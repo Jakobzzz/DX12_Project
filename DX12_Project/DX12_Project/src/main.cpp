@@ -3,7 +3,7 @@
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline, int iCmdshow)
 {
 	Core core;
-	if(!core.Initialize(hInstance))
+	if(core.Initialize(hInstance))
 		core.Run();
 
 	core.ShutDown();

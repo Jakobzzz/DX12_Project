@@ -1,20 +1,20 @@
 struct VertexShaderInput
 {
     float3 pos : POSITION;
-	float2 uv : TEXCOORD;
+    float2 uv : TEXCOORD;
 };
 
 struct VertexShaderOutput
 {
-    float3 pos : SV_Position;
-	float2 uv : TEXCOORD;
+    float4 pos : SV_Position;
+    float2 uv : TEXCOORD;
 };
 
 VertexShaderOutput main(VertexShaderInput input)
 {
-    VertexShaderOutput output;	
+    VertexShaderOutput output;
 
-    output.pos = input.pos;
-	output.uv = input.uv;
-	return output;
+    output.pos = float4(input.pos, 1.f);
+    output.uv = input.uv;
+    return output;
 }

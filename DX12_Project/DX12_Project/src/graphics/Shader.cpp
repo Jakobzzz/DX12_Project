@@ -5,7 +5,7 @@
 void Shader::Initialize(ID3D12Device* device, ID3D12RootSignature* rootsign)
 {
 	//Create shaders
-	InitShaders(device, (WCHAR*)L"VertexShader.hlsl", (WCHAR*)L"FragmentShader.hlsl", rootsign);
+	InitShaders(device, (WCHAR*)L"src/res/shaders/VertexShader.hlsl", (WCHAR*)L"src/res/shaders/FragmentShader.hlsl", rootsign);
 }
 
 void Shader::Render(ID3D12GraphicsCommandList* commandList)
