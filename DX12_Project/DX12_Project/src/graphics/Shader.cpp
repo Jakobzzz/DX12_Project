@@ -2,10 +2,10 @@
 #include <utils/Utility.hpp>
 #include <assert.h>
 
-void Shader::Initialize(ID3D12Device* device, ID3D12RootSignature* rootsign)
+void Shader::Initialize(ID3D12Device* device, ID3D12RootSignature* signature, const std::string & vertexPath, const std::string & fragPath)
 {
 	//Create shaders
-	InitShaders(device, (WCHAR*)L"src/res/shaders/VertexShader.hlsl", (WCHAR*)L"src/res/shaders/FragmentShader.hlsl", rootsign);
+	InitShaders(device, signature, vertexPath, fragPath);
 }
 
 void Shader::Render(ID3D12GraphicsCommandList* commandList)
@@ -14,7 +14,7 @@ void Shader::Render(ID3D12GraphicsCommandList* commandList)
 	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 }
 
-void Shader::InitShaders(ID3D12Device* device, WCHAR* vsFilename, WCHAR* psFilename, ID3D12RootSignature* rootsign)
+void Shader::InitShaders(ID3D12Device* device, ID3D12RootSignature* signature, const std::string & vertexPath, const std::string & fragPath)
 {
 	D3D12_SHADER_BYTECODE vertexShaderByteCode = {};
 	D3D12_SHADER_BYTECODE pixelShaderByteCode = {};
@@ -24,12 +24,12 @@ void Shader::InitShaders(ID3D12Device* device, WCHAR* vsFilename, WCHAR* psFilen
 	ComPtr<ID3DBlob> pixelBlob;
 
 	//Create vertex and pixel shaders
-	assert(!D3DCompileFromFile(vsFilename, nullptr, nullptr, "main", "vs_5_0", D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION, 0, vertexBlob.GetAddressOf(), nullptr));
+	assert(!D3DCompileFromFile(ToWChar(vertexPath).c_str(), nullptr, nullptr, "main", "vs_5_0", D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION, 0, vertexBlob.GetAddressOf(), nullptr));
 	vertexShaderByteCode.BytecodeLength = vertexBlob->GetBufferSize();
 	vertexShaderByteCode.pShaderBytecode = vertexBlob->GetBufferPointer();
 
 	//Compile pixel shader
-	assert(!D3DCompileFromFile(psFilename, nullptr, nullptr, "main", "ps_5_0", D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION, 0, pixelBlob.GetAddressOf(), nullptr));
+	assert(!D3DCompileFromFile(ToWChar(fragPath).c_str(), nullptr, nullptr, "main", "ps_5_0", D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION, 0, pixelBlob.GetAddressOf(), nullptr));
 	pixelShaderByteCode.BytecodeLength = pixelBlob->GetBufferSize();
 	pixelShaderByteCode.pShaderBytecode = pixelBlob->GetBufferPointer();
 
@@ -46,7 +46,7 @@ void Shader::InitShaders(ID3D12Device* device, WCHAR* vsFilename, WCHAR* psFilen
 
 	//Fill in the pipeline state object desc
 	pipelineStateDesc.InputLayout = inputLayoutDesc;
-	pipelineStateDesc.pRootSignature = rootsign;
+	pipelineStateDesc.pRootSignature = signature;
 	pipelineStateDesc.VS = vertexShaderByteCode;
 	pipelineStateDesc.PS = pixelShaderByteCode;
 	pipelineStateDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;

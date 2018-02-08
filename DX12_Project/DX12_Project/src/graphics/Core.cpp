@@ -22,7 +22,8 @@ bool Core::Initialize(HINSTANCE hInstance)
 	}
 
 	m_model = std::make_unique<Model>(m_direct3D->GetDevice(), m_direct3D->GetCommandList());
-	m_colorShader->Initialize(m_direct3D->GetDevice(), m_direct3D->GetRootSignature());
+	m_colorShader->Initialize(m_direct3D->GetDevice(), m_direct3D->GetRootSignature(), 
+							  "src/res/shaders/VertexShader.hlsl", "src/res/shaders/FragmentShader.hlsl");
 
 	m_model->CreateVertexBuffer();
 	m_model->CreateIndexBuffer();

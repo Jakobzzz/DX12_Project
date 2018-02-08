@@ -10,14 +10,14 @@ using namespace Microsoft::WRL;
 class Shader
 {
 public:
-	void Initialize(ID3D12Device*, ID3D12RootSignature*);
-	void Render(ID3D12GraphicsCommandList*);
+	void Initialize(ID3D12Device* device, ID3D12RootSignature* signature, const std::string & vertexPath, const std::string & fragPath);
+	void Render(ID3D12GraphicsCommandList* commandList);
 
 public:
 	ID3D12PipelineState* GetPipelineState() const;
 
 private:
-	void InitShaders(ID3D12Device*, WCHAR*, WCHAR*, ID3D12RootSignature*);
+	void InitShaders(ID3D12Device* device, ID3D12RootSignature* signature, const std::string & vertexPath, const std::string & fragPath);
 
 private:
 	ComPtr<ID3D12PipelineState> m_pipelineState;

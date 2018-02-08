@@ -9,10 +9,8 @@ Texture::Texture(ID3D12Device * device, ID3D12GraphicsCommandList * commandList)
 
 void Texture::LoadTexture(const Textures::ID & id, const std::string & filename)
 {
-	std::wstring holder = std::wstring(filename.begin(), filename.end());
-	const wchar_t* result = holder.c_str();
 	TextureData data;
-	data.imageSize = LoadImageDataFromFile(&data.imageData, data.textureDesc, result, data.imageBytesPerRow);
+	data.imageSize = LoadImageDataFromFile(&data.imageData, data.textureDesc, ToWChar(filename).c_str(), data.imageBytesPerRow);
 
 	//Create default heap
 	assert(!m_device->CreateCommittedResource(
