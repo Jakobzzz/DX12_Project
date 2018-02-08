@@ -1,6 +1,11 @@
-#include <iostream>
+#include <graphics/Core.hpp>
 
-int main()
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline, int iCmdshow)
 {
-	return 0;
+	Core core;
+	if(!core.Initialize(hInstance))
+		core.Run();
+
+	core.ShutDown();
+	return EXIT_SUCCESS;
 }
