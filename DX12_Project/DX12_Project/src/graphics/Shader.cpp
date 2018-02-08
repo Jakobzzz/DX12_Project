@@ -20,16 +20,16 @@ void Shader::InitShaders(ID3D12Device* device, WCHAR* vsFilename, WCHAR* psFilen
 	D3D12_SHADER_BYTECODE pixelShaderByteCode = {};
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC pipelineStateDesc = {};
 	D3D12_INPUT_LAYOUT_DESC inputLayoutDesc = {};
-	ID3DBlob* vertexBlob;
-	ID3DBlob* pixelBlob;
+	ComPtr<ID3DBlob> vertexBlob;
+	ComPtr<ID3DBlob> pixelBlob;
 
 	//Create vertex and pixel shaders
-	assert(!D3DCompileFromFile(vsFilename, nullptr, nullptr, "main", "vs_5_0", D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION, 0, &vertexBlob, nullptr));
+	assert(!D3DCompileFromFile(vsFilename, nullptr, nullptr, "main", "vs_5_0", D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION, 0, vertexBlob.GetAddressOf(), nullptr));
 	vertexShaderByteCode.BytecodeLength = vertexBlob->GetBufferSize();
 	vertexShaderByteCode.pShaderBytecode = vertexBlob->GetBufferPointer();
 
 	//Compile pixel shader
-	assert(!D3DCompileFromFile(psFilename, nullptr, nullptr, "main", "ps_5_0", D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION, 0, &pixelBlob, nullptr));
+	assert(!D3DCompileFromFile(psFilename, nullptr, nullptr, "main", "ps_5_0", D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION, 0, pixelBlob.GetAddressOf(), nullptr));
 	pixelShaderByteCode.BytecodeLength = pixelBlob->GetBufferSize();
 	pixelShaderByteCode.pShaderBytecode = pixelBlob->GetBufferPointer();
 
