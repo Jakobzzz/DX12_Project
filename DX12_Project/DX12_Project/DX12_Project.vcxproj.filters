@@ -14,6 +14,9 @@
     <Filter Include="shaders">
       <UniqueIdentifier>{086e9be1-c415-483d-b37f-b48ffd1d011b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="graphics\buffers">
+      <UniqueIdentifier>{de33fc83-7883-4762-ab30-8c7677da587d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
@@ -31,6 +34,9 @@
     </ClCompile>
     <ClCompile Include="src\graphics\Texture.cpp">
       <Filter>graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="src\graphics\Buffer.cpp">
+      <Filter>graphics\buffers</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -57,6 +63,9 @@
     </ClInclude>
     <ClInclude Include="src\utils\Window.hpp">
       <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\graphics\Buffer.hpp">
+      <Filter>graphics\buffers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

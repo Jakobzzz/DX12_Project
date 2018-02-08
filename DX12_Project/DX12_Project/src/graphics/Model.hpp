@@ -1,12 +1,9 @@
 #pragma once
-#include <d3d12.h>
-#include <d3dx12.h>
 #include <DirectXMath.h>
 #include <memory>
-#include <wrl.h>
+#include <graphics/Buffer.hpp>
 
 using namespace DirectX;
-using namespace Microsoft::WRL;
 
 class Model
 {
@@ -21,7 +18,6 @@ public:
 public:
 	struct Vertex
 	{
-		Vertex(float x, float y, float z, float u, float v) : position(x, y, z), uv(u, v) {}
 		XMFLOAT3 position;
 		XMFLOAT2 uv;
 	};
@@ -35,6 +31,7 @@ private:
 	ID3D12GraphicsCommandList* m_commandList;
 
 private:
+	std::unique_ptr<dx::Buffer> m_buffer;
 	D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView;
 	D3D12_INDEX_BUFFER_VIEW m_indexBufferView;
 };

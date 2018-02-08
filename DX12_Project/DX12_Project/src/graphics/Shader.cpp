@@ -61,7 +61,7 @@ void Shader::InitShaders(ID3D12Device* device, ID3D12RootSignature* signature, c
 	pipelineStateDesc.NumRenderTargets = 1;
 
 	//Create a pipeline state object
-	assert(!device->CreateGraphicsPipelineState(&pipelineStateDesc, __uuidof(ID3D12PipelineState), (void**)m_pipelineState.GetAddressOf()));
+	assert(!device->CreateGraphicsPipelineState(&pipelineStateDesc, IID_PPV_ARGS(m_pipelineState.GetAddressOf())));
 }
 
 ID3D12PipelineState* Shader::GetPipelineState() const

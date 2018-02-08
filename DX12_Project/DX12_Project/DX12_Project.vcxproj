@@ -124,6 +124,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\graphics\Buffer.cpp" />
     <ClCompile Include="src\graphics\Core.cpp" />
     <ClCompile Include="src\graphics\D3D.cpp" />
     <ClCompile Include="src\graphics\Model.cpp" />
@@ -132,6 +133,7 @@
     <ClCompile Include="src\main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\graphics\Buffer.hpp" />
     <ClInclude Include="src\graphics\Core.hpp" />
     <ClInclude Include="src\graphics\D3D.hpp" />
     <ClInclude Include="src\graphics\Model.hpp" />
