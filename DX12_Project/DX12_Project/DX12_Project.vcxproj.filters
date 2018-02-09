@@ -73,6 +73,9 @@
     <ClInclude Include="src\graphics\RootDescriptor.hpp">
       <Filter>graphics\descriptors</Filter>
     </ClInclude>
+    <ClInclude Include="src\graphics\RootParameter.hpp">
+      <Filter>graphics\descriptors</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="src\res\shaders\FragmentShader.hlsl">

@@ -3,6 +3,7 @@
 #include <utils/Utility.hpp>
 #include <assert.h>
 #include <graphics/RootDescriptor.hpp>
+#include <graphics/RootParameter.hpp>
 
 void D3D::ShutDown()
 {
@@ -31,19 +32,15 @@ bool D3D::Initialize(HWND hwnd)
 	//Now create root table for the range
 	srvRootDesc.CreateRootDescTable();
 
-	D3D12_ROOT_PARAMETER rootParameters[2]; // two root parameters
-	rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV; //constant buffer
-	rootParameters[0].Descriptor = { 0, 0 }; //b0
-	rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-
-	rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE; //this is for the SRV
-	rootParameters[1].DescriptorTable = srvRootDesc.GetRootDescTable(); 
-	rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+	//Fill in root parameters
+	dx::RootParameter rootParams;
+	rootParams.AppendRootParameterCBV(0, D3D12_SHADER_VISIBILITY_PIXEL);
+	rootParams.AppendRootParameterDescTable(srvRootDesc.GetRootDescTable(), D3D12_SHADER_VISIBILITY_PIXEL);
 
 	//Create the root signature
 	CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc;
-	rootSignatureDesc.Init(_countof(rootParameters), // we have 2 root parameters
-		rootParameters, // a pointer to the beginning of our root parameters array
+	rootSignatureDesc.Init(rootParams.GetRootParameters().size(), // we have 2 root parameters
+		&rootParams.GetRootParameters()[0], // a pointer to the beginning of our root parameters array
 		1, // we have one static sampler
 		&GetStandardSamplerState(), // a pointer to our static sampler (array)
 		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT | // we can deny shader stages here for better performance

@@ -138,6 +138,7 @@
     <ClInclude Include="src\graphics\D3D.hpp" />
     <ClInclude Include="src\graphics\RootDescriptor.hpp" />
     <ClInclude Include="src\graphics\Model.hpp" />
+    <ClInclude Include="src\graphics\RootParameter.hpp" />
     <ClInclude Include="src\graphics\SamplerStates.hpp" />
     <ClInclude Include="src\graphics\Shader.hpp" />
     <ClInclude Include="src\graphics\Texture.hpp" />
