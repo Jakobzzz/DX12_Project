@@ -136,6 +136,7 @@
     <ClInclude Include="src\graphics\Buffer.hpp" />
     <ClInclude Include="src\graphics\Core.hpp" />
     <ClInclude Include="src\graphics\D3D.hpp" />
+    <ClInclude Include="src\graphics\RootDescriptor.hpp" />
     <ClInclude Include="src\graphics\Model.hpp" />
     <ClInclude Include="src\graphics\SamplerStates.hpp" />
     <ClInclude Include="src\graphics\Shader.hpp" />

@@ -2,8 +2,7 @@
 #include <graphics/SamplerStates.hpp>
 #include <utils/Utility.hpp>
 #include <assert.h>
-#include <d3dx12.h>
-#include <vector>
+#include <graphics/RootDescriptor.hpp>
 
 void D3D::ShutDown()
 {
@@ -25,12 +24,12 @@ bool D3D::Initialize(HWND hwnd)
 	m_texture = std::make_unique<Texture>(m_device.Get(), m_commandList.Get());
 	m_buffer = std::make_unique<dx::Buffer>(m_device.Get(), m_commandList.Get());
 
-	//Shader resource view and constant buffer
-	std::vector<CD3DX12_DESCRIPTOR_RANGE> descriptorTableRanges;
-	descriptorTableRanges.push_back({ D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0 });
+	//Fill in the desc range
+	dx::RootDescriptor srvRootDesc;
+	srvRootDesc.AppendDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
 
-	// create a descriptor table
-	CD3DX12_ROOT_DESCRIPTOR_TABLE descriptorTable(descriptorTableRanges.size(), &descriptorTableRanges[0]);
+	//Now create root table for the range
+	srvRootDesc.CreateRootDescTable();
 
 	D3D12_ROOT_PARAMETER rootParameters[2]; // two root parameters
 	rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV; //constant buffer
@@ -38,7 +37,7 @@ bool D3D::Initialize(HWND hwnd)
 	rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
 	rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE; //this is for the SRV
-	rootParameters[1].DescriptorTable = descriptorTable; 
+	rootParameters[1].DescriptorTable = srvRootDesc.GetRootDescTable(); 
 	rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
 	//Create the root signature
