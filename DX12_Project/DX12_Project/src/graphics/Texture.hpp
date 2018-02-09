@@ -7,7 +7,8 @@ namespace Textures
 {
 	enum class ID
 	{
-		Dark
+		Fatboy,
+		Smiley
 	};
 }
 

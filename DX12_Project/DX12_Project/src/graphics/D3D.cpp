@@ -28,6 +28,7 @@ bool D3D::Initialize(HWND hwnd)
 	//Fill in the desc range
 	dx::RootDescriptor srvRootDesc;
 	srvRootDesc.AppendDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
+	srvRootDesc.AppendDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 1);
 
 	//Now create root table for the range
 	srvRootDesc.CreateRootDescTable();
@@ -39,18 +40,16 @@ bool D3D::Initialize(HWND hwnd)
 
 	//Create the root signature
 	CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc;
-	rootSignatureDesc.Init(rootParams.GetRootParameters().size(), // we have 2 root parameters
-		&rootParams.GetRootParameters()[0], // a pointer to the beginning of our root parameters array
-		1, // we have one static sampler
-		&GetStandardSamplerState(), // a pointer to our static sampler (array)
-		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT | // we can deny shader stages here for better performance
+	rootSignatureDesc.Init(rootParams.GetRootParameters().size(),
+		&rootParams.GetRootParameters()[0],
+		1, //Static samplers
+		&GetStandardSamplerState(), //Sampler states
+		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT | //Deny shader stages
 		D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS |
 		D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |
 		D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS);
 
-	ID3DBlob* errorBuff; // a buffer holding the error data if any
-	ID3DBlob* signature;
-
+	ID3DBlob* errorBuff; ID3DBlob* signature;
 	assert(!D3D12SerializeRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, &errorBuff));
 	assert(!m_device->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(m_rootSignature.GetAddressOf())));
 
@@ -61,23 +60,38 @@ bool D3D::Initialize(HWND hwnd)
 	m_buffer->CreateConstantBufferForRoot(&cbPerObject, sizeof(cbPerObject), m_constantUploadHeap->GetAddressOf(), &cbvGPUAddress[0]);
 	
 	//Load the image from file
-	m_texture->LoadTexture(Textures::ID::Dark, "src/res/textures/fatboy.png");
+	m_texture->LoadTexture(Textures::ID::Fatboy, "src/res/textures/fatboy.png");
+	m_texture->LoadTexture(Textures::ID::Smiley, "src/res/textures/smiley.png");
 
 	//Create the descriptor heap that will store our srv
 	D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
-	heapDesc.NumDescriptors = 1;
+	heapDesc.NumDescriptors = 2;
 	heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 	heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 	assert(!m_device->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(m_textureDescriptorHeap.GetAddressOf())));
 
-	//Now we create a shader resource view (descriptor that points to the texture and describes it)
+	CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle1(m_textureDescriptorHeap->GetCPUDescriptorHandleForHeapStart(), 0,
+		m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
+
+	//First srv
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-	srvDesc.Format = m_texture->GetTexture(Textures::ID::Dark).textureDesc.Format;
+	srvDesc.Format = m_texture->GetTexture(Textures::ID::Fatboy).textureDesc.Format;
 	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 	srvDesc.Texture2D.MipLevels = 1;
-	m_device->CreateShaderResourceView(m_texture->GetTexture(Textures::ID::Dark).textureBuffer, &srvDesc, m_textureDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
+	m_device->CreateShaderResourceView(m_texture->GetTexture(Textures::ID::Fatboy).textureBuffer, &srvDesc, srvHandle1);
 	
+	CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle2(m_textureDescriptorHeap->GetCPUDescriptorHandleForHeapStart(), 1,
+		m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
+
+	//Second srv
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc1 = {};
+	srvDesc1.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc1.Format = m_texture->GetTexture(Textures::ID::Smiley).textureDesc.Format;
+	srvDesc1.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srvDesc1.Texture2D.MipLevels = 1;
+	m_device->CreateShaderResourceView(m_texture->GetTexture(Textures::ID::Smiley).textureBuffer, &srvDesc1, srvHandle2);
+
 	return true;
 }
 
@@ -114,6 +128,10 @@ void D3D::BeginScene(ID3D12PipelineState* pipelinestate)
 	//Record commands in the command list now.
 	m_commandList->OMSetRenderTargets(1, &renderTargetViewHandle, 0, nullptr);
 	m_commandList->ClearRenderTargetView(renderTargetViewHandle, color, 0, nullptr);
+
+	//This is not needed since we have already set the offset with the CPU descriptor handle?
+	/*CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle(m_textureDescriptorHeap->GetGPUDescriptorHandleForHeapStart(), 0,
+											m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));*/
 
 	//Set the descriptor heap
 	ID3D12DescriptorHeap* descriptorHeaps[] = { m_textureDescriptorHeap.Get() };

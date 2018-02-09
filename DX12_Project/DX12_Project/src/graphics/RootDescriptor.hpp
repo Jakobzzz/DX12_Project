@@ -7,6 +7,7 @@ namespace dx
 	class RootDescriptor
 	{
 	public:
+		//Call this after you have appended all the parameters to the descriptor range
 		inline void CreateRootDescTable()
 		{
 			m_rootDescTable = { m_descRange.size(), &m_descRange[0] };
