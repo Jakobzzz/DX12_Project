@@ -1,6 +1,7 @@
 #include <graphics/Buffer.hpp>
 #include <assert.h>
 #include <d3dx12.h>
+#include <utils/Utility.hpp>
 
 namespace dx
 {
@@ -8,7 +9,7 @@ namespace dx
 	{
 	}
 
-	void Buffer::CreateVertexBuffer(const void * data, const unsigned int & size, const unsigned int & stride, ID3D12Resource** buffer, ID3D12Resource** uploadHeap,
+	void Buffer::CreateVertexBuffer(const void * data, const unsigned int & size, const unsigned int & stride, ID3D12Resource ** buffer, ID3D12Resource ** uploadHeap,
 									D3D12_VERTEX_BUFFER_VIEW & view)
 	{
 		//Create the buffer
@@ -24,7 +25,7 @@ namespace dx
 		view.SizeInBytes = size;
 	}
 
-	void Buffer::CreateIndexBuffer(const void * data, const unsigned int & size, ID3D12Resource** buffer, ID3D12Resource** uploadHeap, 
+	void Buffer::CreateIndexBuffer(const void * data, const unsigned int & size, ID3D12Resource ** buffer, ID3D12Resource ** uploadHeap, 
 								   D3D12_INDEX_BUFFER_VIEW & view)
 	{
 		//Create the buffer
@@ -40,17 +41,49 @@ namespace dx
 		view.SizeInBytes = size;
 	}
 
-	void Buffer::Bind(const unsigned int & location, D3D12_VERTEX_BUFFER_VIEW & view)
+	void Buffer::CreateConstantBufferForRoot(const void * data, const unsigned int & size, ID3D12Resource ** buffer, UINT8 ** bufferAddress)
+	{
+		for (unsigned int i = 0; i < FRAME_BUFFERS; ++i)
+		{
+			//Create resource
+			assert(!m_device->CreateCommittedResource(
+				&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
+				D3D12_HEAP_FLAG_NONE, // no flags
+				&CD3DX12_RESOURCE_DESC::Buffer(D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT),
+				D3D12_RESOURCE_STATE_GENERIC_READ,
+				nullptr,
+				IID_PPV_ARGS(&buffer[i])));
+
+			buffer[i]->SetName(L"Constant Buffer Upload Resource Heap");
+
+			//Copy the data
+			CD3DX12_RANGE readRange(0, 0);
+			assert(!buffer[i]->Map(0, &readRange, reinterpret_cast<void**>(&bufferAddress[i])));
+			memcpy(bufferAddress[i], data, size);
+		}
+	}
+
+	void Buffer::SetConstantBufferData(const void * data, const unsigned int & size, const unsigned int & frameIndex, UINT8 ** bufferAddress)
+	{
+		memcpy(bufferAddress[frameIndex], data, size);
+	}
+
+	void Buffer::BindVertexBuffer(const unsigned int & location, D3D12_VERTEX_BUFFER_VIEW & view)
 	{
 		m_commandList->IASetVertexBuffers(location, 1, &view);
 	}
 
-	void Buffer::Bind(D3D12_INDEX_BUFFER_VIEW & view)
+	void Buffer::BindIndexBuffer(D3D12_INDEX_BUFFER_VIEW & view)
 	{
 		m_commandList->IASetIndexBuffer(&view);
 	}
 
-	void Buffer::CreateBuffer(const void * data, const unsigned int & size, ID3D12Resource** buffer, ID3D12Resource** uploadHeap)
+	void Buffer::BindConstantBufferForRoot(const unsigned int & rootIndex, const unsigned int & frameIndex, ID3D12Resource** buffer)
+	{
+		m_commandList->SetGraphicsRootConstantBufferView(rootIndex, buffer[frameIndex]->GetGPUVirtualAddress());
+	}
+
+	void Buffer::CreateBuffer(const void * data, const unsigned int & size, ID3D12Resource ** buffer, ID3D12Resource ** uploadHeap)
 	{
 		//Create default heap for buffer
 		assert(!m_device->CreateCommittedResource(&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT), D3D12_HEAP_FLAG_NONE,

@@ -3,6 +3,7 @@
 #include <utils/Utility.hpp>
 #include <assert.h>
 #include <d3dx12.h>
+#include <vector>
 
 void D3D::ShutDown()
 {
@@ -22,19 +23,14 @@ bool D3D::Initialize(HWND hwnd)
 	CreateViewportAndScissorRect();
 
 	m_texture = std::make_unique<Texture>(m_device.Get(), m_commandList.Get());
+	m_buffer = std::make_unique<dx::Buffer>(m_device.Get(), m_commandList.Get());
 
 	//Shader resource view and constant buffer
-	D3D12_DESCRIPTOR_RANGE  descriptorTableRanges[1]; 
-	descriptorTableRanges[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV; 
-	descriptorTableRanges[0].NumDescriptors = 1; 
-	descriptorTableRanges[0].BaseShaderRegister = 0; //t0
-	descriptorTableRanges[0].RegisterSpace = 0; 
-	descriptorTableRanges[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+	std::vector<CD3DX12_DESCRIPTOR_RANGE> descriptorTableRanges;
+	descriptorTableRanges.push_back({ D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0 });
 
 	// create a descriptor table
-	D3D12_ROOT_DESCRIPTOR_TABLE descriptorTable;
-	descriptorTable.NumDescriptorRanges = _countof(descriptorTableRanges); 
-	descriptorTable.pDescriptorRanges = &descriptorTableRanges[0]; 
+	CD3DX12_ROOT_DESCRIPTOR_TABLE descriptorTable(descriptorTableRanges.size(), &descriptorTableRanges[0]);
 
 	D3D12_ROOT_PARAMETER rootParameters[2]; // two root parameters
 	rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV; //constant buffer
@@ -66,24 +62,7 @@ bool D3D::Initialize(HWND hwnd)
 	SAFE_RELEASE(&signature);
 
 	//For constant buffer
-	for (int i = 0; i < FRAME_BUFFERS; ++i)
-	{
-		// create resource for cube 1
-		assert(!m_device->CreateCommittedResource(
-			&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
-			D3D12_HEAP_FLAG_NONE, // no flags
-			&CD3DX12_RESOURCE_DESC::Buffer(D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT),
-			D3D12_RESOURCE_STATE_GENERIC_READ,
-			nullptr,
-			IID_PPV_ARGS(m_constantUploadHeap[i].GetAddressOf())));
-
-		m_constantUploadHeap[i]->SetName(L"Constant Buffer Upload Resource Heap");
-
-		ZeroMemory(&cbPerObject, sizeof(cbPerObject));
-		CD3DX12_RANGE readRange(0, 0);
-		assert(!m_constantUploadHeap[i]->Map(0, &readRange, reinterpret_cast<void**>(&cbvGPUAddress[i])));
-		memcpy(cbvGPUAddress[i], &cbPerObject, sizeof(cbPerObject));
-	}
+	m_buffer->CreateConstantBufferForRoot(&cbPerObject, sizeof(cbPerObject), m_constantUploadHeap->GetAddressOf(), &cbvGPUAddress[0]);
 	
 	//Load the image from file
 	m_texture->LoadTexture(Textures::ID::Dark, "src/res/textures/fatboy.png");
@@ -112,7 +91,7 @@ void D3D::BeginScene(ID3D12PipelineState* pipelinestate)
 
 	//Copy constant buffer data
 	cbPerObject.color = { 0.5f, 0.f, 0.f, 1.f };
-	memcpy(cbvGPUAddress[m_frameIndex], &cbPerObject, sizeof(cbPerObject));
+	m_buffer->SetConstantBufferData(&cbPerObject, sizeof(cbPerObject), m_frameIndex, &cbvGPUAddress[0]);
 
 	//Reset resources
 	assert(!m_commandAllocator->Reset());
@@ -144,7 +123,7 @@ void D3D::BeginScene(ID3D12PipelineState* pipelinestate)
 	ID3D12DescriptorHeap* descriptorHeaps[] = { m_textureDescriptorHeap.Get() };
 	m_commandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
 	m_commandList->SetGraphicsRootDescriptorTable(1, m_textureDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
-	m_commandList->SetGraphicsRootConstantBufferView(0, m_constantUploadHeap[m_frameIndex]->GetGPUVirtualAddress());
+	m_buffer->BindConstantBufferForRoot(0, m_frameIndex, m_constantUploadHeap->GetAddressOf());
 }
 
 void D3D::EndScene()

@@ -8,10 +8,9 @@
 #include <DirectXMath.h>
 #include <graphics/Texture.hpp>
 #include <memory>
-#include <wrl.h>
+#include <graphics/Buffer.hpp>
 
 using namespace DirectX;
-using namespace Microsoft::WRL;
 
 class D3D
 {
@@ -60,6 +59,7 @@ private:
 	ComPtr<ID3D12Resource> m_constantUploadHeap[2];
 	UINT8* cbvGPUAddress[2];
 	ConstantBufferPerObject cbPerObject;
+	std::unique_ptr<dx::Buffer> m_buffer;
 
 private:
 	ComPtr<ID3D12Fence> m_fence;

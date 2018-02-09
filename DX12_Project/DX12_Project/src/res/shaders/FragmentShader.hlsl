@@ -14,5 +14,5 @@ struct PixelShaderInput
 
 float4 main(PixelShaderInput input) : SV_TARGET
 {
-    return t1.Sample(s1, input.uv) * color;
+    return color; //t1.Sample(s1, input.uv) * color;
 }

@@ -30,8 +30,8 @@ void Model::CreateVertexBuffer()
 void Model::Render(ID3D12GraphicsCommandList* commandList)
 {
 	//Prepare for drawing
-	m_buffer->Bind(0, m_vertexBufferView);
-	m_buffer->Bind(m_indexBufferView);
+	m_buffer->BindVertexBuffer(0, m_vertexBufferView);
+	m_buffer->BindIndexBuffer(m_indexBufferView);
 	commandList->DrawInstanced(ARRAYSIZE(vertices), 1, 0, 0); //Just a triangle for now
 }
 
