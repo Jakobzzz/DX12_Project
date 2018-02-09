@@ -39,7 +39,7 @@ bool D3D::Initialize(HWND hwnd)
 	rootParams.AppendRootParameterDescTable(srvRootDesc.GetRootDescTable(), D3D12_SHADER_VISIBILITY_PIXEL);
 
 	//Create the root signature
-	CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc;
+	CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc = {};
 	rootSignatureDesc.Init(rootParams.GetRootParameters().size(),
 		&rootParams.GetRootParameters()[0],
 		1, //Static samplers
@@ -70,27 +70,15 @@ bool D3D::Initialize(HWND hwnd)
 	heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 	assert(!m_device->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(m_textureDescriptorHeap.GetAddressOf())));
 
+	//First srv
 	CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle1(m_textureDescriptorHeap->GetCPUDescriptorHandleForHeapStart(), 0,
 		m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
-
-	//First srv
-	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-	srvDesc.Format = m_texture->GetTexture(Textures::ID::Fatboy).textureDesc.Format;
-	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-	srvDesc.Texture2D.MipLevels = 1;
-	m_device->CreateShaderResourceView(m_texture->GetTexture(Textures::ID::Fatboy).textureBuffer, &srvDesc, srvHandle1);
+	m_texture->CreateSRVFromTexture(Textures::ID::Fatboy, srvHandle1);
 	
+	//Second srv
 	CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle2(m_textureDescriptorHeap->GetCPUDescriptorHandleForHeapStart(), 1,
 		m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
-
-	//Second srv
-	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc1 = {};
-	srvDesc1.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-	srvDesc1.Format = m_texture->GetTexture(Textures::ID::Smiley).textureDesc.Format;
-	srvDesc1.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-	srvDesc1.Texture2D.MipLevels = 1;
-	m_device->CreateShaderResourceView(m_texture->GetTexture(Textures::ID::Smiley).textureBuffer, &srvDesc1, srvHandle2);
+	m_texture->CreateSRVFromTexture(Textures::ID::Smiley, srvHandle2);
 
 	return true;
 }

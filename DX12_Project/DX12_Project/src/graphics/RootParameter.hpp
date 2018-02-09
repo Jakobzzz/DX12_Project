@@ -9,7 +9,7 @@ namespace dx
 	public:
 		inline void AppendRootParameterCBV(const unsigned int & shaderRegister, D3D12_SHADER_VISIBILITY visibility)
 		{
-			D3D12_ROOT_PARAMETER param;
+			D3D12_ROOT_PARAMETER param = {};
 			param.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
 			param.Descriptor = { 0, shaderRegister };
 			param.ShaderVisibility = visibility;
@@ -20,7 +20,7 @@ namespace dx
 
 		inline void AppendRootParameterDescTable(D3D12_ROOT_DESCRIPTOR_TABLE table, D3D12_SHADER_VISIBILITY visibility)
 		{
-			D3D12_ROOT_PARAMETER param;
+			D3D12_ROOT_PARAMETER param = {};
 			param.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
 			param.DescriptorTable = table;
 			param.ShaderVisibility = visibility;

@@ -36,7 +36,7 @@ void Texture::LoadTexture(const Textures::ID & id, const std::string & filename)
 	data.textureBufferUploadHeap->SetName(L"Texture Buffer Upload Resource Heap"); //This could be done with another parameter if one wants too
 
 	//Store texture data in upload heap
-	D3D12_SUBRESOURCE_DATA textureData;
+	D3D12_SUBRESOURCE_DATA textureData = {};
 	textureData.pData = &data.imageData[0];
 	textureData.RowPitch = data.imageBytesPerRow; 
 	textureData.SlicePitch = data.imageBytesPerRow * data.textureDesc.Height;
@@ -52,18 +52,18 @@ void Texture::LoadTexture(const Textures::ID & id, const std::string & filename)
 	assert(inserted.second);
 }
 
-//void Texture::AddTextureToDescriptorHeap(const Textures::ID & id, ID3D12DescriptorHeap * heap)
-//{
-//	auto found = m_textures.find(id);
-//
-//	//Create SRV with the descriptor heap
-//	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc;
-//	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-//	srvDesc.Format = found->second.textureDesc.Format;
-//	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-//	srvDesc.Texture2D.MipLevels = 1;
-//	m_device->CreateShaderResourceView(found->second.textureBuffer, &srvDesc, heap->GetCPUDescriptorHandleForHeapStart());
-//}
+void Texture::CreateSRVFromTexture(const Textures::ID & id, CD3DX12_CPU_DESCRIPTOR_HANDLE & cpuHandle)
+{
+	auto found = m_textures.find(id);
+
+	//Create SRV with the cpu handle
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.Format = found->second.textureDesc.Format;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Texture2D.MipLevels = 1;
+	m_device->CreateShaderResourceView(found->second.textureBuffer, &srvDesc, cpuHandle);
+}
 
 void Texture::Release()
 {

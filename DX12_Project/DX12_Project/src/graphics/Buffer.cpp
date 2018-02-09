@@ -96,7 +96,7 @@ namespace dx
 		uploadHeap[0]->SetName(L"Vertex Buffer Upload Resource Heap");
 
 		//Store buffer in upload heap
-		D3D12_SUBRESOURCE_DATA dataType;
+		D3D12_SUBRESOURCE_DATA dataType = { 0 };
 		dataType.pData = data;
 		dataType.RowPitch = size;
 		dataType.SlicePitch = size;

@@ -1,5 +1,5 @@
 #pragma once
-#include <d3d12.h>
+#include <d3dx12.h>
 #include <wincodec.h>
 #include <map>
 
@@ -28,7 +28,7 @@ private:
 public:
 	Texture(ID3D12Device* device, ID3D12GraphicsCommandList* commandList);
 	void LoadTexture(const Textures::ID & id, const std::string & filename);
-	//void AddTextureToDescriptorHeap(const Textures::ID & id, ID3D12DescriptorHeap* heap);
+	void CreateSRVFromTexture(const Textures::ID & id, CD3DX12_CPU_DESCRIPTOR_HANDLE & cpuHandle);
 	void Release();
 
 public:
