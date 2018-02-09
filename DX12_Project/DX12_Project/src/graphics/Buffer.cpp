@@ -9,7 +9,7 @@ namespace dx
 	{
 	}
 
-	void Buffer::CreateVertexBuffer(const void * data, const unsigned int & size, const unsigned int & stride, ID3D12Resource ** buffer, ID3D12Resource ** uploadHeap,
+	void Buffer::CreateVertexBuffer(const void * data, const UINT & size, const UINT & stride, ID3D12Resource ** buffer, ID3D12Resource ** uploadHeap,
 									D3D12_VERTEX_BUFFER_VIEW & view)
 	{
 		//Create the buffer
@@ -25,7 +25,7 @@ namespace dx
 		view.SizeInBytes = size;
 	}
 
-	void Buffer::CreateIndexBuffer(const void * data, const unsigned int & size, ID3D12Resource ** buffer, ID3D12Resource ** uploadHeap, 
+	void Buffer::CreateIndexBuffer(const void * data, const UINT & size, ID3D12Resource ** buffer, ID3D12Resource ** uploadHeap, 
 								   D3D12_INDEX_BUFFER_VIEW & view)
 	{
 		//Create the buffer
@@ -41,7 +41,7 @@ namespace dx
 		view.SizeInBytes = size;
 	}
 
-	void Buffer::CreateConstantBufferForRoot(const void * data, const unsigned int & size, ID3D12Resource ** buffer, UINT8 ** bufferAddress)
+	void Buffer::CreateConstantBufferForRoot(const void * data, const UINT & size, ID3D12Resource ** buffer, UINT8 ** bufferAddress)
 	{
 		for (unsigned int i = 0; i < FRAME_BUFFERS; ++i)
 		{
@@ -63,12 +63,12 @@ namespace dx
 		}
 	}
 
-	void Buffer::SetConstantBufferData(const void * data, const unsigned int & size, const unsigned int & frameIndex, UINT8 ** bufferAddress)
+	void Buffer::SetConstantBufferData(const void * data, const UINT & size, const UINT & frameIndex, UINT8 ** bufferAddress)
 	{
 		memcpy(bufferAddress[frameIndex], data, size);
 	}
 
-	void Buffer::BindVertexBuffer(const unsigned int & location, D3D12_VERTEX_BUFFER_VIEW & view)
+	void Buffer::BindVertexBuffer(const UINT & location, D3D12_VERTEX_BUFFER_VIEW & view)
 	{
 		m_commandList->IASetVertexBuffers(location, 1, &view);
 	}
@@ -78,12 +78,12 @@ namespace dx
 		m_commandList->IASetIndexBuffer(&view);
 	}
 
-	void Buffer::BindConstantBufferForRoot(const unsigned int & rootIndex, const unsigned int & frameIndex, ID3D12Resource** buffer)
+	void Buffer::BindConstantBufferForRoot(const UINT & rootIndex, const UINT & frameIndex, ID3D12Resource** buffer)
 	{
 		m_commandList->SetGraphicsRootConstantBufferView(rootIndex, buffer[frameIndex]->GetGPUVirtualAddress());
 	}
 
-	void Buffer::CreateBuffer(const void * data, const unsigned int & size, ID3D12Resource ** buffer, ID3D12Resource ** uploadHeap)
+	void Buffer::CreateBuffer(const void * data, const UINT & size, ID3D12Resource ** buffer, ID3D12Resource ** uploadHeap)
 	{
 		//Create default heap for buffer
 		assert(!m_device->CreateCommittedResource(&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT), D3D12_HEAP_FLAG_NONE,

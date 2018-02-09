@@ -19,7 +19,7 @@ void Texture::LoadTexture(const Textures::ID & id, const std::string & filename)
 		&data.textureDesc,
 		D3D12_RESOURCE_STATE_COPY_DEST, 
 		nullptr, 
-		IID_PPV_ARGS(&data.textureBuffer)));
+		IID_PPV_ARGS(data.textureBuffer.GetAddressOf())));
 	data.textureBuffer->SetName(L"Texture Buffer Resource Heap"); //This could be done with another parameter if one wants too
 
 	UINT64 textureUploadBufferSize;
@@ -32,7 +32,7 @@ void Texture::LoadTexture(const Textures::ID & id, const std::string & filename)
 		&CD3DX12_RESOURCE_DESC::Buffer(textureUploadBufferSize),
 		D3D12_RESOURCE_STATE_GENERIC_READ,
 		nullptr,
-		IID_PPV_ARGS(&data.textureBufferUploadHeap)));
+		IID_PPV_ARGS(data.textureBufferUploadHeap.GetAddressOf())));
 	data.textureBufferUploadHeap->SetName(L"Texture Buffer Upload Resource Heap"); //This could be done with another parameter if one wants too
 
 	//Store texture data in upload heap
@@ -42,27 +42,28 @@ void Texture::LoadTexture(const Textures::ID & id, const std::string & filename)
 	textureData.SlicePitch = data.imageBytesPerRow * data.textureDesc.Height;
 																	
 	//Copy upload buffer content to default heap
-	UpdateSubresources(m_commandList, data.textureBuffer, data.textureBufferUploadHeap, 0, 0, 1, &textureData);
+	UpdateSubresources(m_commandList, data.textureBuffer.Get(), data.textureBufferUploadHeap.Get(), 0, 0, 1, &textureData);
 
 	//Transition the texture default heap to a pixel shader resource
-	m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(data.textureBuffer, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
+	m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(data.textureBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, 
+								   D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
 
 	//Now store the texture inside our container
 	auto inserted = m_textures.insert(std::make_pair(id, std::move(data)));
 	assert(inserted.second);
 }
 
-void Texture::CreateSRVFromTexture(const Textures::ID & id, CD3DX12_CPU_DESCRIPTOR_HANDLE & cpuHandle)
+void Texture::CreateSRVFromTexture(const Textures::ID & id, D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle)
 {
 	auto found = m_textures.find(id);
 
-	//Create SRV with the cpu handle
+	//Create SRV with the CPU handle
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 	srvDesc.Format = found->second.textureDesc.Format;
 	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 	srvDesc.Texture2D.MipLevels = 1;
-	m_device->CreateShaderResourceView(found->second.textureBuffer, &srvDesc, cpuHandle);
+	m_device->CreateShaderResourceView(found->second.textureBuffer.Get(), &srvDesc, cpuHandle);
 }
 
 void Texture::Release()
@@ -70,8 +71,6 @@ void Texture::Release()
 	//Iterate over our container and release data
 	for (auto & texture : m_textures)
 	{
-		SAFE_RELEASE(&texture.second.textureBuffer);
-		SAFE_RELEASE(&texture.second.textureBufferUploadHeap);
 		delete texture.second.imageData;
 		texture.second.imageData = nullptr;
 	}
@@ -84,7 +83,7 @@ Texture::TextureData Texture::GetTexture(const Textures::ID & id) const
 	return found->second;
 }
 
-unsigned int Texture::LoadImageDataFromFile(BYTE ** imageData, D3D12_RESOURCE_DESC & resourceDescription, LPCWSTR filename, unsigned int & bytesPerRow)
+UINT Texture::LoadImageDataFromFile(BYTE ** imageData, D3D12_RESOURCE_DESC & resourceDescription, LPCWSTR filename, UINT & bytesPerRow)
 {
 	static IWICImagingFactory *wicFactory;
 	IWICBitmapDecoder *wicDecoder = nullptr;
@@ -232,7 +231,7 @@ DXGI_FORMAT Texture::GetDXGIFormatFromWICFormat(WICPixelFormatGUID & wicFormatGU
 	return DXGI_FORMAT_UNKNOWN;
 }
 
-unsigned int Texture::GetDXGIFormatBitsPerPixel(DXGI_FORMAT & dxgiFormat)
+UINT Texture::GetDXGIFormatBitsPerPixel(DXGI_FORMAT & dxgiFormat)
 {
 	if (dxgiFormat == DXGI_FORMAT_R32G32B32A32_FLOAT) return 128;
 	else if (dxgiFormat == DXGI_FORMAT_R16G16B16A16_FLOAT) return 64;

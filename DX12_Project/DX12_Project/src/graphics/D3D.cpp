@@ -24,6 +24,7 @@ bool D3D::Initialize(HWND hwnd)
 
 	m_texture = std::make_unique<Texture>(m_device.Get(), m_commandList.Get());
 	m_buffer = std::make_unique<dx::Buffer>(m_device.Get(), m_commandList.Get());
+	m_srvDescHeap = std::make_unique<dx::DescriptorHeap>(m_device.Get(), m_commandList.Get());
 
 	//Fill in the desc range
 	dx::RootDescriptor srvRootDesc;
@@ -64,21 +65,11 @@ bool D3D::Initialize(HWND hwnd)
 	m_texture->LoadTexture(Textures::ID::Smiley, "src/res/textures/smiley.png");
 
 	//Create the descriptor heap that will store our srv
-	D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
-	heapDesc.NumDescriptors = 2;
-	heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-	heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-	assert(!m_device->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(m_textureDescriptorHeap.GetAddressOf())));
+	m_srvDescHeap->CreateDescriptorHeap(2, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
-	//First srv
-	CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle1(m_textureDescriptorHeap->GetCPUDescriptorHandleForHeapStart(), 0,
-		m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
-	m_texture->CreateSRVFromTexture(Textures::ID::Fatboy, srvHandle1);
-	
-	//Second srv
-	CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle2(m_textureDescriptorHeap->GetCPUDescriptorHandleForHeapStart(), 1,
-		m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
-	m_texture->CreateSRVFromTexture(Textures::ID::Smiley, srvHandle2);
+	//Two SRVs
+	m_texture->CreateSRVFromTexture(Textures::ID::Fatboy, m_srvDescHeap->GetCPUIncrementHandle(0));
+	m_texture->CreateSRVFromTexture(Textures::ID::Smiley, m_srvDescHeap->GetCPUIncrementHandle(1));
 
 	return true;
 }
@@ -117,14 +108,8 @@ void D3D::BeginScene(ID3D12PipelineState* pipelinestate)
 	m_commandList->OMSetRenderTargets(1, &renderTargetViewHandle, 0, nullptr);
 	m_commandList->ClearRenderTargetView(renderTargetViewHandle, color, 0, nullptr);
 
-	//This is not needed since we have already set the offset with the CPU descriptor handle?
-	/*CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle(m_textureDescriptorHeap->GetGPUDescriptorHandleForHeapStart(), 0,
-											m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));*/
-
 	//Set the descriptor heap
-	ID3D12DescriptorHeap* descriptorHeaps[] = { m_textureDescriptorHeap.Get() };
-	m_commandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
-	m_commandList->SetGraphicsRootDescriptorTable(1, m_textureDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
+	m_srvDescHeap->SetRootDescriptorTable(1);
 	m_buffer->BindConstantBufferForRoot(0, m_frameIndex, m_constantUploadHeap->GetAddressOf());
 }
 

@@ -7,7 +7,7 @@ namespace dx
 	class RootParameter
 	{
 	public:
-		inline void AppendRootParameterCBV(const unsigned int & shaderRegister, D3D12_SHADER_VISIBILITY visibility)
+		inline void AppendRootParameterCBV(const UINT & shaderRegister, D3D12_SHADER_VISIBILITY visibility)
 		{
 			D3D12_ROOT_PARAMETER param = {};
 			param.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;

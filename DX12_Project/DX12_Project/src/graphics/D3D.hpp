@@ -9,6 +9,7 @@
 #include <graphics/Texture.hpp>
 #include <memory>
 #include <graphics/Buffer.hpp>
+#include <graphics/DescriptorHeap.hpp>
 
 using namespace DirectX;
 
@@ -51,7 +52,7 @@ private:
 private:
 	//For SRV
 	std::unique_ptr<Texture> m_texture;
-	ComPtr<ID3D12DescriptorHeap> m_textureDescriptorHeap;
+	std::unique_ptr<dx::DescriptorHeap> m_srvDescHeap;
 	ComPtr<ID3D12RootSignature> m_rootSignature; 
 
 private:
