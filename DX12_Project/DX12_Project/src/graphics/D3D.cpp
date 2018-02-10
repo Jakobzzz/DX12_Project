@@ -23,7 +23,7 @@ void D3D::LoadTextures()
 
 void D3D::LoadObjects()
 {
-	m_texture = std::make_unique<Texture>(m_device.Get(), m_commandList.Get());
+	m_texture = std::make_unique<dx::Texture>(m_device.Get(), m_commandList.Get());
 	m_buffer = std::make_unique<dx::Buffer>(m_device.Get(), m_commandList.Get());
 	m_srvDescHeap = std::make_unique<dx::DescriptorHeap>(m_device.Get(), m_commandList.Get());
 	m_rootSignature = std::make_unique<dx::RootSignature>(m_device.Get(), m_commandList.Get());
@@ -53,15 +53,16 @@ bool D3D::Initialize(HWND hwnd)
 	rootParams.AppendRootParameterDescTable(srvRootDesc.GetRootDescTable(), D3D12_SHADER_VISIBILITY_PIXEL);
 
 	//Create a standard root signature
-	m_rootSignature->CreateRootSignature(rootParams.GetRootParameters().size(), 1, &rootParams.GetRootParameters()[0], &GetStandardSamplerState(),
+	m_rootSignature->CreateRootSignature(rootParams.GetRootParameters().size(), 1, &rootParams.GetRootParameters()[0], &dx::GetStandardSamplerState(),
 										 D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
 										 D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS |
 										 D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |
 										 D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS);
-	//For constant buffer
+	
+	//For constant buffer (place this in the model class?)
 	m_buffer->CreateConstantBufferForRoot(&cbPerObject, sizeof(cbPerObject), m_constantUploadHeap->GetAddressOf(), &cbvGPUAddress[0]);
 	
-	//Create the descriptor heap that will store our srv
+	//Create the descriptor heap that will store our SRVs
 	m_srvDescHeap->CreateDescriptorHeap(2, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
 	//Two SRVs

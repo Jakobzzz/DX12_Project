@@ -25,9 +25,6 @@ bool Core::Initialize(HINSTANCE hInstance)
 	m_colorShader->Initialize(m_direct3D->GetDevice(), m_direct3D->GetRootSignature(), 
 							  "src/res/shaders/VertexShader.hlsl", "src/res/shaders/FragmentShader.hlsl");
 
-	m_model->CreateVertexBuffer();
-	m_model->CreateIndexBuffer();
-
 	m_direct3D->ExecuteCommandList();
 	m_direct3D->WaitForPreviousFrame();
 

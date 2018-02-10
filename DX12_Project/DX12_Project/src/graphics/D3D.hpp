@@ -57,7 +57,7 @@ private:
 
 private:
 	//For SRV
-	std::unique_ptr<Texture> m_texture;
+	std::unique_ptr<dx::Texture> m_texture;
 	std::unique_ptr<dx::DescriptorHeap> m_srvDescHeap;
 	std::unique_ptr<dx::RootSignature> m_rootSignature;
 
