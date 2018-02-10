@@ -29,14 +29,12 @@ namespace dx
 
 	D3D12_CPU_DESCRIPTOR_HANDLE DescriptorHeap::GetCPUIncrementHandle(const INT & resourceIndex)
 	{
-		CD3DX12_CPU_DESCRIPTOR_HANDLE handle = { m_descHeap->GetCPUDescriptorHandleForHeapStart(), resourceIndex, m_handleIncrementSize };
-		return handle;
+		return CD3DX12_CPU_DESCRIPTOR_HANDLE(m_descHeap->GetCPUDescriptorHandleForHeapStart(), resourceIndex, m_handleIncrementSize);
 	}
 
 	D3D12_GPU_DESCRIPTOR_HANDLE DescriptorHeap::GetGPUIncrementHandle(const INT & resourceIndex)
 	{
-		CD3DX12_GPU_DESCRIPTOR_HANDLE handle = { m_descHeap->GetGPUDescriptorHandleForHeapStart(), resourceIndex, m_handleIncrementSize };
-		return handle;
+		return CD3DX12_GPU_DESCRIPTOR_HANDLE(m_descHeap->GetGPUDescriptorHandleForHeapStart(), resourceIndex, m_handleIncrementSize);
 	}
 
 	ID3D12DescriptorHeap * DescriptorHeap::GetDescriptorHeap() const

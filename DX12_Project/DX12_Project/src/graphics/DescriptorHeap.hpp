@@ -10,8 +10,6 @@ namespace dx
 	{
 	public:
 		DescriptorHeap(ID3D12Device* device, ID3D12GraphicsCommandList* commandList);
-
-	public:
 		void CreateDescriptorHeap(const UINT & numDesc, D3D12_DESCRIPTOR_HEAP_FLAGS heapFlags, D3D12_DESCRIPTOR_HEAP_TYPE type);
 
 	public:
