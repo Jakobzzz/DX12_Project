@@ -10,6 +10,7 @@
 #include <memory>
 #include <graphics/Buffer.hpp>
 #include <graphics/DescriptorHeap.hpp>
+#include <graphics/RootSignature.hpp>
 
 using namespace DirectX;
 
@@ -30,6 +31,11 @@ public:
 	ID3D12RootSignature* GetRootSignature() const;
 
 private:
+	void LoadTextures();
+	void LoadObjects();
+
+private:
+	//DX12 initalizers
 	bool FindAndCreateDevice();
 	void CreateRenderTargetsAndFences();
 	void CreateCommandsAndSwapChain(HWND hwnd);
@@ -53,7 +59,7 @@ private:
 	//For SRV
 	std::unique_ptr<Texture> m_texture;
 	std::unique_ptr<dx::DescriptorHeap> m_srvDescHeap;
-	ComPtr<ID3D12RootSignature> m_rootSignature; 
+	std::unique_ptr<dx::RootSignature> m_rootSignature;
 
 private:
 	//For constant buffer
@@ -68,7 +74,7 @@ private:
 	ComPtr<ID3D12Resource> m_backBufferRenderTarget[2];
 
 private:
-	unsigned int m_frameIndex;
+	UINT m_frameIndex;
 	HANDLE m_fenceEvent;
 	UINT64 m_fenceValue;
 	D3D12_VIEWPORT m_viewport;

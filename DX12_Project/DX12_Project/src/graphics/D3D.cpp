@@ -15,23 +15,36 @@ void D3D::ShutDown()
 	m_device.Get()->Release();
 }
 
+void D3D::LoadTextures()
+{
+	m_texture->LoadTexture(Textures::ID::Fatboy, "src/res/textures/fatboy.png");
+	m_texture->LoadTexture(Textures::ID::Smiley, "src/res/textures/smiley.png");
+}
+
+void D3D::LoadObjects()
+{
+	m_texture = std::make_unique<Texture>(m_device.Get(), m_commandList.Get());
+	m_buffer = std::make_unique<dx::Buffer>(m_device.Get(), m_commandList.Get());
+	m_srvDescHeap = std::make_unique<dx::DescriptorHeap>(m_device.Get(), m_commandList.Get());
+	m_rootSignature = std::make_unique<dx::RootSignature>(m_device.Get(), m_commandList.Get());
+}
+
 bool D3D::Initialize(HWND hwnd)
 {
+	//Initialize DirectX12 functionality
 	FindAndCreateDevice();
 	CreateCommandsAndSwapChain(hwnd);
 	CreateRenderTargetsAndFences();
 	CreateViewportAndScissorRect();
 
-	m_texture = std::make_unique<Texture>(m_device.Get(), m_commandList.Get());
-	m_buffer = std::make_unique<dx::Buffer>(m_device.Get(), m_commandList.Get());
-	m_srvDescHeap = std::make_unique<dx::DescriptorHeap>(m_device.Get(), m_commandList.Get());
+	//Prepare scene
+	LoadObjects();
+	LoadTextures();
 
-	//Fill in the desc range
+	//Fill in the desc range and create root table for the description
 	dx::RootDescriptor srvRootDesc;
 	srvRootDesc.AppendDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
 	srvRootDesc.AppendDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 1);
-
-	//Now create root table for the range
 	srvRootDesc.CreateRootDescTable();
 
 	//Fill in root parameters
@@ -39,31 +52,15 @@ bool D3D::Initialize(HWND hwnd)
 	rootParams.AppendRootParameterCBV(0, D3D12_SHADER_VISIBILITY_PIXEL);
 	rootParams.AppendRootParameterDescTable(srvRootDesc.GetRootDescTable(), D3D12_SHADER_VISIBILITY_PIXEL);
 
-	//Create the root signature
-	CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc = {};
-	rootSignatureDesc.Init(rootParams.GetRootParameters().size(),
-		&rootParams.GetRootParameters()[0],
-		1, //Static samplers
-		&GetStandardSamplerState(), //Sampler states
-		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT | //Deny shader stages
-		D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS |
-		D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |
-		D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS);
-
-	ID3DBlob* errorBuff; ID3DBlob* signature;
-	assert(!D3D12SerializeRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, &errorBuff));
-	assert(!m_device->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(m_rootSignature.GetAddressOf())));
-
-	SAFE_RELEASE(&errorBuff);
-	SAFE_RELEASE(&signature);
-
+	//Create a standard root signature
+	m_rootSignature->CreateRootSignature(rootParams.GetRootParameters().size(), 1, &rootParams.GetRootParameters()[0], &GetStandardSamplerState(),
+										 D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
+										 D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS |
+										 D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |
+										 D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS);
 	//For constant buffer
 	m_buffer->CreateConstantBufferForRoot(&cbPerObject, sizeof(cbPerObject), m_constantUploadHeap->GetAddressOf(), &cbvGPUAddress[0]);
 	
-	//Load the image from file
-	m_texture->LoadTexture(Textures::ID::Fatboy, "src/res/textures/fatboy.png");
-	m_texture->LoadTexture(Textures::ID::Smiley, "src/res/textures/smiley.png");
-
 	//Create the descriptor heap that will store our srv
 	m_srvDescHeap->CreateDescriptorHeap(2, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
@@ -87,20 +84,17 @@ void D3D::BeginScene(ID3D12PipelineState* pipelinestate)
 	assert(!m_commandList->Reset(m_commandAllocator.Get(), pipelinestate));
 
 	//Set required states
-	m_commandList->SetGraphicsRootSignature(m_rootSignature.Get());
+	m_rootSignature->SetRootSignature();
 	m_commandList->RSSetViewports(1, &m_viewport);
 	m_commandList->RSSetScissorRects(1, &m_rect);
 
 	//Indicate that the backbuffer will be used as a render target
-	D3D12_RESOURCE_BARRIER barrier = {};
-	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-	barrier.Transition.pResource = m_backBufferRenderTarget[m_frameIndex].Get();
-	barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
-	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+	CD3DX12_RESOURCE_BARRIER barrier = {};
+	barrier = barrier.Transition(m_backBufferRenderTarget[m_frameIndex].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
 	m_commandList->ResourceBarrier(1, &barrier);
 
 	//Get the render target view handle for the current back buffer.
-	D3D12_CPU_DESCRIPTOR_HANDLE renderTargetViewHandle;
+	D3D12_CPU_DESCRIPTOR_HANDLE renderTargetViewHandle = { 0 };
 	renderTargetViewHandle = m_renderTargetViewDescHeap->GetCPUDescriptorHandleForHeapStart();
 	renderTargetViewHandle.ptr += m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV) * m_frameIndex;
 
@@ -108,7 +102,7 @@ void D3D::BeginScene(ID3D12PipelineState* pipelinestate)
 	m_commandList->OMSetRenderTargets(1, &renderTargetViewHandle, 0, nullptr);
 	m_commandList->ClearRenderTargetView(renderTargetViewHandle, color, 0, nullptr);
 
-	//Set the descriptor heap
+	//Set resources
 	m_srvDescHeap->SetRootDescriptorTable(1);
 	m_buffer->BindConstantBufferForRoot(0, m_frameIndex, m_constantUploadHeap->GetAddressOf());
 }
@@ -116,11 +110,8 @@ void D3D::BeginScene(ID3D12PipelineState* pipelinestate)
 void D3D::EndScene()
 {
 	//Indicate that the backbuffer will now be used to present
-	D3D12_RESOURCE_BARRIER barrier = {};
-	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-	barrier.Transition.pResource = m_backBufferRenderTarget[m_frameIndex].Get();
-	barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
-	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
+	CD3DX12_RESOURCE_BARRIER barrier = {};
+	barrier = barrier.Transition(m_backBufferRenderTarget[m_frameIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
 	m_commandList->ResourceBarrier(1, &barrier);
 
 	ExecuteCommandList();
@@ -306,5 +297,5 @@ ID3D12GraphicsCommandList* D3D::GetCommandList() const
 
 ID3D12RootSignature * D3D::GetRootSignature() const
 {
-	return m_rootSignature.Get();
+	return m_rootSignature->GetRootSignature();
 }

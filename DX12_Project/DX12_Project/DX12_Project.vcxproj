@@ -129,6 +129,7 @@
     <ClCompile Include="src\graphics\D3D.cpp" />
     <ClCompile Include="src\graphics\DescriptorHeap.cpp" />
     <ClCompile Include="src\graphics\Model.cpp" />
+    <ClCompile Include="src\graphics\RootSignature.cpp" />
     <ClCompile Include="src\graphics\Shader.cpp" />
     <ClCompile Include="src\graphics\Texture.cpp" />
     <ClCompile Include="src\main.cpp" />
@@ -141,6 +142,7 @@
     <ClInclude Include="src\graphics\RootDescriptor.hpp" />
     <ClInclude Include="src\graphics\Model.hpp" />
     <ClInclude Include="src\graphics\RootParameter.hpp" />
+    <ClInclude Include="src\graphics\RootSignature.hpp" />
     <ClInclude Include="src\graphics\SamplerStates.hpp" />
     <ClInclude Include="src\graphics\Shader.hpp" />
     <ClInclude Include="src\graphics\Texture.hpp" />

@@ -44,6 +44,9 @@
     <ClCompile Include="src\graphics\DescriptorHeap.cpp">
       <Filter>graphics\descriptors</Filter>
     </ClCompile>
+    <ClCompile Include="src\graphics\RootSignature.cpp">
+      <Filter>graphics\descriptors</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\graphics\Core.hpp">
@@ -80,6 +83,9 @@
       <Filter>graphics\descriptors</Filter>
     </ClInclude>
     <ClInclude Include="src\graphics\DescriptorHeap.hpp">
+      <Filter>graphics\descriptors</Filter>
+    </ClInclude>
+    <ClInclude Include="src\graphics\RootSignature.hpp">
       <Filter>graphics\descriptors</Filter>
     </ClInclude>
   </ItemGroup>
