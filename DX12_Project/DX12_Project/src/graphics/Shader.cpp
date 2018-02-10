@@ -1,74 +1,87 @@
 #include <graphics/Shader.hpp>
 #include <utils/Utility.hpp>
 #include <assert.h>
+#include <d3dcompiler.h>
 
-//TODO: rework this class for different type of shaders
-void Shader::Initialize(ID3D12Device* device, ID3D12RootSignature* signature, const std::string & vertexPath, const std::string & fragPath)
+namespace dx
 {
-	//Create shaders
-	InitShaders(device, signature, vertexPath, fragPath);
-}
-
-void Shader::Render(ID3D12GraphicsCommandList* commandList)
-{
-	//Set topology
-	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-}
-
-void Shader::InitShaders(ID3D12Device* device, ID3D12RootSignature* signature, const std::string & vertexPath, const std::string & fragPath)
-{
-	D3D12_SHADER_BYTECODE vertexShaderByteCode = {};
-	D3D12_SHADER_BYTECODE pixelShaderByteCode = {};
-	D3D12_GRAPHICS_PIPELINE_STATE_DESC pipelineStateDesc = {};
-	ID3DBlob* vertexBlob;
-	ID3DBlob* pixelBlob;
-
-	//Create vertex and pixel shaders
-	assert(!D3DCompileFromFile(ToWChar(vertexPath).c_str(), nullptr, nullptr, "main", "vs_5_0", D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION, 0, &vertexBlob, nullptr));
-	vertexShaderByteCode.BytecodeLength = vertexBlob->GetBufferSize();
-	vertexShaderByteCode.pShaderBytecode = vertexBlob->GetBufferPointer();
-
-	//Compile pixel shader
-	assert(!D3DCompileFromFile(ToWChar(fragPath).c_str(), nullptr, nullptr, "main", "ps_5_0", D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION, 0, &pixelBlob, nullptr));
-	pixelShaderByteCode.BytecodeLength = pixelBlob->GetBufferSize();
-	pixelShaderByteCode.pShaderBytecode = pixelBlob->GetBufferPointer();
-
-	//Create input layout for vertex shader
-	D3D12_INPUT_ELEMENT_DESC inputElementDesc[] =
+	Shader::Shader(ID3D12Device * device, ID3D12GraphicsCommandList * commandList) : m_device(device), m_commandList(commandList)
 	{
-		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
-	};
+	}
 
-	D3D12_INPUT_LAYOUT_DESC inputLayoutDesc = {};
-	inputLayoutDesc.NumElements = ARRAYSIZE(inputElementDesc);
-	inputLayoutDesc.pInputElementDescs = inputElementDesc;
+	//Only vertex and pixel shader here for now...
+	void Shader::LoadShaders(const Shaders::ID & id, const std::string & vertexPath, const std::string & pixelPath)
+	{
+		ShaderData data;
+		CreateShaders(vertexPath, pixelPath, &data.byteCode[0], data.blobs->GetAddressOf());
 
-	//Fill in the pipeline state object desc
-	pipelineStateDesc.InputLayout = inputLayoutDesc;
-	pipelineStateDesc.pRootSignature = signature;
-	pipelineStateDesc.VS = vertexShaderByteCode;
-	pipelineStateDesc.PS = pixelShaderByteCode;
-	pipelineStateDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-	pipelineStateDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
-	pipelineStateDesc.DepthStencilState.DepthEnable = FALSE;
-	pipelineStateDesc.DepthStencilState.StencilEnable = FALSE;
-	pipelineStateDesc.SampleDesc.Count = 1;
-	pipelineStateDesc.SampleDesc.Quality = 0;
-	pipelineStateDesc.SampleMask = 0xffffffff;
-	pipelineStateDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
-	pipelineStateDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
-	pipelineStateDesc.NumRenderTargets = 1;
+		auto inserted = m_standardShaders.insert(std::make_pair(id, std::move(data)));
+		assert(inserted.second);
+	}
 
-	//Create a pipeline state object from the description
-	assert(!device->CreateGraphicsPipelineState(&pipelineStateDesc, IID_PPV_ARGS(m_pipelineState.GetAddressOf())));
+	void Shader::CreateShaders(const std::string & vertexPath, const std::string & pixelPath, D3D12_SHADER_BYTECODE * byteCode, ID3DBlob ** blobs)
+	{
+		//Compile vertex shader
+		assert(!D3DCompileFromFile(ToWChar(vertexPath).c_str(), nullptr, nullptr, "main", "vs_5_0", D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION, 0, &blobs[0], nullptr));
+		byteCode[0].BytecodeLength = blobs[0]->GetBufferSize();
+		byteCode[0].pShaderBytecode = blobs[0]->GetBufferPointer();
 
-	//Release the blobs
-	SAFE_RELEASE(&vertexBlob);
-	SAFE_RELEASE(&pixelBlob);
-}
+		//Compile pixel shader
+		assert(!D3DCompileFromFile(ToWChar(pixelPath).c_str(), nullptr, nullptr, "main", "ps_5_0", D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION, 0, &blobs[1], nullptr));
+		byteCode[1].BytecodeLength = blobs[1]->GetBufferSize();
+		byteCode[1].pShaderBytecode = blobs[1]->GetBufferPointer();
+	}
 
-ID3D12PipelineState* Shader::GetPipelineState() const
-{
-	return m_pipelineState.Get();
+	//Standard parameters for now
+	void Shader::CreateInputLayoutAndPipelineState(const Shaders::ID & id, const UINT & samplers, ID3D12RootSignature * signature)
+	{
+		auto found = m_standardShaders.find(id);
+
+		//Just hardcoded input layout for now
+		D3D12_INPUT_ELEMENT_DESC inputElementDesc[] =
+		{
+			{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+			{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
+		};
+
+		D3D12_INPUT_LAYOUT_DESC inputLayoutDesc = {};
+		inputLayoutDesc.NumElements = ARRAYSIZE(inputElementDesc);
+		inputLayoutDesc.pInputElementDescs = inputElementDesc;
+
+		//Fill in the pipeline description
+		D3D12_GRAPHICS_PIPELINE_STATE_DESC pipelineStateDesc = {};
+		pipelineStateDesc.InputLayout = inputLayoutDesc;
+		pipelineStateDesc.pRootSignature = signature;
+		pipelineStateDesc.VS = found->second.byteCode[0];
+		pipelineStateDesc.PS = found->second.byteCode[1];
+		pipelineStateDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+		pipelineStateDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+		pipelineStateDesc.DepthStencilState.DepthEnable = FALSE;
+		pipelineStateDesc.DepthStencilState.StencilEnable = FALSE;
+		pipelineStateDesc.SampleDesc.Count = samplers;
+		pipelineStateDesc.SampleDesc.Quality = 0;
+		pipelineStateDesc.SampleMask = 0xffffffff;
+		pipelineStateDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+		pipelineStateDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+		pipelineStateDesc.NumRenderTargets = 1;
+
+		//Create a pipeline state object from the description
+		assert(!m_device->CreateGraphicsPipelineState(&pipelineStateDesc, IID_PPV_ARGS(found->second.pipelineState.GetAddressOf())));
+
+		//Release the blobs
+		found->second.blobs[0].Reset();
+		found->second.blobs[1].Reset();
+	}
+
+	void Shader::SetTopology(D3D12_PRIMITIVE_TOPOLOGY topology)
+	{
+		m_commandList->IASetPrimitiveTopology(topology);
+	}
+
+	Shader::ShaderData Shader::GetShaders(const Shaders::ID & id) const
+	{
+		auto found = m_standardShaders.find(id);
+		assert(found != m_standardShaders.end());
+		return found->second;
+	}
 }

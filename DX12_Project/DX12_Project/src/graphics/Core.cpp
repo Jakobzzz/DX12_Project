@@ -1,7 +1,7 @@
 #include <graphics/Core.hpp>
 #include <utils/Window.hpp>
 
-Core::Core() : m_direct3D(nullptr), m_colorShader(nullptr), m_model(nullptr)
+Core::Core() : m_direct3D(nullptr), m_model(nullptr)
 {
 }
 
@@ -12,7 +12,6 @@ bool Core::Initialize(HINSTANCE hInstance)
 
 	//Create objects
 	m_direct3D = std::make_unique<D3D>();
-	m_colorShader = std::make_unique<Shader>();
 
 	//Init classes
 	if (!m_direct3D->Initialize(m_hwnd))
@@ -22,8 +21,6 @@ bool Core::Initialize(HINSTANCE hInstance)
 	}
 
 	m_model = std::make_unique<Model>(m_direct3D->GetDevice(), m_direct3D->GetCommandList());
-	m_colorShader->Initialize(m_direct3D->GetDevice(), m_direct3D->GetRootSignature(), 
-							  "src/res/shaders/VertexShader.hlsl", "src/res/shaders/FragmentShader.hlsl");
 
 	m_direct3D->ExecuteCommandList();
 	m_direct3D->WaitForPreviousFrame();
@@ -59,9 +56,8 @@ void Core::Run()
 
 void Core::Update()
 {
-	m_direct3D->BeginScene(m_colorShader->GetPipelineState());
+	m_direct3D->BeginScene();
 
-	m_colorShader->Render(m_direct3D->GetCommandList());
 	m_model->Render(m_direct3D->GetCommandList());
 
 	m_direct3D->EndScene();

@@ -15,6 +15,11 @@ void D3D::ShutDown()
 	m_device.Get()->Release();
 }
 
+void D3D::LoadShaders()
+{
+	m_shaders->LoadShaders(Shaders::ID::Triangle, "src/res/shaders/VertexShader.hlsl", "src/res/shaders/FragmentShader.hlsl");
+}
+
 void D3D::LoadTextures()
 {
 	m_texture->LoadTexture(Textures::ID::Fatboy, "src/res/textures/fatboy.png");
@@ -23,6 +28,7 @@ void D3D::LoadTextures()
 
 void D3D::LoadObjects()
 {
+	m_shaders = std::make_unique<dx::Shader>(m_device.Get(), m_commandList.Get());
 	m_texture = std::make_unique<dx::Texture>(m_device.Get(), m_commandList.Get());
 	m_buffer = std::make_unique<dx::Buffer>(m_device.Get(), m_commandList.Get());
 	m_srvDescHeap = std::make_unique<dx::DescriptorHeap>(m_device.Get(), m_commandList.Get());
@@ -39,6 +45,7 @@ bool D3D::Initialize(HWND hwnd)
 
 	//Prepare scene
 	LoadObjects();
+	LoadShaders();
 	LoadTextures();
 
 	//Fill in the desc range and create root table for the description
@@ -58,6 +65,10 @@ bool D3D::Initialize(HWND hwnd)
 										 D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS |
 										 D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |
 										 D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS);
+
+
+	//Fill in input layout and pipeline states for shaders
+	m_shaders->CreateInputLayoutAndPipelineState(Shaders::ID::Triangle, 1, m_rootSignature->GetRootSignature());
 	
 	//For constant buffer (place this in the model class?)
 	m_buffer->CreateConstantBufferForRoot(&cbPerObject, sizeof(cbPerObject), m_constantUploadHeap->GetAddressOf(), &cbvGPUAddress[0]);
@@ -72,7 +83,7 @@ bool D3D::Initialize(HWND hwnd)
 	return true;
 }
 
-void D3D::BeginScene(ID3D12PipelineState* pipelinestate)
+void D3D::BeginScene()
 {
 	float color[] = { 0.5f, 0.5f, 0.5f, 1.f };
 
@@ -82,7 +93,7 @@ void D3D::BeginScene(ID3D12PipelineState* pipelinestate)
 
 	//Reset resources
 	assert(!m_commandAllocator->Reset());
-	assert(!m_commandList->Reset(m_commandAllocator.Get(), pipelinestate));
+	assert(!m_commandList->Reset(m_commandAllocator.Get(), m_shaders->GetShaders(Shaders::ID::Triangle).pipelineState.Get()));
 
 	//Set required states
 	m_rootSignature->SetRootSignature();
@@ -106,6 +117,7 @@ void D3D::BeginScene(ID3D12PipelineState* pipelinestate)
 	//Set resources
 	m_srvDescHeap->SetRootDescriptorTable(1);
 	m_buffer->BindConstantBufferForRoot(0, m_frameIndex, m_constantUploadHeap->GetAddressOf());
+	m_shaders->SetTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 }
 
 void D3D::EndScene()
@@ -294,9 +306,4 @@ ID3D12CommandQueue * D3D::GetCommandQueue() const
 ID3D12GraphicsCommandList* D3D::GetCommandList() const
 {
 	return m_commandList.Get();
-}
-
-ID3D12RootSignature * D3D::GetRootSignature() const
-{
-	return m_rootSignature->GetRootSignature();
 }

@@ -1,24 +1,49 @@
 #pragma once
-#include <d3d12.h>
 #include <d3dx12.h>
-#include <d3dcompiler.h>
-#include <fstream>
 #include <wrl.h>
+#include <string>
+#include <map>
+
+namespace Shaders
+{
+	enum class ID
+	{
+		Triangle
+	};
+}
 
 using namespace Microsoft::WRL;
 
-class Shader
+namespace dx
 {
-public:
-	void Initialize(ID3D12Device* device, ID3D12RootSignature* signature, const std::string & vertexPath, const std::string & fragPath);
-	void Render(ID3D12GraphicsCommandList* commandList);
+	class Shader
+	{
+	private:
+		struct ShaderData
+		{
+			D3D12_SHADER_BYTECODE byteCode[2];
+			ComPtr<ID3DBlob> blobs[2];
+			ComPtr<ID3D12PipelineState> pipelineState;
+		};
 
-public:
-	ID3D12PipelineState* GetPipelineState() const;
+	public:
+		Shader(ID3D12Device* device, ID3D12GraphicsCommandList* commandList);
+		void LoadShaders(const Shaders::ID & id, const std::string & vertexPath, const std::string & pixelPath);
+		void CreateInputLayoutAndPipelineState(const Shaders::ID & id, const UINT & samplers, ID3D12RootSignature* signature);
 
-private:
-	void InitShaders(ID3D12Device* device, ID3D12RootSignature* signature, const std::string & vertexPath, const std::string & fragPath);
+	public:
+		void SetTopology(D3D12_PRIMITIVE_TOPOLOGY topology);
 
-private:
-	ComPtr<ID3D12PipelineState> m_pipelineState;
-};
+	public:
+		ShaderData GetShaders(const Shaders::ID & id) const;
+
+	private:
+		void CreateShaders(const std::string & vertexPath, const std::string & pixelPath, D3D12_SHADER_BYTECODE* byteCode, ID3DBlob** blobs);
+
+	private:
+		ID3D12Device * m_device;
+		ID3D12GraphicsCommandList* m_commandList;
+		std::map<Shaders::ID, ShaderData> m_standardShaders;
+	};
+}
+

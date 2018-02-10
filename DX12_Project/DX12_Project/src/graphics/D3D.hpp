@@ -11,6 +11,7 @@
 #include <graphics/Buffer.hpp>
 #include <graphics/DescriptorHeap.hpp>
 #include <graphics/RootSignature.hpp>
+#include <graphics/Shader.hpp>
 
 using namespace DirectX;
 
@@ -18,8 +19,8 @@ class D3D
 {
 public:
 	void ShutDown();
-	bool Initialize(HWND);
-	void BeginScene(ID3D12PipelineState*);
+	bool Initialize(HWND hwnd);
+	void BeginScene();
 	void EndScene();
 	void ExecuteCommandList();
 	void WaitForPreviousFrame();
@@ -28,9 +29,9 @@ public:
 	ID3D12Device* GetDevice() const;
 	ID3D12CommandQueue* GetCommandQueue() const;
 	ID3D12GraphicsCommandList* GetCommandList() const;
-	ID3D12RootSignature* GetRootSignature() const;
 
 private:
+	void LoadShaders();
 	void LoadTextures();
 	void LoadObjects();
 
@@ -56,17 +57,18 @@ private:
 	ComPtr<IDXGIFactory5> m_factory;
 
 private:
-	//For SRV
+	//Objects
 	std::unique_ptr<dx::Texture> m_texture;
 	std::unique_ptr<dx::DescriptorHeap> m_srvDescHeap;
 	std::unique_ptr<dx::RootSignature> m_rootSignature;
+	std::unique_ptr<dx::Shader> m_shaders;
+	std::unique_ptr<dx::Buffer> m_buffer;
 
 private:
 	//For constant buffer
 	ComPtr<ID3D12Resource> m_constantUploadHeap[2];
 	UINT8* cbvGPUAddress[2];
 	ConstantBufferPerObject cbPerObject;
-	std::unique_ptr<dx::Buffer> m_buffer;
 
 private:
 	ComPtr<ID3D12Fence> m_fence;
