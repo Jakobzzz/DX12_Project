@@ -5,33 +5,36 @@
 
 using namespace DirectX;
 
-class Model
+namespace dx
 {
-public:
-	Model(ID3D12Device* device, ID3D12GraphicsCommandList* commandList);
-
-public:
-	void Render(ID3D12GraphicsCommandList* commandList);
-
-public:
-	struct Vertex
+	class Model
 	{
-		XMFLOAT3 position;
-		XMFLOAT2 uv;
+	public:
+		Model(ID3D12Device* device, ID3D12GraphicsCommandList* commandList, Buffer* buffer);
+
+	public:
+		void Draw();
+
+	public:
+		struct Vertex
+		{
+			XMFLOAT3 position;
+			XMFLOAT2 uv;
+		};
+
+	private:
+		ComPtr<ID3D12Resource> m_vertexBuffer;
+		ComPtr<ID3D12Resource> m_indexBuffer;
+		ComPtr<ID3D12Resource> m_vertexBufferUploadHeap;
+		ComPtr<ID3D12Resource> m_indexBufferUploadHeap;
+
+	private:
+		D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView;
+		D3D12_INDEX_BUFFER_VIEW m_indexBufferView;
+
+	private:
+		Buffer * m_buffer;
+		ID3D12Device * m_device;
+		ID3D12GraphicsCommandList* m_commandList;
 	};
-
-private:
-	ComPtr<ID3D12Resource> m_vertexBuffer;
-	ComPtr<ID3D12Resource> m_indexBuffer;
-	ComPtr<ID3D12Resource> m_vertexBufferUploadHeap;
-	ComPtr<ID3D12Resource> m_indexBufferUploadHeap;
-
-private:
-	std::unique_ptr<dx::Buffer> m_buffer;
-	D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView;
-	D3D12_INDEX_BUFFER_VIEW m_indexBufferView;
-
-private:
-	ID3D12Device * m_device;
-	ID3D12GraphicsCommandList* m_commandList;
-};
+}
