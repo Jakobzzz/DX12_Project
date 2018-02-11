@@ -27,13 +27,13 @@ namespace dx
 		m_buffer->CreateConstantBufferForRoot(&m_cb, sizeof(m_cb), m_constantUploadHeap->GetAddressOf(), &cbvGPUAddress[0]);
 	}
 
-	void Model::BindBuffers(const UINT & frameIndex)
+	void Model::BindBuffers(const UINT & rootIndex, const UINT & frameIndex)
 	{
 		m_cb.color = { 0.5f, 0.f, 0.f, 1.f };
 		m_buffer->SetConstantBufferData(&m_cb, sizeof(m_cb), frameIndex, &cbvGPUAddress[0]);
 		m_buffer->BindVertexBuffer(0, m_vertexBufferView);
 		m_buffer->BindIndexBuffer(m_indexBufferView);
-		m_buffer->BindConstantBufferForRoot(0, frameIndex, m_constantUploadHeap->GetAddressOf());
+		m_buffer->BindConstantBufferForRoot(rootIndex, frameIndex, m_constantUploadHeap->GetAddressOf());
 	}
 
 	void Model::Draw()

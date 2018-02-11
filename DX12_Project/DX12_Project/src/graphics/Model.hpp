@@ -13,7 +13,7 @@ namespace dx
 		Model(ID3D12Device* device, ID3D12GraphicsCommandList* commandList, Buffer* buffer);
 
 	public:
-		void BindBuffers(const UINT & frameIndex);
+		void BindBuffers(const UINT & rootIndex, const UINT & frameIndex);
 		void Draw();
 
 	public:

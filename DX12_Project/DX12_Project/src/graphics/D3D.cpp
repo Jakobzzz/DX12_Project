@@ -83,7 +83,7 @@ namespace dx
 		//Set resources and draw model
 		m_shaders->SetTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		m_srvDescHeap->SetRootDescriptorTable(1);
-		m_model->BindBuffers(m_frameIndex);
+		m_model->BindBuffers(0, m_frameIndex);
 		m_model->Draw();
 
 		EndScene();

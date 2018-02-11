@@ -8,7 +8,7 @@ namespace dx
 		//Create window
 		m_hwnd = Window::InitWindow(hInstance);
 
-		//Init the direct3D class
+		//Init the Direct3D class
 		m_direct3D = std::make_unique<D3D>();
 		m_direct3D->Initialize(m_hwnd);
 	}
