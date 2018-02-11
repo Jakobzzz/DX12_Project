@@ -21,12 +21,12 @@ namespace dx
 
 	void D3D::LoadObjects()
 	{
-		m_shaders = std::make_unique<dx::Shader>(m_device.Get(), m_commandList.Get());
-		m_texture = std::make_unique<dx::Texture>(m_device.Get(), m_commandList.Get());
-		m_buffer = std::make_unique<dx::Buffer>(m_device.Get(), m_commandList.Get());
-		m_srvDescHeap = std::make_unique<dx::DescriptorHeap>(m_device.Get(), m_commandList.Get());
-		m_rootSignature = std::make_unique<dx::RootSignature>(m_device.Get(), m_commandList.Get());
-		m_model = std::make_unique<dx::Model>(m_device.Get(), m_commandList.Get(), m_buffer.get());
+		m_shaders = std::make_unique<Shader>(m_device.Get(), m_commandList.Get());
+		m_texture = std::make_unique<Texture>(m_device.Get(), m_commandList.Get());
+		m_buffer = std::make_unique<Buffer>(m_device.Get(), m_commandList.Get());
+		m_srvDescHeap = std::make_unique<DescriptorHeap>(m_device.Get(), m_commandList.Get());
+		m_rootSignature = std::make_unique<RootSignature>(m_device.Get(), m_commandList.Get());
+		m_model = std::make_unique<Model>(m_device.Get(), m_commandList.Get(), m_buffer.get());
 	}
 
 	void D3D::Initialize(HWND hwnd)
@@ -43,18 +43,18 @@ namespace dx
 		LoadTextures();
 
 		//Fill in the desc range and create root table for the description
-		dx::RootDescriptor srvRootDesc;
+		RootDescriptor srvRootDesc;
 		srvRootDesc.AppendDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
 		srvRootDesc.AppendDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 1);
 		srvRootDesc.CreateRootDescTable();
 
 		//Fill in root parameters
-		dx::RootParameter rootParams;
+		RootParameter rootParams;
 		rootParams.AppendRootParameterCBV(0, D3D12_SHADER_VISIBILITY_PIXEL);
 		rootParams.AppendRootParameterDescTable(srvRootDesc.GetRootDescTable(), D3D12_SHADER_VISIBILITY_PIXEL);
 
 		//Create a standard root signature
-		m_rootSignature->CreateRootSignature(rootParams.GetRootParameters().size(), 1, &rootParams.GetRootParameters()[0], &dx::GetStandardSamplerState(),
+		m_rootSignature->CreateRootSignature(rootParams.GetRootParameters().size(), 1, &rootParams.GetRootParameters()[0], &GetStandardSamplerState(),
 			D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
 			D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS |
 			D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |
@@ -63,9 +63,6 @@ namespace dx
 
 		//Fill in input layout and pipeline states for shaders
 		m_shaders->CreateInputLayoutAndPipelineState(Shaders::ID::Triangle, 1, m_rootSignature->GetRootSignature());
-
-		//For constant buffer (place this in the model class?)
-		m_buffer->CreateConstantBufferForRoot(&cbPerObject, sizeof(cbPerObject), m_constantUploadHeap->GetAddressOf(), &cbvGPUAddress[0]);
 
 		//Create the descriptor heap that will store our SRVs
 		m_srvDescHeap->CreateDescriptorHeap(2, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
@@ -83,16 +80,10 @@ namespace dx
 	{
 		BeginScene(Colors::DarkGray);
 
-		//Set resources
+		//Set resources and draw model
 		m_shaders->SetTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		cbPerObject.color = { 0.5f, 0.f, 0.f, 1.f };
-		m_buffer->SetConstantBufferData(&cbPerObject, sizeof(cbPerObject), m_frameIndex, &cbvGPUAddress[0]);
-
-		//Descriptors and buffers
 		m_srvDescHeap->SetRootDescriptorTable(1);
-		m_buffer->BindConstantBufferForRoot(0, m_frameIndex, m_constantUploadHeap->GetAddressOf());
-
-		//Finally draw the model
+		m_model->BindBuffers(m_frameIndex);
 		m_model->Draw();
 
 		EndScene();

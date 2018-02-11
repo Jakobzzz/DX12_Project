@@ -35,7 +35,7 @@ namespace dx
 		void LoadObjects();
 
 	private:
-		//DX12 initalizers
+		//DX12 functionality
 		bool FindAndCreateDevice();
 		void CreateRenderTargetsAndFences();
 		void CreateCommandsAndSwapChain(HWND hwnd);
@@ -46,25 +46,12 @@ namespace dx
 		void WaitForPreviousFrame();
 
 	private:
-		struct ConstantBufferPerObject
-		{
-			XMFLOAT4 color;
-		};
-
-	private:
-		//Objects
 		std::unique_ptr<Texture> m_texture;
 		std::unique_ptr<DescriptorHeap> m_srvDescHeap;
 		std::unique_ptr<RootSignature> m_rootSignature;
 		std::unique_ptr<Shader> m_shaders;
 		std::unique_ptr<Buffer> m_buffer;
 		std::unique_ptr<Model> m_model;
-
-	private:
-		//For constant buffer
-		ComPtr<ID3D12Resource> m_constantUploadHeap[2];
-		UINT8* cbvGPUAddress[2];
-		ConstantBufferPerObject cbPerObject;
 
 	private:
 		ComPtr<ID3D12Device> m_device;
