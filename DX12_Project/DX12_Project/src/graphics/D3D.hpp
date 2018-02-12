@@ -3,73 +3,72 @@
 #pragma comment(lib, "dxgi.lib")
 #pragma comment(lib, "d3dcompiler.lib")
 
+#include <memory>
 #include <dxgi1_5.h>
-#include <d3dcompiler.h>
 #include <DirectXMath.h>
 #include <graphics/Texture.hpp>
-#include <memory>
-#include <wrl.h>
+#include <graphics/Buffer.hpp>
+#include <graphics/DescriptorHeap.hpp>
+#include <graphics/RootSignature.hpp>
+#include <graphics/Shader.hpp>
+#include <graphics/Model.hpp>
 
 using namespace DirectX;
-using namespace Microsoft::WRL;
 
-class D3D
+namespace dx
 {
-public:
-	void ShutDown();
-	bool Initialize(HWND);
-	void BeginScene(ID3D12PipelineState*);
-	void EndScene();
-	void ExecuteCommandList();
-	void WaitForPreviousFrame();
-
-public:
-	ID3D12Device* GetDevice() const;
-	ID3D12CommandQueue* GetCommandQueue() const;
-	ID3D12GraphicsCommandList* GetCommandList() const;
-	ID3D12RootSignature* GetRootSignature() const;
-
-private:
-	bool FindAndCreateDevice();
-	void CreateRenderTargetsAndFences();
-	void CreateCommandsAndSwapChain(HWND hwnd);
-	void CreateViewportAndScissorRect();
-
-private:
-	struct ConstantBufferPerObject 
+	class D3D
 	{
-		XMFLOAT4 color;
+	public:
+		void ShutDown();
+		void Initialize(HWND hwnd);
+		void Render();
+
+	public:
+		ID3D12Device * GetDevice() const;
+		ID3D12CommandQueue* GetCommandQueue() const;
+		ID3D12GraphicsCommandList* GetCommandList() const;
+
+	private:
+		void LoadShaders();
+		void LoadTextures();
+		void LoadObjects();
+
+	private:
+		//DX12 functionality
+		bool FindAndCreateDevice();
+		void CreateRenderTargetsAndFences();
+		void CreateCommandsAndSwapChain(HWND hwnd);
+		void CreateViewportAndScissorRect();
+		void BeginScene(const FLOAT* color);
+		void EndScene();
+		void ExecuteCommandList();
+		void WaitForPreviousFrame();
+
+	private:
+		std::unique_ptr<Texture> m_texture;
+		std::unique_ptr<DescriptorHeap> m_srvDescHeap;
+		std::unique_ptr<RootSignature> m_rootSignature;
+		std::unique_ptr<Shader> m_shaders;
+		std::unique_ptr<Buffer> m_buffer;
+		std::unique_ptr<Model> m_model;
+
+	private:
+		ComPtr<ID3D12Device> m_device;
+		ComPtr<ID3D12CommandQueue> m_commandQueue;
+		ComPtr<ID3D12GraphicsCommandList> m_commandList;
+		ComPtr<ID3D12DescriptorHeap> m_renderTargetViewDescHeap;
+		ComPtr<IDXGISwapChain3> m_swapChain;
+		ComPtr<IDXGIFactory5> m_factory;
+		ComPtr<ID3D12Fence> m_fence;
+		ComPtr<ID3D12CommandAllocator> m_commandAllocator;
+		ComPtr<ID3D12Resource> m_backBufferRenderTarget[2];
+
+	private:
+		UINT m_frameIndex;
+		HANDLE m_fenceEvent;
+		UINT64 m_fenceValue;
+		D3D12_VIEWPORT m_viewport;
+		D3D12_RECT m_rect;
 	};
-
-private:
-	ComPtr<ID3D12Device> m_device;
-	ComPtr<ID3D12CommandQueue> m_commandQueue;
-	ComPtr<ID3D12GraphicsCommandList> m_commandList;
-	ComPtr<ID3D12DescriptorHeap> m_renderTargetViewDescHeap;
-	ComPtr<IDXGISwapChain3> m_swapChain;
-	ComPtr<IDXGIFactory5> m_factory;
-
-private:
-	//For SRV
-	std::unique_ptr<Texture> m_texture;
-	ComPtr<ID3D12DescriptorHeap> m_textureDescriptorHeap;
-	ComPtr<ID3D12RootSignature> m_rootSignature; 
-
-private:
-	//For constant buffer
-	ComPtr<ID3D12Resource> m_constantUploadHeap[2];
-	UINT8* cbvGPUAddress[2];
-	ConstantBufferPerObject cbPerObject;
-
-private:
-	ComPtr<ID3D12Fence> m_fence;
-	ComPtr<ID3D12CommandAllocator> m_commandAllocator;
-	ComPtr<ID3D12Resource> m_backBufferRenderTarget[2];
-
-private:
-	unsigned int m_frameIndex;
-	HANDLE m_fenceEvent;
-	UINT64 m_fenceValue;
-	D3D12_VIEWPORT m_viewport;
-	D3D12_RECT m_rect;
-};
+}

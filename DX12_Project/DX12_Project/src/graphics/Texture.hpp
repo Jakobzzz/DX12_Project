@@ -1,46 +1,53 @@
 #pragma once
-#include <d3d12.h>
+#include <d3dx12.h>
 #include <wincodec.h>
 #include <map>
+#include <wrl.h>
 
 namespace Textures
 {
 	enum class ID
 	{
-		Dark
+		Fatboy,
+		Smiley
 	};
 }
 
-class Texture
+using namespace Microsoft::WRL;
+
+namespace dx
 {
-private:
-	struct TextureData
+	class Texture
 	{
-		BYTE* imageData;
-		D3D12_RESOURCE_DESC textureDesc;
-		ID3D12Resource* textureBuffer;
-		ID3D12Resource* textureBufferUploadHeap;
-		unsigned int imageBytesPerRow;
-		unsigned int imageSize;
+	private:
+		struct TextureData
+		{
+			BYTE* imageData;
+			D3D12_RESOURCE_DESC textureDesc;
+			ComPtr<ID3D12Resource> textureBuffer;
+			ComPtr<ID3D12Resource> textureBufferUploadHeap;
+			UINT imageBytesPerRow;
+			UINT imageSize;
+		};
+
+	public:
+		Texture(ID3D12Device* device, ID3D12GraphicsCommandList* commandList);
+		void LoadTexture(const Textures::ID & id, const std::string & filename);
+		void CreateSRVFromTexture(const Textures::ID & id, D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle);
+		void Release();
+
+	public:
+		TextureData GetTexture(const Textures::ID & id) const;
+
+	private:
+		UINT LoadImageDataFromFile(BYTE** imageData, D3D12_RESOURCE_DESC & resourceDescription, LPCWSTR filename, UINT & bytesPerRow);
+		WICPixelFormatGUID GetConvertToWICFormat(WICPixelFormatGUID & wicFormatGUID);
+		DXGI_FORMAT GetDXGIFormatFromWICFormat(WICPixelFormatGUID & wicFormatGUID);
+		UINT GetDXGIFormatBitsPerPixel(DXGI_FORMAT & dxgiFormat);
+
+	private:
+		ID3D12Device * m_device;
+		ID3D12GraphicsCommandList* m_commandList;
+		std::map<Textures::ID, TextureData> m_textures;
 	};
-
-public:
-	Texture(ID3D12Device* device, ID3D12GraphicsCommandList* commandList);
-	void LoadTexture(const Textures::ID & id, const std::string & filename);
-	//void AddTextureToDescriptorHeap(const Textures::ID & id, ID3D12DescriptorHeap* heap);
-	void Release();
-
-public:
-	TextureData GetTexture(const Textures::ID & id) const;
-
-private:
-	unsigned int LoadImageDataFromFile(BYTE** imageData, D3D12_RESOURCE_DESC & resourceDescription, LPCWSTR filename, unsigned int & bytesPerRow);
-	WICPixelFormatGUID GetConvertToWICFormat(WICPixelFormatGUID & wicFormatGUID);
-	DXGI_FORMAT GetDXGIFormatFromWICFormat(WICPixelFormatGUID & wicFormatGUID);
-	unsigned int GetDXGIFormatBitsPerPixel(DXGI_FORMAT & dxgiFormat);
-
-private:
-	ID3D12Device* m_device;
-	ID3D12GraphicsCommandList* m_commandList;
-	std::map<Textures::ID, TextureData> m_textures;
-};
+}

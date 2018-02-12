@@ -14,6 +14,12 @@
     <Filter Include="shaders">
       <UniqueIdentifier>{086e9be1-c415-483d-b37f-b48ffd1d011b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="graphics\buffers">
+      <UniqueIdentifier>{de33fc83-7883-4762-ab30-8c7677da587d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="graphics\descriptors">
+      <UniqueIdentifier>{97a8a98f-6edf-44a9-a4bb-fa3a9808a5a8}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
@@ -31,6 +37,15 @@
     </ClCompile>
     <ClCompile Include="src\graphics\Texture.cpp">
       <Filter>graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="src\graphics\Buffer.cpp">
+      <Filter>graphics\buffers</Filter>
+    </ClCompile>
+    <ClCompile Include="src\graphics\DescriptorHeap.cpp">
+      <Filter>graphics\descriptors</Filter>
+    </ClCompile>
+    <ClCompile Include="src\graphics\RootSignature.cpp">
+      <Filter>graphics\descriptors</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -57,6 +72,21 @@
     </ClInclude>
     <ClInclude Include="src\utils\Window.hpp">
       <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\graphics\Buffer.hpp">
+      <Filter>graphics\buffers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\graphics\RootDescriptor.hpp">
+      <Filter>graphics\descriptors</Filter>
+    </ClInclude>
+    <ClInclude Include="src\graphics\RootParameter.hpp">
+      <Filter>graphics\descriptors</Filter>
+    </ClInclude>
+    <ClInclude Include="src\graphics\DescriptorHeap.hpp">
+      <Filter>graphics\descriptors</Filter>
+    </ClInclude>
+    <ClInclude Include="src\graphics\RootSignature.hpp">
+      <Filter>graphics\descriptors</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
