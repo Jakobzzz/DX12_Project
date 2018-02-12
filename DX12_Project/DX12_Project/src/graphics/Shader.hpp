@@ -29,7 +29,7 @@ namespace dx
 	public:
 		Shader(ID3D12Device* device, ID3D12GraphicsCommandList* commandList);
 		void LoadShaders(const Shaders::ID & id, const std::string & vertexPath, const std::string & pixelPath);
-		void CreateInputLayoutAndPipelineState(const Shaders::ID & id, const UINT & samplers, ID3D12RootSignature* signature);
+		void CreateInputLayoutAndPipelineState(const Shaders::ID & id, ID3D12RootSignature* signature);
 
 	public:
 		void SetTopology(D3D12_PRIMITIVE_TOPOLOGY topology);

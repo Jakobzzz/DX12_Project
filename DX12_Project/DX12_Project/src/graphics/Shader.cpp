@@ -33,7 +33,7 @@ namespace dx
 	}
 
 	//Standard parameters for now
-	void Shader::CreateInputLayoutAndPipelineState(const Shaders::ID & id, const UINT & samplers, ID3D12RootSignature * signature)
+	void Shader::CreateInputLayoutAndPipelineState(const Shaders::ID & id, ID3D12RootSignature * signature)
 	{
 		auto found = m_standardShaders.find(id);
 
@@ -57,7 +57,7 @@ namespace dx
 		pipelineStateDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
 		pipelineStateDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
 		pipelineStateDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
-		pipelineStateDesc.SampleDesc.Count = samplers;
+		pipelineStateDesc.SampleDesc.Count = 1;
 		pipelineStateDesc.SampleDesc.Quality = 0;
 		pipelineStateDesc.SampleMask = 0xffffffff;
 		pipelineStateDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);

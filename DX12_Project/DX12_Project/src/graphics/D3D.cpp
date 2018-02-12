@@ -22,14 +22,19 @@ namespace dx
 
 	void D3D::LoadObjects()
 	{
+		//Standard utility
 		m_shaders = std::make_unique<Shader>(m_device.Get(), m_commandList.Get());
 		m_texture = std::make_unique<Texture>(m_device.Get(), m_commandList.Get());
 		m_buffer = std::make_unique<Buffer>(m_device.Get(), m_commandList.Get());
-		m_srvDescHeap = std::make_unique<DescriptorHeap>(m_device.Get(), m_commandList.Get(), 1);
-		m_depthStencilHeap = std::make_unique<DescriptorHeap>(m_device.Get(), m_commandList.Get(), 1);
-		m_rootSignature = std::make_unique<RootSignature>(m_device.Get(), m_commandList.Get());
 		m_camera = std::make_unique<Camera>();
 		m_model = std::make_unique<Model>(m_device.Get(), m_commandList.Get(), m_buffer.get(), m_camera.get());
+
+		//Descriptor heaps
+		m_srvDescHeap = std::make_unique<DescriptorHeap>(m_device.Get(), m_commandList.Get(), 1);
+		m_depthStencilHeap = std::make_unique<DescriptorHeap>(m_device.Get(), m_commandList.Get(), 1);
+		
+		//Root signatures
+		m_rootSignature = std::make_unique<RootSignature>(m_device.Get(), m_commandList.Get());
 	}
 
 	void D3D::Initialize(HWND hwnd)
@@ -64,7 +69,7 @@ namespace dx
 			D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS);
 
 		//Fill in input layout and pipeline states for shaders
-		m_shaders->CreateInputLayoutAndPipelineState(Shaders::ID::Triangle, 1, m_rootSignature->GetRootSignature());
+		m_shaders->CreateInputLayoutAndPipelineState(Shaders::ID::Triangle, m_rootSignature->GetRootSignature());
 
 		//Create descriptor heaps and depth stencil buffer
 		m_srvDescHeap->CreateDescriptorHeap(1, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
