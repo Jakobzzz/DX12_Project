@@ -41,7 +41,7 @@ namespace dx
 		view.SizeInBytes = size;
 	}
 
-	void Buffer::CreateConstantBufferForRoot(ID3D12Resource ** buffer, UINT8 ** bufferAddress)
+	void Buffer::CreateConstantBufferForRootDescriptor(ID3D12Resource ** buffer, UINT8 ** bufferAddress)
 	{
 		for (unsigned int i = 0; i < FRAME_BUFFERS; ++i)
 		{
@@ -55,6 +55,32 @@ namespace dx
 				IID_PPV_ARGS(&buffer[i])));
 
 			buffer[i]->SetName(L"Constant Buffer Upload Resource Heap");
+
+			//Copy the data
+			CD3DX12_RANGE readRange(0, 0);
+			assert(!buffer[i]->Map(0, &readRange, reinterpret_cast<void**>(&bufferAddress[i])));
+		}
+	}
+
+	void Buffer::CreateConstantBufferForRootTable(const UINT & size, UINT8 ** bufferAddress, ID3D12Resource ** buffer, D3D12_CONSTANT_BUFFER_VIEW_DESC & view,
+											  D3D12_CPU_DESCRIPTOR_HANDLE* handlers)
+	{
+		for (unsigned int i = 0; i < FRAME_BUFFERS; ++i)
+		{
+			//Create resource
+			assert(!m_device->CreateCommittedResource(
+				&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
+				D3D12_HEAP_FLAG_NONE, // no flags
+				&CD3DX12_RESOURCE_DESC::Buffer(D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT),
+				D3D12_RESOURCE_STATE_GENERIC_READ,
+				nullptr,
+				IID_PPV_ARGS(&buffer[i])));
+
+			buffer[i]->SetName(L"Constant Buffer Upload Resource Heap");
+
+			view.BufferLocation = buffer[0]->GetGPUVirtualAddress();
+			view.SizeInBytes = (size + 255) & ~255;	//256-byte aligned CB.
+			m_device->CreateConstantBufferView(&view, handlers[i]);
 
 			//Copy the data
 			CD3DX12_RANGE readRange(0, 0);
@@ -77,7 +103,7 @@ namespace dx
 		m_commandList->IASetIndexBuffer(&view);
 	}
 
-	void Buffer::BindConstantBufferForRoot(const UINT & rootIndex, const UINT & frameIndex, ID3D12Resource** buffer)
+	void Buffer::BindConstantBufferForRootDescriptor(const UINT & rootIndex, const UINT & frameIndex, ID3D12Resource** buffer)
 	{
 		m_commandList->SetGraphicsRootConstantBufferView(rootIndex, buffer[frameIndex]->GetGPUVirtualAddress());
 	}

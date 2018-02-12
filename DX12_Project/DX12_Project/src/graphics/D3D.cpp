@@ -65,6 +65,7 @@ namespace dx
 
 		//Create the descriptor heap that will store our SRVs
 		m_srvDescHeap->CreateDescriptorHeap(2, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+		m_model->CreateConstantBuffers();
 
 		//Two SRVs
 		m_texture->CreateSRVFromTexture(Textures::ID::Fatboy, m_srvDescHeap->GetCPUIncrementHandle(0));
@@ -81,8 +82,8 @@ namespace dx
 
 		//Set resources and draw model
 		m_shaders->SetTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		m_srvDescHeap->SetRootDescriptorTable(1);
 		m_model->BindBuffers(0, m_frameIndex);
+		m_srvDescHeap->SetRootDescriptorTable(1);
 		m_model->Draw();
 
 		EndScene();

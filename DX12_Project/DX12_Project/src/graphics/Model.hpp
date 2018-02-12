@@ -13,6 +13,7 @@ namespace dx
 		Model(ID3D12Device* device, ID3D12GraphicsCommandList* commandList, Buffer* buffer);
 
 	public:
+		void CreateConstantBuffers();
 		void BindBuffers(const UINT & rootIndex, const UINT & frameIndex);
 		void Draw();
 
@@ -34,7 +35,7 @@ namespace dx
 		ComPtr<ID3D12Resource> m_vertexBufferUploadHeap;
 		ComPtr<ID3D12Resource> m_indexBufferUploadHeap;
 		ComPtr<ID3D12Resource> m_constantUploadHeap[2];
-		UINT8* cbvGPUAddress[2];
+		UINT8* m_cbvGPUAddress[2];
 		CBInfo m_cb;
 
 	private:
