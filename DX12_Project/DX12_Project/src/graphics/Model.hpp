@@ -2,8 +2,10 @@
 #include <DirectXMath.h>
 #include <memory>
 #include <graphics/Buffer.hpp>
+#include <SimpleMath.h>
 
 using namespace DirectX;
+using namespace DirectX::SimpleMath;
 
 namespace dx
 {
@@ -26,7 +28,7 @@ namespace dx
 
 		struct CBInfo
 		{
-			XMFLOAT4 color;
+			Matrix WVP;
 		};
 
 	private:
@@ -37,6 +39,12 @@ namespace dx
 		ComPtr<ID3D12Resource> m_constantUploadHeap[2];
 		UINT8* m_cbvGPUAddress[2];
 		CBInfo m_cb;
+
+	private:
+		Matrix m_WVP;
+		Matrix m_world;
+		Matrix m_view;
+		Matrix m_projection;
 
 	private:
 		D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView;

@@ -48,6 +48,7 @@ namespace dx
 	private:
 		std::unique_ptr<Texture> m_texture;
 		std::unique_ptr<DescriptorHeap> m_srvDescHeap;
+		std::unique_ptr<DescriptorHeap> m_depthStencilHeap;
 		std::unique_ptr<RootSignature> m_rootSignature;
 		std::unique_ptr<Shader> m_shaders;
 		std::unique_ptr<Buffer> m_buffer;
@@ -63,6 +64,7 @@ namespace dx
 		ComPtr<ID3D12Fence> m_fence;
 		ComPtr<ID3D12CommandAllocator> m_commandAllocator;
 		ComPtr<ID3D12Resource> m_backBufferRenderTarget[2];
+		ComPtr<ID3D12Resource> m_depthStencilBuffer;
 
 	private:
 		UINT m_frameIndex;
@@ -70,5 +72,6 @@ namespace dx
 		UINT64 m_fenceValue;
 		D3D12_VIEWPORT m_viewport;
 		D3D12_RECT m_rect;
+		D3D12_DEPTH_STENCIL_VIEW_DESC m_depthViewDesc;
 	};
 }

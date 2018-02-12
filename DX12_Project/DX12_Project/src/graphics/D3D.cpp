@@ -25,6 +25,7 @@ namespace dx
 		m_texture = std::make_unique<Texture>(m_device.Get(), m_commandList.Get());
 		m_buffer = std::make_unique<Buffer>(m_device.Get(), m_commandList.Get());
 		m_srvDescHeap = std::make_unique<DescriptorHeap>(m_device.Get(), m_commandList.Get(), 1);
+		m_depthStencilHeap = std::make_unique<DescriptorHeap>(m_device.Get(), m_commandList.Get(), 1);
 		m_rootSignature = std::make_unique<RootSignature>(m_device.Get(), m_commandList.Get());
 		m_model = std::make_unique<Model>(m_device.Get(), m_commandList.Get(), m_buffer.get());
 	}
@@ -45,12 +46,11 @@ namespace dx
 		//Fill in the desc range and create root table for the description
 		RootDescriptor srvRootDesc;
 		srvRootDesc.AppendDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
-		srvRootDesc.AppendDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 1);
 		srvRootDesc.CreateRootDescTable();
 
 		//Fill in root parameters
 		RootParameter rootParams;
-		rootParams.AppendRootParameterCBV(0, D3D12_SHADER_VISIBILITY_PIXEL);
+		rootParams.AppendRootParameterCBV(0, D3D12_SHADER_VISIBILITY_VERTEX);
 		rootParams.AppendRootParameterDescTable(srvRootDesc.GetRootDescTable(), D3D12_SHADER_VISIBILITY_PIXEL);
 
 		//Create a standard root signature
@@ -63,13 +63,14 @@ namespace dx
 		//Fill in input layout and pipeline states for shaders
 		m_shaders->CreateInputLayoutAndPipelineState(Shaders::ID::Triangle, 1, m_rootSignature->GetRootSignature());
 
-		//Create the descriptor heap that will store our SRVs
-		m_srvDescHeap->CreateDescriptorHeap(2, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+		//Create descriptor heaps and depth stencil buffer
+		m_srvDescHeap->CreateDescriptorHeap(1, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+		m_depthStencilHeap->CreateDescriptorHeap(1, D3D12_DESCRIPTOR_HEAP_FLAG_NONE, D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+		m_buffer->CreateDepthStencilBuffer(m_depthStencilBuffer.GetAddressOf(), m_depthViewDesc, m_depthStencilHeap->GetCPUIncrementHandle(0));
 		m_model->CreateConstantBuffers();
 
-		//Two SRVs
+		//One SRV
 		m_texture->CreateSRVFromTexture(Textures::ID::Fatboy, m_srvDescHeap->GetCPUIncrementHandle(0));
-		m_texture->CreateSRVFromTexture(Textures::ID::Smiley, m_srvDescHeap->GetCPUIncrementHandle(1));
 
 		//Close the command list
 		ExecuteCommandList();
@@ -111,8 +112,9 @@ namespace dx
 		renderTargetViewHandle.ptr += m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV) * m_frameIndex;
 
 		//Record commands in the command list now.
-		m_commandList->OMSetRenderTargets(1, &renderTargetViewHandle, 0, nullptr);
+		m_commandList->OMSetRenderTargets(1, &renderTargetViewHandle, 0, &m_depthStencilHeap->GetCPUIncrementHandle(0));
 		m_commandList->ClearRenderTargetView(renderTargetViewHandle, color, 0, nullptr);
+		m_commandList->ClearDepthStencilView(m_depthStencilHeap->GetCPUIncrementHandle(0), D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 	}
 
 	void D3D::EndScene()

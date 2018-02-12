@@ -41,6 +41,22 @@ namespace dx
 		view.SizeInBytes = size;
 	}
 
+	void Buffer::CreateDepthStencilBuffer(ID3D12Resource ** buffer, D3D12_DEPTH_STENCIL_VIEW_DESC & view, D3D12_CPU_DESCRIPTOR_HANDLE handle)
+	{
+		view.Format = DXGI_FORMAT_D32_FLOAT;
+		view.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+		view.Flags = D3D12_DSV_FLAG_NONE;
+
+		CD3DX12_CLEAR_VALUE depth = { DXGI_FORMAT_D32_FLOAT, 1.f, 0 };
+
+		//Create the default heap
+		m_device->CreateCommittedResource(&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT), D3D12_HEAP_FLAG_NONE, 
+			&CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_D32_FLOAT, SCREEN_WIDTH, SCREEN_HEIGHT, 1, 1, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL),
+			D3D12_RESOURCE_STATE_DEPTH_WRITE, &depth, IID_PPV_ARGS(&buffer[0]));
+
+		m_device->CreateDepthStencilView(buffer[0], &view, handle);
+	}
+
 	void Buffer::CreateConstantBufferForRootDescriptor(ID3D12Resource ** buffer, UINT8 ** bufferAddress)
 	{
 		for (unsigned int i = 0; i < FRAME_BUFFERS; ++i)

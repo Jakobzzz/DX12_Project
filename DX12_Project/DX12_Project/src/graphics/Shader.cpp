@@ -56,14 +56,14 @@ namespace dx
 		pipelineStateDesc.PS = found->second.byteCode[1];
 		pipelineStateDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
 		pipelineStateDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
-		pipelineStateDesc.DepthStencilState.DepthEnable = FALSE;
-		pipelineStateDesc.DepthStencilState.StencilEnable = FALSE;
+		pipelineStateDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
 		pipelineStateDesc.SampleDesc.Count = samplers;
 		pipelineStateDesc.SampleDesc.Quality = 0;
 		pipelineStateDesc.SampleMask = 0xffffffff;
 		pipelineStateDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
 		pipelineStateDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
 		pipelineStateDesc.NumRenderTargets = 1;
+		pipelineStateDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
 
 		//Create a pipeline state object from the description
 		assert(!m_device->CreateGraphicsPipelineState(&pipelineStateDesc, IID_PPV_ARGS(found->second.pipelineState.GetAddressOf())));
