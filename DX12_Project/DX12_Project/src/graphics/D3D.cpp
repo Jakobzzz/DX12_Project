@@ -3,6 +3,7 @@
 #include <graphics/RootDescriptor.hpp>
 #include <graphics/RootParameter.hpp>
 #include <utils/Utility.hpp>
+#include <utils/Input.hpp>
 #include <assert.h>
 #include <DirectXColors.h>
 
@@ -32,7 +33,8 @@ namespace dx
 
 	void D3D::Initialize(HWND hwnd)
 	{
-		//Initialize DirectX12 functionality
+		//Initialize DirectX12 functionality and input
+		Input::Initialize(hwnd);
 		FindAndCreateDevice();
 		CreateCommandsAndSwapChain(hwnd);
 		CreateRenderTargetsAndFences();
@@ -92,6 +94,13 @@ namespace dx
 
 	void D3D::BeginScene(const FLOAT* color)
 	{
+		//Update the input
+		Input::Update();
+
+		//Exit application
+		if (Input::GetKeyDown(Keyboard::Keys::Escape))
+			PostQuitMessage(0);
+
 		//Reset resources
 		assert(!m_commandAllocator->Reset());
 		assert(!m_commandList->Reset(m_commandAllocator.Get(), m_shaders->GetShaders(Shaders::ID::Triangle).pipelineState.Get()));

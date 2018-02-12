@@ -47,6 +47,9 @@
     <ClCompile Include="src\graphics\RootSignature.cpp">
       <Filter>graphics\descriptors</Filter>
     </ClCompile>
+    <ClCompile Include="src\utils\Input.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\graphics\Core.hpp">
@@ -87,6 +90,9 @@
     </ClInclude>
     <ClInclude Include="src\graphics\RootSignature.hpp">
       <Filter>graphics\descriptors</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\Input.hpp">
+      <Filter>utils</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
