@@ -16,15 +16,15 @@ namespace dx
 		void CreateVertexBuffer(const void* data, const UINT & size, const UINT & stride, ID3D12Resource** buffer, 
 								ID3D12Resource** uploadHeap, D3D12_VERTEX_BUFFER_VIEW & view);
 		void CreateIndexBuffer(const void* data, const UINT & size, ID3D12Resource** buffer, ID3D12Resource** uploadHeap, D3D12_INDEX_BUFFER_VIEW & view);
-		void CreateConstantBufferForRoot(ID3D12Resource** buffer, UINT8** bufferAddress);
-		void CreateConstantBufferForTable(const UINT & size, UINT8** bufferAddress, ID3D12Resource** buffer, D3D12_CONSTANT_BUFFER_VIEW_DESC & view,
+		void CreateConstantBufferForRootDescriptor(ID3D12Resource** buffer, UINT8** bufferAddress);
+		void CreateConstantBufferForRootTable(const UINT & size, UINT8** bufferAddress, ID3D12Resource** buffer, D3D12_CONSTANT_BUFFER_VIEW_DESC & view,
 										  D3D12_CPU_DESCRIPTOR_HANDLE* handlers);
 
 	public:
 		void SetConstantBufferData(const void* data, const UINT & size, const UINT & frameIndex, UINT8** bufferAddress);
 		void BindVertexBuffer(const UINT & location, D3D12_VERTEX_BUFFER_VIEW & view);
 		void BindIndexBuffer(D3D12_INDEX_BUFFER_VIEW & view);
-		void BindConstantBufferForRoot(const UINT & rootIndex, const UINT & frameIndex, ID3D12Resource** buffer);
+		void BindConstantBufferForRootDescriptor(const UINT & rootIndex, const UINT & frameIndex, ID3D12Resource** buffer);
 
 	private:
 		void CreateBuffer(const void* data, const UINT & size, ID3D12Resource** buffer, ID3D12Resource** uploadHeap);

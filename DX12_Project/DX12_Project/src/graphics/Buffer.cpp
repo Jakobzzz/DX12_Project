@@ -41,7 +41,7 @@ namespace dx
 		view.SizeInBytes = size;
 	}
 
-	void Buffer::CreateConstantBufferForRoot(ID3D12Resource ** buffer, UINT8 ** bufferAddress)
+	void Buffer::CreateConstantBufferForRootDescriptor(ID3D12Resource ** buffer, UINT8 ** bufferAddress)
 	{
 		for (unsigned int i = 0; i < FRAME_BUFFERS; ++i)
 		{
@@ -62,7 +62,7 @@ namespace dx
 		}
 	}
 
-	void Buffer::CreateConstantBufferForTable(const UINT & size, UINT8 ** bufferAddress, ID3D12Resource ** buffer, D3D12_CONSTANT_BUFFER_VIEW_DESC & view,
+	void Buffer::CreateConstantBufferForRootTable(const UINT & size, UINT8 ** bufferAddress, ID3D12Resource ** buffer, D3D12_CONSTANT_BUFFER_VIEW_DESC & view,
 											  D3D12_CPU_DESCRIPTOR_HANDLE* handlers)
 	{
 		for (unsigned int i = 0; i < FRAME_BUFFERS; ++i)
@@ -103,7 +103,7 @@ namespace dx
 		m_commandList->IASetIndexBuffer(&view);
 	}
 
-	void Buffer::BindConstantBufferForRoot(const UINT & rootIndex, const UINT & frameIndex, ID3D12Resource** buffer)
+	void Buffer::BindConstantBufferForRootDescriptor(const UINT & rootIndex, const UINT & frameIndex, ID3D12Resource** buffer)
 	{
 		m_commandList->SetGraphicsRootConstantBufferView(rootIndex, buffer[frameIndex]->GetGPUVirtualAddress());
 	}
