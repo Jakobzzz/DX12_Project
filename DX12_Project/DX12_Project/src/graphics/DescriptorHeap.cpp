@@ -47,8 +47,12 @@ namespace dx
 		return CD3DX12_CPU_DESCRIPTOR_HANDLE(m_descHeaps[0]->GetCPUDescriptorHandleForHeapStart(), resourceIndex, m_handleIncrementSize);
 	}
 
-	D3D12_GPU_DESCRIPTOR_HANDLE DescriptorHeap::GetGPUIncrementHandle(const INT & resourceIndex)
+	std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> DescriptorHeap::GetCPUIncrementHandleForMultipleHeaps(const INT & resourceIndex)
 	{
-		return CD3DX12_GPU_DESCRIPTOR_HANDLE(m_descHeaps[0]->GetGPUDescriptorHandleForHeapStart(), resourceIndex, m_handleIncrementSize);
+		std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> handlers;
+
+		for (UINT i = 0; i < m_descHeaps.size(); ++i)
+			handlers.push_back(CD3DX12_CPU_DESCRIPTOR_HANDLE(m_descHeaps[i]->GetCPUDescriptorHandleForHeapStart(), resourceIndex, m_handleIncrementSize));
+		return handlers;
 	}
 }

@@ -18,7 +18,7 @@ namespace dx
 
 	public:
 		D3D12_CPU_DESCRIPTOR_HANDLE GetCPUIncrementHandle(const INT & resourceIndex);
-		D3D12_GPU_DESCRIPTOR_HANDLE GetGPUIncrementHandle(const INT & resourceIndex);
+		std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> GetCPUIncrementHandleForMultipleHeaps(const INT & resourceIndex);
 
 	private:
 		std::vector<ComPtr<ID3D12DescriptorHeap>> m_descHeaps;
