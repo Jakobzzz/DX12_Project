@@ -28,7 +28,8 @@ namespace dx
 		m_srvDescHeap = std::make_unique<DescriptorHeap>(m_device.Get(), m_commandList.Get(), 1);
 		m_depthStencilHeap = std::make_unique<DescriptorHeap>(m_device.Get(), m_commandList.Get(), 1);
 		m_rootSignature = std::make_unique<RootSignature>(m_device.Get(), m_commandList.Get());
-		m_model = std::make_unique<Model>(m_device.Get(), m_commandList.Get(), m_buffer.get());
+		m_camera = std::make_unique<Camera>();
+		m_model = std::make_unique<Model>(m_device.Get(), m_commandList.Get(), m_buffer.get(), m_camera.get());
 	}
 
 	void D3D::Initialize(HWND hwnd)
@@ -94,8 +95,9 @@ namespace dx
 
 	void D3D::BeginScene(const FLOAT* color)
 	{
-		//Update the input
+		//Update the input and camera
 		Input::Update();
+		m_camera->Update(0.00001f);
 
 		//Exit application
 		if (Input::GetKeyDown(Keyboard::Keys::Escape))

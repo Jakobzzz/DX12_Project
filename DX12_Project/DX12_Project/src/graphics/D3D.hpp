@@ -5,13 +5,13 @@
 
 #include <memory>
 #include <dxgi1_5.h>
-#include <DirectXMath.h>
 #include <graphics/Texture.hpp>
 #include <graphics/Buffer.hpp>
 #include <graphics/DescriptorHeap.hpp>
 #include <graphics/RootSignature.hpp>
 #include <graphics/Shader.hpp>
 #include <graphics/Model.hpp>
+#include <graphics/Camera.hpp>
 
 using namespace DirectX;
 
@@ -53,6 +53,7 @@ namespace dx
 		std::unique_ptr<Shader> m_shaders;
 		std::unique_ptr<Buffer> m_buffer;
 		std::unique_ptr<Model> m_model;
+		std::unique_ptr<Camera> m_camera;
 
 	private:
 		ComPtr<ID3D12Device> m_device;
