@@ -41,7 +41,7 @@ namespace dx
 		view.SizeInBytes = size;
 	}
 
-	void Buffer::CreateConstantBufferForRoot(const void * data, const UINT & size, ID3D12Resource ** buffer, UINT8 ** bufferAddress)
+	void Buffer::CreateConstantBufferForRoot(ID3D12Resource ** buffer, UINT8 ** bufferAddress)
 	{
 		for (unsigned int i = 0; i < FRAME_BUFFERS; ++i)
 		{
@@ -59,7 +59,6 @@ namespace dx
 			//Copy the data
 			CD3DX12_RANGE readRange(0, 0);
 			assert(!buffer[i]->Map(0, &readRange, reinterpret_cast<void**>(&bufferAddress[i])));
-			memcpy(bufferAddress[i], data, size);
 		}
 	}
 

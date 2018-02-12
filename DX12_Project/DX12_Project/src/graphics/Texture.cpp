@@ -21,7 +21,7 @@ namespace dx
 			D3D12_RESOURCE_STATE_COPY_DEST,
 			nullptr,
 			IID_PPV_ARGS(data.textureBuffer.GetAddressOf())));
-		data.textureBuffer->SetName(L"Texture Buffer Resource Heap"); //This could be done with another parameter if one wants too
+		data.textureBuffer->SetName(L"Texture Buffer Resource Heap");
 
 		UINT64 textureUploadBufferSize;
 		m_device->GetCopyableFootprints(&data.textureDesc, 0, 1, 0, nullptr, nullptr, nullptr, &textureUploadBufferSize);
@@ -34,9 +34,9 @@ namespace dx
 			D3D12_RESOURCE_STATE_GENERIC_READ,
 			nullptr,
 			IID_PPV_ARGS(data.textureBufferUploadHeap.GetAddressOf())));
-		data.textureBufferUploadHeap->SetName(L"Texture Buffer Upload Resource Heap"); //This could be done with another parameter if one wants too
+		data.textureBufferUploadHeap->SetName(L"Texture Buffer Upload Resource Heap");
 
-																					   //Store texture data in upload heap
+		//Store texture data in upload heap
 		D3D12_SUBRESOURCE_DATA textureData = {};
 		textureData.pData = &data.imageData[0];
 		textureData.RowPitch = data.imageBytesPerRow;

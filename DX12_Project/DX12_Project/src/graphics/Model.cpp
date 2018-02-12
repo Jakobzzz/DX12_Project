@@ -24,7 +24,7 @@ namespace dx
 		m_buffer->CreateVertexBuffer(vertices, sizeof(vertices), sizeof(Vertex), m_vertexBuffer.GetAddressOf(), m_vertexBufferUploadHeap.GetAddressOf(),
 			m_vertexBufferView);
 		m_buffer->CreateIndexBuffer(indices, sizeof(indices), m_indexBuffer.GetAddressOf(), m_indexBufferUploadHeap.GetAddressOf(), m_indexBufferView);
-		m_buffer->CreateConstantBufferForRoot(&m_cb, sizeof(m_cb), m_constantUploadHeap->GetAddressOf(), &cbvGPUAddress[0]);
+		m_buffer->CreateConstantBufferForRoot(m_constantUploadHeap->GetAddressOf(), &cbvGPUAddress[0]);
 	}
 
 	void Model::BindBuffers(const UINT & rootIndex, const UINT & frameIndex)

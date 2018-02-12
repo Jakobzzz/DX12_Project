@@ -16,7 +16,7 @@ namespace dx
 		void CreateVertexBuffer(const void* data, const UINT & size, const UINT & stride, ID3D12Resource** buffer, 
 								ID3D12Resource** uploadHeap, D3D12_VERTEX_BUFFER_VIEW & view);
 		void CreateIndexBuffer(const void* data, const UINT & size, ID3D12Resource** buffer, ID3D12Resource** uploadHeap, D3D12_INDEX_BUFFER_VIEW & view);
-		void CreateConstantBufferForRoot(const void* data, const UINT & size, ID3D12Resource** buffer, UINT8** bufferAddress);
+		void CreateConstantBufferForRoot(ID3D12Resource** buffer, UINT8** bufferAddress);
 
 	public:
 		void SetConstantBufferData(const void* data, const UINT & size, const UINT & frameIndex, UINT8** bufferAddress);

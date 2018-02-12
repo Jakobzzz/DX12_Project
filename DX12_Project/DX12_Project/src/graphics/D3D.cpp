@@ -24,7 +24,7 @@ namespace dx
 		m_shaders = std::make_unique<Shader>(m_device.Get(), m_commandList.Get());
 		m_texture = std::make_unique<Texture>(m_device.Get(), m_commandList.Get());
 		m_buffer = std::make_unique<Buffer>(m_device.Get(), m_commandList.Get());
-		m_srvDescHeap = std::make_unique<DescriptorHeap>(m_device.Get(), m_commandList.Get());
+		m_srvDescHeap = std::make_unique<DescriptorHeap>(m_device.Get(), m_commandList.Get(), 1);
 		m_rootSignature = std::make_unique<RootSignature>(m_device.Get(), m_commandList.Get());
 		m_model = std::make_unique<Model>(m_device.Get(), m_commandList.Get(), m_buffer.get());
 	}
@@ -59,7 +59,6 @@ namespace dx
 			D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS |
 			D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |
 			D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS);
-
 
 		//Fill in input layout and pipeline states for shaders
 		m_shaders->CreateInputLayoutAndPipelineState(Shaders::ID::Triangle, 1, m_rootSignature->GetRootSignature());
