@@ -125,6 +125,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\graphics\Buffer.cpp" />
+    <ClCompile Include="src\graphics\Camera.cpp" />
     <ClCompile Include="src\graphics\Core.cpp" />
     <ClCompile Include="src\graphics\D3D.cpp" />
     <ClCompile Include="src\graphics\DescriptorHeap.cpp" />
@@ -133,9 +134,11 @@
     <ClCompile Include="src\graphics\Shader.cpp" />
     <ClCompile Include="src\graphics\Texture.cpp" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\utils\Input.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\graphics\Buffer.hpp" />
+    <ClInclude Include="src\graphics\Camera.hpp" />
     <ClInclude Include="src\graphics\Core.hpp" />
     <ClInclude Include="src\graphics\D3D.hpp" />
     <ClInclude Include="src\graphics\DescriptorHeap.hpp" />
@@ -146,6 +149,7 @@
     <ClInclude Include="src\graphics\SamplerStates.hpp" />
     <ClInclude Include="src\graphics\Shader.hpp" />
     <ClInclude Include="src\graphics\Texture.hpp" />
+    <ClInclude Include="src\utils\Input.hpp" />
     <ClInclude Include="src\utils\Utility.hpp" />
     <ClInclude Include="src\utils\Window.hpp" />
   </ItemGroup>
@@ -163,7 +167,17 @@
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
     </FxCompile>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
+    <Import Project="..\packages\directxtk12_desktop_2015.2017.12.13.1\build\native\directxtk12_desktop_2015.targets" Condition="Exists('..\packages\directxtk12_desktop_2015.2017.12.13.1\build\native\directxtk12_desktop_2015.targets')" />
   </ImportGroup>
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\directxtk12_desktop_2015.2017.12.13.1\build\native\directxtk12_desktop_2015.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\directxtk12_desktop_2015.2017.12.13.1\build\native\directxtk12_desktop_2015.targets'))" />
+  </Target>
 </Project>

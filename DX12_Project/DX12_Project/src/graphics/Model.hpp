@@ -2,15 +2,14 @@
 #include <DirectXMath.h>
 #include <memory>
 #include <graphics/Buffer.hpp>
-
-using namespace DirectX;
+#include <graphics/Camera.hpp>
 
 namespace dx
 {
 	class Model
 	{
 	public:
-		Model(ID3D12Device* device, ID3D12GraphicsCommandList* commandList, Buffer* buffer);
+		Model(ID3D12Device* device, ID3D12GraphicsCommandList* commandList, Buffer* buffer, Camera* camera);
 
 	public:
 		void CreateConstantBuffers();
@@ -26,23 +25,26 @@ namespace dx
 
 		struct CBInfo
 		{
-			XMFLOAT4 color;
+			Matrix WVP;
 		};
 
 	private:
 		ComPtr<ID3D12Resource> m_vertexBuffer;
 		ComPtr<ID3D12Resource> m_indexBuffer;
 		ComPtr<ID3D12Resource> m_vertexBufferUploadHeap;
-		ComPtr<ID3D12Resource> m_indexBufferUploadHeap;
 		ComPtr<ID3D12Resource> m_constantUploadHeap[2];
 		UINT8* m_cbvGPUAddress[2];
 		CBInfo m_cb;
 
 	private:
-		D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView;
-		D3D12_INDEX_BUFFER_VIEW m_indexBufferView;
+		Matrix m_WVP;
+		Matrix m_world;
 
 	private:
+		D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView;
+
+	private:
+		Camera * m_camera;
 		Buffer * m_buffer;
 		ID3D12Device * m_device;
 		ID3D12GraphicsCommandList* m_commandList;

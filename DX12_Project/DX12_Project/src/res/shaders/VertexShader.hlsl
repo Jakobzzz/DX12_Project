@@ -10,11 +10,16 @@ struct VS_OUT
     float2 uv : TEXCOORD;
 };
 
+cbuffer matrixBuffer : register(b0)
+{
+    float4x4 WVP;
+};
+
 VS_OUT main(VS_IN input)
 {
     VS_OUT output;
 
-    output.pos = float4(input.pos, 1.f);
+    output.pos = mul(float4(input.pos, 1.f), WVP);
     output.uv = input.uv;
     return output;
 }

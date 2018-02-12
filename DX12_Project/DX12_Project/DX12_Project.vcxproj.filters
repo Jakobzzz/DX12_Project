@@ -5,96 +5,114 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="graphics">
+    <Filter Include="Graphics">
       <UniqueIdentifier>{84eec256-7cc4-4811-a167-71472deea189}</UniqueIdentifier>
     </Filter>
-    <Filter Include="utils">
-      <UniqueIdentifier>{97b3293a-a5ce-49ea-a2af-a0bc5ccac74f}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="shaders">
-      <UniqueIdentifier>{086e9be1-c415-483d-b37f-b48ffd1d011b}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="graphics\buffers">
+    <Filter Include="Graphics\Buffers">
       <UniqueIdentifier>{de33fc83-7883-4762-ab30-8c7677da587d}</UniqueIdentifier>
     </Filter>
-    <Filter Include="graphics\descriptors">
+    <Filter Include="Graphics\Descriptors">
       <UniqueIdentifier>{97a8a98f-6edf-44a9-a4bb-fa3a9808a5a8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Utils">
+      <UniqueIdentifier>{97b3293a-a5ce-49ea-a2af-a0bc5ccac74f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders">
+      <UniqueIdentifier>{086e9be1-c415-483d-b37f-b48ffd1d011b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Graphics\Camera">
+      <UniqueIdentifier>{85f3a94b-c42d-44cf-8a27-35dbcbb97ffb}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\graphics\Core.cpp">
-      <Filter>graphics</Filter>
+      <Filter>Graphics</Filter>
     </ClCompile>
     <ClCompile Include="src\graphics\D3D.cpp">
-      <Filter>graphics</Filter>
+      <Filter>Graphics</Filter>
     </ClCompile>
     <ClCompile Include="src\graphics\Model.cpp">
-      <Filter>graphics</Filter>
+      <Filter>Graphics</Filter>
     </ClCompile>
     <ClCompile Include="src\graphics\Shader.cpp">
-      <Filter>graphics</Filter>
+      <Filter>Graphics</Filter>
     </ClCompile>
     <ClCompile Include="src\graphics\Texture.cpp">
-      <Filter>graphics</Filter>
+      <Filter>Graphics</Filter>
     </ClCompile>
     <ClCompile Include="src\graphics\Buffer.cpp">
-      <Filter>graphics\buffers</Filter>
+      <Filter>Graphics\Buffers</Filter>
     </ClCompile>
     <ClCompile Include="src\graphics\DescriptorHeap.cpp">
-      <Filter>graphics\descriptors</Filter>
+      <Filter>Graphics\Descriptors</Filter>
     </ClCompile>
     <ClCompile Include="src\graphics\RootSignature.cpp">
-      <Filter>graphics\descriptors</Filter>
+      <Filter>Graphics\Descriptors</Filter>
+    </ClCompile>
+    <ClCompile Include="src\utils\Input.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src\graphics\Camera.cpp">
+      <Filter>Graphics\Camera</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\graphics\Core.hpp">
-      <Filter>graphics</Filter>
+      <Filter>Graphics</Filter>
     </ClInclude>
     <ClInclude Include="src\graphics\D3D.hpp">
-      <Filter>graphics</Filter>
+      <Filter>Graphics</Filter>
     </ClInclude>
     <ClInclude Include="src\graphics\Model.hpp">
-      <Filter>graphics</Filter>
+      <Filter>Graphics</Filter>
     </ClInclude>
     <ClInclude Include="src\graphics\SamplerStates.hpp">
-      <Filter>graphics</Filter>
+      <Filter>Graphics</Filter>
     </ClInclude>
     <ClInclude Include="src\graphics\Shader.hpp">
-      <Filter>graphics</Filter>
+      <Filter>Graphics</Filter>
     </ClInclude>
     <ClInclude Include="src\graphics\Texture.hpp">
-      <Filter>graphics</Filter>
+      <Filter>Graphics</Filter>
     </ClInclude>
     <ClInclude Include="src\utils\Utility.hpp">
-      <Filter>utils</Filter>
+      <Filter>Utils</Filter>
     </ClInclude>
     <ClInclude Include="src\utils\Window.hpp">
-      <Filter>utils</Filter>
+      <Filter>Utils</Filter>
     </ClInclude>
     <ClInclude Include="src\graphics\Buffer.hpp">
-      <Filter>graphics\buffers</Filter>
+      <Filter>Graphics\Buffers</Filter>
     </ClInclude>
     <ClInclude Include="src\graphics\RootDescriptor.hpp">
-      <Filter>graphics\descriptors</Filter>
+      <Filter>Graphics\Descriptors</Filter>
     </ClInclude>
     <ClInclude Include="src\graphics\RootParameter.hpp">
-      <Filter>graphics\descriptors</Filter>
+      <Filter>Graphics\Descriptors</Filter>
     </ClInclude>
     <ClInclude Include="src\graphics\DescriptorHeap.hpp">
-      <Filter>graphics\descriptors</Filter>
+      <Filter>Graphics\Descriptors</Filter>
     </ClInclude>
     <ClInclude Include="src\graphics\RootSignature.hpp">
-      <Filter>graphics\descriptors</Filter>
+      <Filter>Graphics\Descriptors</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\Input.hpp">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\graphics\Camera.hpp">
+      <Filter>Graphics\Camera</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="src\res\shaders\FragmentShader.hlsl">
-      <Filter>shaders</Filter>
+      <Filter>Shaders</Filter>
     </FxCompile>
     <FxCompile Include="src\res\shaders\VertexShader.hlsl">
-      <Filter>shaders</Filter>
+      <Filter>Shaders</Filter>
     </FxCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
 </Project>
