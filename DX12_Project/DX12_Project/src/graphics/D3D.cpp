@@ -71,7 +71,6 @@ namespace dx
 			D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS);
 
 		//--- Compute shader ---
-		
 
 
 		//Fill in input layout and pipeline states for shaders

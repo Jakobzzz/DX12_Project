@@ -44,6 +44,7 @@ namespace dx
 
 	public:
 		void SetTopology(D3D12_PRIMITIVE_TOPOLOGY topology);
+		void SetComputeDispatch(const UINT & tgx, const UINT & tgy, const UINT & tgz);
 
 	public:
 		ShaderData GetShaders(const Shaders::ID & id) const;

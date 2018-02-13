@@ -113,6 +113,11 @@ namespace dx
 		m_commandList->IASetPrimitiveTopology(topology);
 	}
 
+	void Shader::SetComputeDispatch(const UINT & tgx, const UINT & tgy, const UINT & tgz)
+	{
+		m_commandList->Dispatch(tgx, tgy, tgz);
+	}
+
 	Shader::ShaderData Shader::GetShaders(const Shaders::ID & id) const
 	{
 		auto found = m_standardShaders.find(id);

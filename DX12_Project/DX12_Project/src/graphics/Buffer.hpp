@@ -20,6 +20,7 @@ namespace dx
 		void CreateConstantBufferForRootDescriptor(ID3D12Resource** buffer, UINT8** bufferAddress);
 		void CreateConstantBufferForRootTable(const UINT & size, UINT8** bufferAddress, ID3D12Resource** buffer, D3D12_CONSTANT_BUFFER_VIEW_DESC & view,
 										  D3D12_CPU_DESCRIPTOR_HANDLE* handlers);
+		void CreateUAVForRootTable(ID3D12Resource** buffer, D3D12_UNORDERED_ACCESS_VIEW_DESC & view, D3D12_CPU_DESCRIPTOR_HANDLE handle);
 
 	public:
 		void SetConstantBufferData(const void* data, const UINT & size, const UINT & frameIndex, UINT8** bufferAddress);

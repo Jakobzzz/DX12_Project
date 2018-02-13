@@ -88,6 +88,27 @@ namespace dx
 		}
 	}
 
+	void Buffer::CreateUAVForRootTable(ID3D12Resource ** buffer, D3D12_UNORDERED_ACCESS_VIEW_DESC & view, D3D12_CPU_DESCRIPTOR_HANDLE handle)
+	{
+		//Create resource
+		assert(!m_device->CreateCommittedResource(
+			&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
+			D3D12_HEAP_FLAG_NONE, // no flags
+			&CD3DX12_RESOURCE_DESC::Buffer(D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT),
+			D3D12_RESOURCE_STATE_GENERIC_READ,
+			nullptr,
+			IID_PPV_ARGS(&buffer[0])));
+
+		buffer[0]->SetName(L"UAV Upload Resource Heap");
+
+		//Describe the view
+	
+
+		//Copy the data
+		/*CD3DX12_RANGE readRange(0, 0);
+		assert(!buffer[i]->Map(0, &readRange, reinterpret_cast<void**>(&bufferAddress[i])))*/;
+	}
+
 	void Buffer::CreateDepthStencilBuffer(ID3D12Resource ** buffer, D3D12_DEPTH_STENCIL_VIEW_DESC & view, D3D12_CPU_DESCRIPTOR_HANDLE handle)
 	{
 		view.Format = DXGI_FORMAT_D32_FLOAT;
