@@ -13,7 +13,7 @@ namespace dx
 	void Shader::LoadShaders(const Shaders::ID & id, const std::string & vertexPath, const std::string & pixelPath)
 	{
 		ShaderData data;
-		CreateShaders(vertexPath, pixelPath, &data.byteCode[0], data.blobs->GetAddressOf());
+		CreateShaders(vertexPath, pixelPath, data.blobs->GetAddressOf());
 
 		auto inserted = m_standardShaders.insert(std::make_pair(id, std::move(data)));
 		assert(inserted.second);
@@ -23,31 +23,23 @@ namespace dx
 	void Shader::LoadComputeShader(const Shaders::ID & id, const std::string & computePath)
 	{
 		ComputeShaderData data;
-		CreateComputeShader(computePath, data.byteCode, data.blob.GetAddressOf());
+		CreateComputeShader(computePath, data.blob.GetAddressOf());
 
 		auto inserted = m_computeShaders.insert(std::make_pair(id, std::move(data)));
 		assert(inserted.second);
 	}
 
-	void Shader::CreateComputeShader(const std::string & computePath, D3D12_SHADER_BYTECODE & byteCode, ID3DBlob ** blob)
+	void Shader::CreateComputeShader(const std::string & computePath, ID3DBlob ** blob)
 	{
 		//Compile compute shader
 		assert(!D3DCompileFromFile(ToWChar(computePath).c_str(), nullptr, nullptr, "main", "cs_5_0", D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION, 0, &blob[0], nullptr));
-		byteCode.BytecodeLength = blob[0]->GetBufferSize();
-		byteCode.pShaderBytecode = blob[0]->GetBufferPointer();
 	}
 
-	void Shader::CreateShaders(const std::string & vertexPath, const std::string & pixelPath, D3D12_SHADER_BYTECODE * byteCode, ID3DBlob ** blobs)
+	void Shader::CreateShaders(const std::string & vertexPath, const std::string & pixelPath, ID3DBlob ** blobs)
 	{
-		//Compile vertex shader
+		//Compile vertex and pixel shader
 		assert(!D3DCompileFromFile(ToWChar(vertexPath).c_str(), nullptr, nullptr, "main", "vs_5_0", D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION, 0, &blobs[0], nullptr));
-		byteCode[0].BytecodeLength = blobs[0]->GetBufferSize();
-		byteCode[0].pShaderBytecode = blobs[0]->GetBufferPointer();
-
-		//Compile pixel shader
 		assert(!D3DCompileFromFile(ToWChar(pixelPath).c_str(), nullptr, nullptr, "main", "ps_5_0", D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION, 0, &blobs[1], nullptr));
-		byteCode[1].BytecodeLength = blobs[1]->GetBufferSize();
-		byteCode[1].pShaderBytecode = blobs[1]->GetBufferPointer();
 	}
 
 	//Standard parameters for now
@@ -70,8 +62,8 @@ namespace dx
 		D3D12_GRAPHICS_PIPELINE_STATE_DESC pipelineStateDesc = { 0 };
 		pipelineStateDesc.InputLayout = inputLayoutDesc;
 		pipelineStateDesc.pRootSignature = signature;
-		pipelineStateDesc.VS = found->second.byteCode[0];
-		pipelineStateDesc.PS = found->second.byteCode[1];
+		pipelineStateDesc.VS = CD3DX12_SHADER_BYTECODE(found->second.blobs[0].Get());
+		pipelineStateDesc.PS = CD3DX12_SHADER_BYTECODE(found->second.blobs[1].Get());
 		pipelineStateDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
 		pipelineStateDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
 		pipelineStateDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
@@ -98,7 +90,7 @@ namespace dx
 		//Fill in compute pipeline description
 		D3D12_COMPUTE_PIPELINE_STATE_DESC pipelineStateDesc = { 0 };
 		pipelineStateDesc.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
-		pipelineStateDesc.CS = found->second.byteCode;
+		pipelineStateDesc.CS = CD3DX12_SHADER_BYTECODE(found->second.blob.Get());
 		pipelineStateDesc.pRootSignature = signature;
 
 		//Create a pipeline state object from the description

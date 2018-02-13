@@ -102,11 +102,10 @@ namespace dx
 		buffer[0]->SetName(L"UAV Upload Resource Heap");
 
 		//Describe the view
-	
 
-		//Copy the data
-		/*CD3DX12_RANGE readRange(0, 0);
-		assert(!buffer[i]->Map(0, &readRange, reinterpret_cast<void**>(&bufferAddress[i])))*/;
+		
+		//Create the UAV
+		//m_device->CreateUnorderedAccessView(buffer[0], nullptr, &view, handle);
 	}
 
 	void Buffer::CreateDepthStencilBuffer(ID3D12Resource ** buffer, D3D12_DEPTH_STENCIL_VIEW_DESC & view, D3D12_CPU_DESCRIPTOR_HANDLE handle)
