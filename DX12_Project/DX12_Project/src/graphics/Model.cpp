@@ -14,14 +14,10 @@ namespace dx
 	Model::Model(ID3D12Device* device, ID3D12GraphicsCommandList* commandList, Buffer* buffer, Camera* camera) : m_device(device), m_commandList(commandList), 
 																												 m_buffer(buffer), m_camera(camera)
 	{
-		//Create vertex, index and constant buffer
+		//Create vertex and constant buffer
 		m_buffer->CreateVertexBuffer(vertices, sizeof(vertices), sizeof(Vertex), m_vertexBuffer.GetAddressOf(), m_vertexBufferUploadHeap.GetAddressOf(),
 									 m_vertexBufferView);
-	}
-
-	void Model::CreateConstantBuffers()
-	{
-		m_buffer->CreateConstantBufferForRootDescriptor(m_constantUploadHeap->GetAddressOf(), &m_cbvGPUAddress[0]);
+		m_buffer->CreateConstantBuffer(m_constantUploadHeap->GetAddressOf(), &m_cbvGPUAddress[0]);
 	}
 
 	void Model::BindBuffers(const UINT & rootIndex, const UINT & frameIndex)

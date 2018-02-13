@@ -80,7 +80,6 @@ namespace dx
 		m_srvDescHeap->CreateDescriptorHeap(1, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 		m_depthStencilHeap->CreateDescriptorHeap(1, D3D12_DESCRIPTOR_HEAP_FLAG_NONE, D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
 		m_buffer->CreateDepthStencilBuffer(m_depthStencilBuffer.GetAddressOf(), m_depthViewDesc, m_depthStencilHeap->GetCPUIncrementHandle(0));
-		m_model->CreateConstantBuffers();
 
 		//One SRV
 		m_texture->CreateSRVFromTexture(Textures::ID::Fatboy, m_srvDescHeap->GetCPUIncrementHandle(0));
@@ -264,8 +263,8 @@ namespace dx
 
 		//Initialize the swap chain description.
 		DXGI_SWAP_CHAIN_DESC1 scDesc = {};
-		scDesc.Width = 0;
-		scDesc.Height = 0;
+		scDesc.Width = SCREEN_WIDTH;
+		scDesc.Height = SCREEN_HEIGHT;
 		scDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 		scDesc.Stereo = FALSE;
 		scDesc.SampleDesc.Count = 1;

@@ -1,5 +1,5 @@
 //Input and output resources
-RWTexture2D<float4> OutputMap : register(u0);
+RWStructuredBuffer<float4> OutputBuffer : register(u0);
 
 //Group size
 #define size_x 32
@@ -10,5 +10,6 @@ RWTexture2D<float4> OutputMap : register(u0);
 
 void main(uint3 DispatchThreadID : SV_DispatchThreadID)
 {
-    OutputMap[DispatchThreadID.xy] = float4(1.f, 0.f, 0.f, 1.f);
+    //Fill the output buffer with a red color
+    OutputBuffer[DispatchThreadID.x] = float4(1.f, 0.f, 0.f, 1.f);
 }

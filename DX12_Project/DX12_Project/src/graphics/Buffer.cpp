@@ -21,7 +21,7 @@ namespace dx
 
 		//Create a vertex buffer view for the primitive
 		view.BufferLocation = buffer[0]->GetGPUVirtualAddress();
-		view.StrideInBytes = stride; //Note: couldn't find a good way to get the stride from the data, should be sizeof(data[0]) but not allowed since void*...
+		view.StrideInBytes = stride;
 		view.SizeInBytes = size;
 	}
 
@@ -41,7 +41,7 @@ namespace dx
 		view.SizeInBytes = size;
 	}
 
-	void Buffer::CreateConstantBufferForRootDescriptor(ID3D12Resource ** buffer, UINT8 ** bufferAddress)
+	void Buffer::CreateConstantBuffer(ID3D12Resource ** buffer, UINT8 ** bufferAddress)
 	{
 		for (unsigned int i = 0; i < FRAME_BUFFERS; ++i)
 		{
@@ -88,24 +88,27 @@ namespace dx
 		}
 	}
 
-	void Buffer::CreateUAVForRootTable(ID3D12Resource ** buffer, D3D12_UNORDERED_ACCESS_VIEW_DESC & view, D3D12_CPU_DESCRIPTOR_HANDLE handle)
+	void Buffer::CreateUAVForRootTable(const void* data, const UINT & size, const UINT & stride, ID3D12Resource** buffer, ID3D12Resource** uploadHeap,
+									   D3D12_UNORDERED_ACCESS_VIEW_DESC & view, D3D12_CPU_DESCRIPTOR_HANDLE handle)
 	{
-		//Create resource
-		assert(!m_device->CreateCommittedResource(
-			&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
-			D3D12_HEAP_FLAG_NONE, // no flags
-			&CD3DX12_RESOURCE_DESC::Buffer(D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT),
-			D3D12_RESOURCE_STATE_GENERIC_READ,
-			nullptr,
-			IID_PPV_ARGS(&buffer[0])));
+		//Create the buffer
+		CreateBuffer(data, size, buffer, uploadHeap);
 
-		buffer[0]->SetName(L"UAV Upload Resource Heap");
+		//Transition the UAV buffer data from copy destination to UAV buffer state
+		m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(buffer[0], D3D12_RESOURCE_STATE_COPY_DEST,
+			D3D12_RESOURCE_STATE_UNORDERED_ACCESS));
 
 		//Describe the view
-
+		view.Format = DXGI_FORMAT_UNKNOWN;
+		view.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
+		view.Buffer.FirstElement = 0;
+		view.Buffer.NumElements = size;
+		view.Buffer.StructureByteStride = stride;
+		view.Buffer.CounterOffsetInBytes = 0;
+		view.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_NONE;
 		
 		//Create the UAV
-		//m_device->CreateUnorderedAccessView(buffer[0], nullptr, &view, handle);
+		m_device->CreateUnorderedAccessView(buffer[0], nullptr, &view, handle);
 	}
 
 	void Buffer::CreateDepthStencilBuffer(ID3D12Resource ** buffer, D3D12_DEPTH_STENCIL_VIEW_DESC & view, D3D12_CPU_DESCRIPTOR_HANDLE handle)
@@ -149,12 +152,12 @@ namespace dx
 		//Create default heap for buffer
 		assert(!m_device->CreateCommittedResource(&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT), D3D12_HEAP_FLAG_NONE,
 			&CD3DX12_RESOURCE_DESC::Buffer(size), D3D12_RESOURCE_STATE_COPY_DEST, nullptr, IID_PPV_ARGS(&buffer[0])));
-		buffer[0]->SetName(L"Vertex Buffer Resource Heap");
+		buffer[0]->SetName(L"Buffer Resource Heap");
 
 		//Create the upload heap
 		assert(!m_device->CreateCommittedResource(&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD), D3D12_HEAP_FLAG_NONE,
 			&CD3DX12_RESOURCE_DESC::Buffer(size), D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&uploadHeap[0])));
-		uploadHeap[0]->SetName(L"Vertex Buffer Upload Resource Heap");
+		uploadHeap[0]->SetName(L"Buffer Upload Resource Heap");
 
 		//Store buffer in upload heap
 		D3D12_SUBRESOURCE_DATA dataType = { 0 };
