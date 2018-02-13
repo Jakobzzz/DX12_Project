@@ -12,6 +12,7 @@ namespace dx
 	void D3D::LoadShaders()
 	{
 		m_shaders->LoadShaders(Shaders::ID::Triangle, "src/res/shaders/VertexShader.hlsl", "src/res/shaders/FragmentShader.hlsl");
+		//m_shaders->LoadComputeShader(Shaders::ID::BasicCompute, "src/res/shaders/BlurComputeShader.hlsl");
 	}
 
 	void D3D::LoadTextures()
@@ -35,6 +36,7 @@ namespace dx
 		
 		//Root signatures
 		m_rootSignature = std::make_unique<RootSignature>(m_device.Get(), m_commandList.Get());
+		//m_computeRootSignature = std::make_unique<RootSignature>(m_device.Get(), m_commandList.Get());
 	}
 
 	void D3D::Initialize(HWND hwnd)
@@ -51,12 +53,12 @@ namespace dx
 		LoadShaders();
 		LoadTextures();
 
-		//Fill in the desc range and create root table for the description
+		//Desc range and root table for standard pipeline 
 		RootDescriptor srvRootDesc;
 		srvRootDesc.AppendDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
 		srvRootDesc.CreateRootDescTable();
 
-		//Fill in root parameters
+		//Fill in root parameters for standard pipeline
 		RootParameter rootParams;
 		rootParams.AppendRootParameterCBV(0, D3D12_SHADER_VISIBILITY_VERTEX);
 		rootParams.AppendRootParameterDescTable(srvRootDesc.GetRootDescTable(), D3D12_SHADER_VISIBILITY_PIXEL);
@@ -67,6 +69,10 @@ namespace dx
 			D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS |
 			D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |
 			D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS);
+
+		//--- Compute shader ---
+		
+
 
 		//Fill in input layout and pipeline states for shaders
 		m_shaders->CreateInputLayoutAndPipelineState(Shaders::ID::Triangle, m_rootSignature->GetRootSignature());

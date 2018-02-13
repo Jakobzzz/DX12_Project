@@ -18,6 +18,17 @@ namespace dx
 			m_rootParameters.push_back(param);
 		}
 
+		inline void AppendRootParameterUAV(const UINT & shaderRegister, D3D12_SHADER_VISIBILITY visibility)
+		{
+			D3D12_ROOT_PARAMETER param = {};
+			param.ParameterType = D3D12_ROOT_PARAMETER_TYPE_UAV;
+			param.Descriptor = { 0, shaderRegister };
+			param.ShaderVisibility = visibility;
+
+			//Add the root parameter to the vector
+			m_rootParameters.push_back(param);
+		}
+
 		inline void AppendRootParameterDescTable(D3D12_ROOT_DESCRIPTOR_TABLE table, D3D12_SHADER_VISIBILITY visibility)
 		{
 			D3D12_ROOT_PARAMETER param = {};

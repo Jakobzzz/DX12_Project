@@ -50,6 +50,7 @@ namespace dx
 		std::unique_ptr<DescriptorHeap> m_srvDescHeap;
 		std::unique_ptr<DescriptorHeap> m_depthStencilHeap;
 		std::unique_ptr<RootSignature> m_rootSignature;
+		std::unique_ptr<RootSignature> m_computeRootSignature;
 		std::unique_ptr<Shader> m_shaders;
 		std::unique_ptr<Buffer> m_buffer;
 		std::unique_ptr<Model> m_model;

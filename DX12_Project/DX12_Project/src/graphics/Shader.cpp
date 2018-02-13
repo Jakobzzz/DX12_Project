@@ -19,6 +19,24 @@ namespace dx
 		assert(inserted.second);
 	}
 
+	//Compute shader
+	void Shader::LoadComputeShader(const Shaders::ID & id, const std::string & computePath)
+	{
+		ComputeShaderData data;
+		CreateComputeShader(computePath, data.byteCode, data.blob.GetAddressOf());
+
+		auto inserted = m_computeShaders.insert(std::make_pair(id, std::move(data)));
+		assert(inserted.second);
+	}
+
+	void Shader::CreateComputeShader(const std::string & computePath, D3D12_SHADER_BYTECODE & byteCode, ID3DBlob ** blob)
+	{
+		//Compile compute shader
+		assert(!D3DCompileFromFile(ToWChar(computePath).c_str(), nullptr, nullptr, "main", "cs_5_0", D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION, 0, &blob[0], nullptr));
+		byteCode.BytecodeLength = blob[0]->GetBufferSize();
+		byteCode.pShaderBytecode = blob[0]->GetBufferPointer();
+	}
+
 	void Shader::CreateShaders(const std::string & vertexPath, const std::string & pixelPath, D3D12_SHADER_BYTECODE * byteCode, ID3DBlob ** blobs)
 	{
 		//Compile vertex shader
@@ -49,7 +67,7 @@ namespace dx
 		inputLayoutDesc.pInputElementDescs = inputElementDesc;
 
 		//Fill in the pipeline description
-		D3D12_GRAPHICS_PIPELINE_STATE_DESC pipelineStateDesc = {};
+		D3D12_GRAPHICS_PIPELINE_STATE_DESC pipelineStateDesc = { 0 };
 		pipelineStateDesc.InputLayout = inputLayoutDesc;
 		pipelineStateDesc.pRootSignature = signature;
 		pipelineStateDesc.VS = found->second.byteCode[0];
@@ -71,6 +89,23 @@ namespace dx
 		//Release the blobs
 		found->second.blobs[0].Reset();
 		found->second.blobs[1].Reset();
+	}
+
+	void Shader::CreatePipelineStateForComputeShader(const Shaders::ID & id, ID3D12RootSignature * signature)
+	{
+		auto found = m_computeShaders.find(id);
+
+		//Fill in compute pipeline description
+		D3D12_COMPUTE_PIPELINE_STATE_DESC pipelineStateDesc = { 0 };
+		pipelineStateDesc.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
+		pipelineStateDesc.CS = found->second.byteCode;
+		pipelineStateDesc.pRootSignature = signature;
+
+		//Create a pipeline state object from the description
+		assert(!m_device->CreateComputePipelineState(&pipelineStateDesc, IID_PPV_ARGS(found->second.pipelineState.GetAddressOf())));
+
+		//Release blob
+		found->second.blob.Reset();
 	}
 
 	void Shader::SetTopology(D3D12_PRIMITIVE_TOPOLOGY topology)
