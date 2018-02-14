@@ -49,12 +49,18 @@ namespace dx
 		std::unique_ptr<Texture> m_texture;
 		std::unique_ptr<DescriptorHeap> m_srvDescHeap;
 		std::unique_ptr<DescriptorHeap> m_depthStencilHeap;
+		std::unique_ptr<DescriptorHeap> m_uavDescHeap; //For uav
 		std::unique_ptr<RootSignature> m_rootSignature;
-		std::unique_ptr<RootSignature> m_computeRootSignature;
+		std::unique_ptr<RootSignature> m_computeRootSignature; //For compute shader
 		std::unique_ptr<Shader> m_shaders;
 		std::unique_ptr<Buffer> m_buffer;
 		std::unique_ptr<Model> m_model;
 		std::unique_ptr<Camera> m_camera;
+
+	private:
+		//For UAV test
+		ComPtr<ID3D12Resource> m_uavBuffer;
+		ComPtr<ID3D12Resource> m_uavBufferUploadHeap;
 
 	private:
 		ComPtr<ID3D12Device> m_device;

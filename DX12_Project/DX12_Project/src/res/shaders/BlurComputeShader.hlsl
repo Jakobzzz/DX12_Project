@@ -1,5 +1,9 @@
-//Input and output resources
-RWStructuredBuffer<float4> OutputBuffer : register(u0);
+struct Color
+{
+    float4 color;
+};
+
+RWStructuredBuffer<Color> OutputBuffer : register(u0);
 
 //Group size
 #define size_x 32
@@ -10,6 +14,6 @@ RWStructuredBuffer<float4> OutputBuffer : register(u0);
 
 void main(uint3 DispatchThreadID : SV_DispatchThreadID)
 {
-    //Fill the output buffer with a red color
-    OutputBuffer[DispatchThreadID.x] = float4(1.f, 0.f, 0.f, 1.f);
+    //Set the structured buffer to a green color
+    OutputBuffer[DispatchThreadID.x].color = float4(0.f, 1.f, 0.f, 1.f);
 }

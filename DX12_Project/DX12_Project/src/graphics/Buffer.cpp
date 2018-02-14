@@ -13,7 +13,7 @@ namespace dx
 									D3D12_VERTEX_BUFFER_VIEW & view)
 	{
 		//Create the buffer
-		CreateBuffer(data, size, buffer, uploadHeap);
+		CreateBuffer(data, size, buffer, uploadHeap, D3D12_RESOURCE_FLAG_NONE);
 
 		//Transition the vertex buffer data from copy destination to vertex buffer state
 		m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(buffer[0], D3D12_RESOURCE_STATE_COPY_DEST,
@@ -29,7 +29,7 @@ namespace dx
 								   D3D12_INDEX_BUFFER_VIEW & view)
 	{
 		//Create the buffer
-		CreateBuffer(data, size, buffer, uploadHeap);
+		CreateBuffer(data, size, buffer, uploadHeap, D3D12_RESOURCE_FLAG_NONE);
 
 		//Transition the index buffer data from copy destination to index buffer state
 		m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(buffer[0], D3D12_RESOURCE_STATE_COPY_DEST,
@@ -62,8 +62,7 @@ namespace dx
 		}
 	}
 
-	void Buffer::CreateConstantBufferForRootTable(const UINT & size, UINT8 ** bufferAddress, ID3D12Resource ** buffer, D3D12_CONSTANT_BUFFER_VIEW_DESC & view,
-											  D3D12_CPU_DESCRIPTOR_HANDLE* handlers)
+	void Buffer::CreateConstantBufferForRootTable(const UINT & size, UINT8 ** bufferAddress, ID3D12Resource ** buffer, D3D12_CPU_DESCRIPTOR_HANDLE* handlers)
 	{
 		for (unsigned int i = 0; i < FRAME_BUFFERS; ++i)
 		{
@@ -78,6 +77,7 @@ namespace dx
 
 			buffer[i]->SetName(L"Constant Buffer Upload Resource Heap");
 
+			D3D12_CONSTANT_BUFFER_VIEW_DESC view = { 0 };
 			view.BufferLocation = buffer[0]->GetGPUVirtualAddress();
 			view.SizeInBytes = (size + 255) & ~255;	//256-byte aligned CB.
 			m_device->CreateConstantBufferView(&view, handlers[i]);
@@ -88,21 +88,24 @@ namespace dx
 		}
 	}
 
-	void Buffer::CreateUAVForRootTable(const void* data, const UINT & size, const UINT & stride, ID3D12Resource** buffer, ID3D12Resource** uploadHeap,
-									   D3D12_UNORDERED_ACCESS_VIEW_DESC & view, D3D12_CPU_DESCRIPTOR_HANDLE handle)
+	void Buffer::CreateUAVForRootTable(const void* data, const UINT & size, const UINT & stride, const UINT & numElements, 
+										ID3D12Resource** buffer, ID3D12Resource** uploadHeap, D3D12_CPU_DESCRIPTOR_HANDLE handle)
 	{
 		//Create the buffer
-		CreateBuffer(data, size, buffer, uploadHeap);
+		CreateBuffer(data, size, buffer, uploadHeap, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS); //Problem here
 
 		//Transition the UAV buffer data from copy destination to UAV buffer state
 		m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(buffer[0], D3D12_RESOURCE_STATE_COPY_DEST,
-			D3D12_RESOURCE_STATE_UNORDERED_ACCESS));
+			D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE));
 
+
+		//D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE
 		//Describe the view
+		D3D12_UNORDERED_ACCESS_VIEW_DESC view = {};
 		view.Format = DXGI_FORMAT_UNKNOWN;
 		view.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
 		view.Buffer.FirstElement = 0;
-		view.Buffer.NumElements = size;
+		view.Buffer.NumElements = numElements;
 		view.Buffer.StructureByteStride = stride;
 		view.Buffer.CounterOffsetInBytes = 0;
 		view.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_NONE;
@@ -147,11 +150,11 @@ namespace dx
 		m_commandList->SetGraphicsRootConstantBufferView(rootIndex, buffer[frameIndex]->GetGPUVirtualAddress());
 	}
 
-	void Buffer::CreateBuffer(const void * data, const UINT & size, ID3D12Resource ** buffer, ID3D12Resource ** uploadHeap)
+	void Buffer::CreateBuffer(const void * data, const UINT & size, ID3D12Resource ** buffer, ID3D12Resource ** uploadHeap, D3D12_RESOURCE_FLAGS flags)
 	{
 		//Create default heap for buffer
 		assert(!m_device->CreateCommittedResource(&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT), D3D12_HEAP_FLAG_NONE,
-			&CD3DX12_RESOURCE_DESC::Buffer(size), D3D12_RESOURCE_STATE_COPY_DEST, nullptr, IID_PPV_ARGS(&buffer[0])));
+			&CD3DX12_RESOURCE_DESC::Buffer(size, flags), D3D12_RESOURCE_STATE_COPY_DEST, nullptr, IID_PPV_ARGS(&buffer[0])));
 		buffer[0]->SetName(L"Buffer Resource Heap");
 
 		//Create the upload heap

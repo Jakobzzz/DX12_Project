@@ -12,7 +12,7 @@ namespace dx
 	void D3D::LoadShaders()
 	{
 		m_shaders->LoadShaders(Shaders::ID::Triangle, "src/res/shaders/VertexShader.hlsl", "src/res/shaders/FragmentShader.hlsl");
-		//m_shaders->LoadComputeShader(Shaders::ID::BasicCompute, "src/res/shaders/BlurComputeShader.hlsl");
+		m_shaders->LoadComputeShader(Shaders::ID::BasicCompute, "src/res/shaders/BlurComputeShader.hlsl");
 	}
 
 	void D3D::LoadTextures()
@@ -33,10 +33,11 @@ namespace dx
 		//Descriptor heaps
 		m_srvDescHeap = std::make_unique<DescriptorHeap>(m_device.Get(), m_commandList.Get(), 1);
 		m_depthStencilHeap = std::make_unique<DescriptorHeap>(m_device.Get(), m_commandList.Get(), 1);
+		m_uavDescHeap = std::make_unique<DescriptorHeap>(m_device.Get(), m_commandList.Get(), 1);
 		
 		//Root signatures
 		m_rootSignature = std::make_unique<RootSignature>(m_device.Get(), m_commandList.Get());
-		//m_computeRootSignature = std::make_unique<RootSignature>(m_device.Get(), m_commandList.Get());
+		m_computeRootSignature = std::make_unique<RootSignature>(m_device.Get(), m_commandList.Get());
 	}
 
 	void D3D::Initialize(HWND hwnd)
@@ -71,9 +72,36 @@ namespace dx
 			D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS);
 
 		//--- Compute shader ---
+		//Desc range
+		RootDescriptor uavRootDesc;
+		uavRootDesc.AppendDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0);
+		uavRootDesc.CreateRootDescTable();
+
+		//Root parameters for root signature
+		RootParameter computeRootParams;
+		computeRootParams.AppendRootParameterDescTable(uavRootDesc.GetRootDescTable(), D3D12_SHADER_VISIBILITY_ALL);
+
+		//Create the compute root signature
+		m_computeRootSignature->CreateRootSignature(computeRootParams.GetRootParameters().size(), 0, &computeRootParams.GetRootParameters()[0],
+													nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+
+		//Create the desc heap for the UAV
+		m_uavDescHeap->CreateDescriptorHeap(1, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+
+		//Create the UAV buffer
+		struct Color
+		{
+			Vector4 color;
+		};
+
+		Color uavColor;
+		uavColor.color = Vector4(1.f, 0.f, 0.f, 1.f); //Init with red color
+		m_buffer->CreateUAVForRootTable(&uavColor, sizeof(uavColor), sizeof(Color), 1, m_uavBuffer.GetAddressOf(), m_uavBufferUploadHeap.GetAddressOf(),
+										m_uavDescHeap->GetCPUIncrementHandle(0));
 
 
 		//Fill in input layout and pipeline states for shaders
+		m_shaders->CreatePipelineStateForComputeShader(Shaders::ID::BasicCompute, m_computeRootSignature->GetRootSignature());
 		m_shaders->CreateInputLayoutAndPipelineState(Shaders::ID::Triangle, m_rootSignature->GetRootSignature());
 
 		//Create descriptor heaps and depth stencil buffer
