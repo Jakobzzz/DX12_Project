@@ -93,13 +93,11 @@ namespace dx
 		Color uavColor;
 		uavColor.color = Vector4(1.f, 0.f, 0.f, 1.f); //Init with red color
 		m_buffer->CreateSRVForRootTable(&uavColor, sizeof(uavColor), sizeof(Color), 1, m_srvBuffer.GetAddressOf(), m_srvBufferUploadHeap.GetAddressOf(), //SRV
-			m_srvDescHeap->GetCPUIncrementHandle(0));
+										m_srvDescHeap->GetCPUIncrementHandle(0));
 
-		uavColor.color = Vector4(0.f, 1.f, 0.f, 1.f);
+		//uavColor.color = Vector4(0.f, 1.f, 0.f, 1.f); //Init with green color
 		m_buffer->CreateUAVForRootTable(&uavColor, sizeof(uavColor), sizeof(Color), 1, m_uavBuffer.GetAddressOf(), m_uavBufferUploadHeap.GetAddressOf(), //UAV
 										m_srvDescHeap->GetCPUIncrementHandle(1));
-
-		//--- TODO: launch compute shader here and retrieve the data from the UAV?
 
 		//Close the command list
 		ExecuteCommandList();
@@ -113,10 +111,7 @@ namespace dx
 		//Set resources and draw model
 		m_shaders->SetTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		m_model->BindBuffers(0, m_frameIndex);
-
 		m_srvDescHeap->SetRootDescriptorTable(1);
-		//m_srvDescHeap->SetRootDescriptorTable(1, m_srvDescHeap->GetGPUIncrementHandle(0));
-		//m_srvDescHeap->SetRootDescriptorTable(1, m_srvDescHeap->GetGPUIncrementHandle(1));
 
 		m_model->Draw();
 
@@ -137,10 +132,16 @@ namespace dx
 		assert(!m_commandAllocator->Reset());
 		assert(!m_commandList->Reset(m_commandAllocator.Get(), nullptr));
 
+		ID3D12Resource* pUavResource = m_uavBuffer.Get();
+		m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(pUavResource, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS));
+
 		m_commandList->SetPipelineState(m_shaders->GetComputeShader(Shaders::ID::BasicCompute).pipelineState.Get());
 		m_rootSignature->SetComputeRootSignature();
-		m_srvDescHeap->SetComputeRootDescriptorTable(2);
+
+		m_srvDescHeap->SetComputeRootDescriptorTable(2, m_srvDescHeap->GetGPUIncrementHandle(1));
 		m_shaders->SetComputeDispatch(32, 32, 1);
+		
+		m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(pUavResource, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE));
 
 		//Set required states
 		m_commandList->SetPipelineState(m_shaders->GetShaders(Shaders::ID::Triangle).pipelineState.Get());
