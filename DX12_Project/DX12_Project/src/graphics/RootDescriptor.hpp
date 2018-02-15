@@ -10,7 +10,7 @@ namespace dx
 		//Call this after you have appended all the parameters to the descriptor range
 		inline void CreateRootDescTable()
 		{
-			m_rootDescTable = { m_descRange.size(), &m_descRange[0] };
+			m_rootDescTable = { (UINT)m_descRange.size(), &m_descRange[0] };
 		}
 
 		inline void AppendDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE type, const UINT & numDesc, const UINT & baseShaderRegister)
