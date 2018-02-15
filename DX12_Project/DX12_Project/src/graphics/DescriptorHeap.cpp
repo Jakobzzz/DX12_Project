@@ -26,6 +26,22 @@ namespace dx
 		m_handleIncrementSize = m_device->GetDescriptorHandleIncrementSize(type);
 	}
 
+	void DescriptorHeap::SetRootDescriptorTable(const UINT & rootIndex, D3D12_GPU_DESCRIPTOR_HANDLE handle, const UINT & frameIndex)
+	{
+		if (m_descHeaps.size() > 1)
+		{
+			ID3D12DescriptorHeap* descriptorHeaps[] = { m_descHeaps[frameIndex].Get() };
+			m_commandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
+			m_commandList->SetGraphicsRootDescriptorTable(rootIndex, m_descHeaps[frameIndex]->GetGPUDescriptorHandleForHeapStart());
+		}
+		else
+		{
+			ID3D12DescriptorHeap* descriptorHeaps[] = { m_descHeaps[0].Get() };
+			m_commandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
+			m_commandList->SetGraphicsRootDescriptorTable(rootIndex, handle);
+		}
+	}
+
 	void DescriptorHeap::SetRootDescriptorTable(const UINT & rootIndex, const UINT & frameIndex)
 	{
 		if (m_descHeaps.size() > 1)
@@ -55,6 +71,22 @@ namespace dx
 			ID3D12DescriptorHeap* descriptorHeaps[] = { m_descHeaps[0].Get() };
 			m_commandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
 			m_commandList->SetComputeRootDescriptorTable(rootIndex, m_descHeaps[0]->GetGPUDescriptorHandleForHeapStart());
+		}
+	}
+
+	void DescriptorHeap::SetComputeRootDescriptorTable(const UINT & rootIndex, D3D12_GPU_DESCRIPTOR_HANDLE handle, const UINT & frameIndex)
+	{
+		if (m_descHeaps.size() > 1)
+		{
+			ID3D12DescriptorHeap* descriptorHeaps[] = { m_descHeaps[frameIndex].Get() };
+			m_commandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
+			m_commandList->SetComputeRootDescriptorTable(rootIndex, m_descHeaps[frameIndex]->GetGPUDescriptorHandleForHeapStart());
+		}
+		else
+		{
+			ID3D12DescriptorHeap* descriptorHeaps[] = { m_descHeaps[0].Get() };
+			m_commandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
+			m_commandList->SetComputeRootDescriptorTable(rootIndex, handle);
 		}
 	}
 

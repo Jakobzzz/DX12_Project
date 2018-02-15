@@ -60,6 +60,10 @@ namespace dx
 		ComPtr<ID3D12Resource> m_uavBuffer;
 		ComPtr<ID3D12Resource> m_uavBufferUploadHeap;
 
+		//For SRV
+		ComPtr<ID3D12Resource> m_srvBuffer;
+		ComPtr<ID3D12Resource> m_srvBufferUploadHeap;
+
 	private:
 		ComPtr<ID3D12Device> m_device;
 		ComPtr<ID3D12CommandQueue> m_commandQueue;
