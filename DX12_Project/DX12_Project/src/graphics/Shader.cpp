@@ -116,4 +116,11 @@ namespace dx
 		assert(found != m_standardShaders.end());
 		return found->second;
 	}
+
+	Shader::ComputeShaderData Shader::GetComputeShader(const Shaders::ID & id) const
+	{
+		auto found = m_computeShaders.find(id);
+		assert(found != m_computeShaders.end());
+		return found->second;
+	}
 }

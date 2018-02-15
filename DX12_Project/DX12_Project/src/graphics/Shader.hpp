@@ -47,6 +47,7 @@ namespace dx
 
 	public:
 		ShaderData GetShaders(const Shaders::ID & id) const;
+		ComputeShaderData GetComputeShader(const Shaders::ID & id) const;
 
 	private:
 		void CreateComputeShader(const std::string & computePath, ID3DBlob** blob);
