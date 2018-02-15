@@ -15,9 +15,11 @@ namespace dx
 
 	public:
 		void SetRootDescriptorTable(const UINT & rootIndex, const UINT & frameIndex = 0);
+		void SetComputeRootDescriptorTable(const UINT & rootIndex, const UINT & frameIndex = 0);
 
 	public:
 		D3D12_CPU_DESCRIPTOR_HANDLE GetCPUIncrementHandle(const INT & resourceIndex);
+		D3D12_GPU_DESCRIPTOR_HANDLE GetGPUIncrementHandle(const INT & resourceIndex);
 		std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> GetCPUIncrementHandleForMultipleHeaps(const INT & resourceIndex);
 
 	private:

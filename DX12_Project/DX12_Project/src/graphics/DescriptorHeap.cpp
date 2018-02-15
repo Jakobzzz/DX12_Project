@@ -42,9 +42,30 @@ namespace dx
 		}
 	}
 
+	void DescriptorHeap::SetComputeRootDescriptorTable(const UINT & rootIndex, const UINT & frameIndex)
+	{
+		if (m_descHeaps.size() > 1)
+		{
+			ID3D12DescriptorHeap* descriptorHeaps[] = { m_descHeaps[frameIndex].Get() };
+			m_commandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
+			m_commandList->SetComputeRootDescriptorTable(rootIndex, m_descHeaps[frameIndex]->GetGPUDescriptorHandleForHeapStart());
+		}
+		else
+		{
+			ID3D12DescriptorHeap* descriptorHeaps[] = { m_descHeaps[0].Get() };
+			m_commandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
+			m_commandList->SetComputeRootDescriptorTable(rootIndex, m_descHeaps[0]->GetGPUDescriptorHandleForHeapStart());
+		}
+	}
+
 	D3D12_CPU_DESCRIPTOR_HANDLE DescriptorHeap::GetCPUIncrementHandle(const INT & resourceIndex)
 	{
 		return CD3DX12_CPU_DESCRIPTOR_HANDLE(m_descHeaps[0]->GetCPUDescriptorHandleForHeapStart(), resourceIndex, m_handleIncrementSize);
+	}
+
+	D3D12_GPU_DESCRIPTOR_HANDLE DescriptorHeap::GetGPUIncrementHandle(const INT & resourceIndex)
+	{
+		return CD3DX12_GPU_DESCRIPTOR_HANDLE(m_descHeaps[0]->GetGPUDescriptorHandleForHeapStart(), resourceIndex, m_handleIncrementSize);
 	}
 
 	std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> DescriptorHeap::GetCPUIncrementHandleForMultipleHeaps(const INT & resourceIndex)

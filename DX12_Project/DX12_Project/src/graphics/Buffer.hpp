@@ -21,6 +21,8 @@ namespace dx
 		void CreateConstantBufferForRootTable(const UINT & size, UINT8** bufferAddress, ID3D12Resource** buffer, D3D12_CPU_DESCRIPTOR_HANDLE* handlers);
 		void CreateUAVForRootTable(const void* data, const UINT & size, const UINT & stride, const UINT & numElements, ID3D12Resource** buffer, ID3D12Resource** uploadHeap,
 									D3D12_CPU_DESCRIPTOR_HANDLE handle);
+		void CreateSRVForRootTable(const void* data, const UINT & size, const UINT & stride, const UINT & numElements, ID3D12Resource** buffer, ID3D12Resource** uploadHeap,
+			D3D12_CPU_DESCRIPTOR_HANDLE handle);
 
 	public:
 		void SetConstantBufferData(const void* data, const UINT & size, const UINT & frameIndex, UINT8** bufferAddress);
