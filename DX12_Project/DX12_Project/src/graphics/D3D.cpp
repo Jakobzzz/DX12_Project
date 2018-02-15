@@ -68,7 +68,7 @@ namespace dx
 		rootParams.AppendRootParameterDescTable(uavRootDesc.GetRootDescTable(), D3D12_SHADER_VISIBILITY_ALL);
 
 		//Create a standard root signature
-		m_rootSignature->CreateRootSignature(rootParams.GetRootParameters().size(), 1, &rootParams.GetRootParameters()[0], &GetStandardSamplerState(),
+		m_rootSignature->CreateRootSignature((UINT)rootParams.GetRootParameters().size(), 1, &rootParams.GetRootParameters()[0], &GetStandardSamplerState(),
 			D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
 			D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS |
 			D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |
@@ -91,13 +91,15 @@ namespace dx
 		};
 
 		Color uavColor;
-		uavColor.color = Vector4(1.f, 0.f, 0.f, 1.f); //Init with red color
+		uavColor.color = Vector4(0.f, 0.f, 1.f, 1.f); //Init with red color
 		m_buffer->CreateSRVForRootTable(&uavColor, sizeof(uavColor), sizeof(Color), 1, m_srvBuffer.GetAddressOf(), m_srvBufferUploadHeap.GetAddressOf(), //SRV
-										m_srvDescHeap->GetCPUIncrementHandle(0));
+			m_srvDescHeap->GetCPUIncrementHandle(0));
 
-		//uavColor.color = Vector4(0.f, 1.f, 0.f, 1.f); //Init with green color
+		//uavColor.color = Vector4(0.f, 1.f, 0.f, 1.f);
 		m_buffer->CreateUAVForRootTable(&uavColor, sizeof(uavColor), sizeof(Color), 1, m_uavBuffer.GetAddressOf(), m_uavBufferUploadHeap.GetAddressOf(), //UAV
 										m_srvDescHeap->GetCPUIncrementHandle(1));
+
+		//--- TODO: launch compute shader here and retrieve the data from the UAV?
 
 		//Close the command list
 		ExecuteCommandList();
@@ -138,9 +140,12 @@ namespace dx
 		m_commandList->SetPipelineState(m_shaders->GetComputeShader(Shaders::ID::BasicCompute).pipelineState.Get());
 		m_rootSignature->SetComputeRootSignature();
 
-		m_srvDescHeap->SetComputeRootDescriptorTable(2, m_srvDescHeap->GetGPUIncrementHandle(1));
-		m_shaders->SetComputeDispatch(32, 32, 1);
+		D3D12_GPU_DESCRIPTOR_HANDLE uavHandle = m_srvDescHeap->GetGPUIncrementHandle(0);
+
+		m_srvDescHeap->SetComputeRootDescriptorTable(2, uavHandle);
 		
+		m_shaders->SetComputeDispatch(32, 32, 1);
+
 		m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(pUavResource, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE));
 
 		//Set required states
