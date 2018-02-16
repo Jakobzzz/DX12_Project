@@ -52,20 +52,20 @@ namespace dx
 		LoadShaders();
 		LoadTextures();
 
-		//Desc range and root table for standard pipeline 
-		RootDescriptor srvRootDesc;
-		srvRootDesc.AppendDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DESCRIPTORS_VOLATILE);
-		srvRootDesc.CreateRootDescTable();
+		//Create depth stecil heap and buffer
+		m_depthStencilHeap->CreateDescriptorHeap(1, D3D12_DESCRIPTOR_HEAP_FLAG_NONE, D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+		m_buffer->CreateDepthStencilBuffer(m_depthStencilBuffer.GetAddressOf(), m_depthViewDesc, m_depthStencilHeap->GetCPUIncrementHandle(0));
 
-		RootDescriptor uavRootDesc;
-		uavRootDesc.AppendDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_VOLATILE);
-		uavRootDesc.CreateRootDescTable();
+		//Desc range for pipelines
+		RootDescriptor srvUavRootDesc;
+		srvUavRootDesc.AppendDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DESCRIPTORS_VOLATILE);
+		srvUavRootDesc.AppendDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_VOLATILE);
 
 		//Fill in root parameters for standard pipeline
 		RootParameter rootParams;
-		rootParams.AppendRootParameterCBV(0, D3D12_SHADER_VISIBILITY_ALL);
-		rootParams.AppendRootParameterDescTable(srvRootDesc.GetRootDescTable(), D3D12_SHADER_VISIBILITY_PIXEL);
-		rootParams.AppendRootParameterDescTable(uavRootDesc.GetRootDescTable(), D3D12_SHADER_VISIBILITY_ALL);
+		rootParams.AppendRootParameterCBV(0, D3D12_SHADER_VISIBILITY_VERTEX);
+		rootParams.AppendRootParameterDescTable(1, &srvUavRootDesc.GetDescRange()[0], D3D12_SHADER_VISIBILITY_PIXEL);
+		rootParams.AppendRootParameterDescTable(1, &srvUavRootDesc.GetDescRange()[1], D3D12_SHADER_VISIBILITY_ALL);
 
 		//Create a standard root signature
 		m_rootSignature->CreateRootSignature((UINT)rootParams.GetRootParameters().size(), 1, &rootParams.GetRootParameters()[0], &GetStandardSamplerState(),
@@ -75,10 +75,8 @@ namespace dx
 		m_shaders->CreatePipelineStateForComputeShader(Shaders::ID::BasicCompute, m_rootSignature->GetRootSignature());
 		m_shaders->CreateInputLayoutAndPipelineState(Shaders::ID::Triangle, m_rootSignature->GetRootSignature());
 
-		//Create descriptor heaps and depth stencil buffer
+		//Create descriptor heaps
 		m_srvDescHeap->CreateDescriptorHeap(2, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-		m_depthStencilHeap->CreateDescriptorHeap(1, D3D12_DESCRIPTOR_HEAP_FLAG_NONE, D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
-		m_buffer->CreateDepthStencilBuffer(m_depthStencilBuffer.GetAddressOf(), m_depthViewDesc, m_depthStencilHeap->GetCPUIncrementHandle(0));
 
 		//Create the UAV buffer
 		struct Color
@@ -108,12 +106,15 @@ namespace dx
 		m_shaders->SetTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		m_model->BindBuffers(0, m_frameIndex);
 
+		//Copy the data from the UAV to the SRV
 		m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_uavBuffer.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COPY_SOURCE));
 		m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_srvBuffer.Get(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COPY_DEST));
-		m_commandList->CopyResource(m_srvBuffer.Get(), m_uavBuffer.Get()); //Copy the data
+		m_commandList->CopyResource(m_srvBuffer.Get(), m_uavBuffer.Get());
 		m_srvDescHeap->SetRootDescriptorTable(1, m_srvDescHeap->GetGPUIncrementHandle(0));
 		m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_uavBuffer.Get(), D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS));
 		m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_srvBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));		
+		
+		//Finally draw the model
 		m_model->Draw();
 
 		EndScene();

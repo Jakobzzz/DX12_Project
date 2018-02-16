@@ -22,7 +22,7 @@ namespace dx
 		void CreateUAVForRootTable(const void* data, const UINT & size, const UINT & stride, const UINT & numElements, ID3D12Resource** buffer, ID3D12Resource** uploadHeap,
 									D3D12_CPU_DESCRIPTOR_HANDLE handle);
 		void CreateSRVForRootTable(const void* data, const UINT & size, const UINT & stride, const UINT & numElements, ID3D12Resource** buffer, ID3D12Resource** uploadHeap,
-			D3D12_CPU_DESCRIPTOR_HANDLE handle);
+			D3D12_CPU_DESCRIPTOR_HANDLE handle, D3D12_RESOURCE_STATES resourceState = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 
 	public:
 		void SetConstantBufferData(const void* data, const UINT & size, const UINT & frameIndex, UINT8** bufferAddress);

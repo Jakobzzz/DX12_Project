@@ -112,14 +112,14 @@ namespace dx
 		m_device->CreateUnorderedAccessView(buffer[0], nullptr, &view, handle);
 	}
 
-	void Buffer::CreateSRVForRootTable(const void * data, const UINT & size, const UINT & stride, const UINT & numElements, ID3D12Resource ** buffer, ID3D12Resource ** uploadHeap, D3D12_CPU_DESCRIPTOR_HANDLE handle)
+	void Buffer::CreateSRVForRootTable(const void * data, const UINT & size, const UINT & stride, const UINT & numElements, ID3D12Resource ** buffer, ID3D12Resource ** uploadHeap, 
+										D3D12_CPU_DESCRIPTOR_HANDLE handle, D3D12_RESOURCE_STATES resourceState)
 	{
 		//Create the buffer
 		CreateBuffer(data, size, buffer, uploadHeap, D3D12_RESOURCE_FLAG_NONE);
 
 		//Transition the SRV buffer data from copy destination to SRV buffer state
-		m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(buffer[0], D3D12_RESOURCE_STATE_COPY_DEST,
-			D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
+		m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(buffer[0], D3D12_RESOURCE_STATE_COPY_DEST, resourceState));
 
 		//Describe the view
 		D3D12_SHADER_RESOURCE_VIEW_DESC view = {};
