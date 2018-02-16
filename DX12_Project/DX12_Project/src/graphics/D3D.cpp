@@ -54,25 +54,22 @@ namespace dx
 
 		//Desc range and root table for standard pipeline 
 		RootDescriptor srvRootDesc;
-		srvRootDesc.AppendDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
+		srvRootDesc.AppendDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DESCRIPTORS_VOLATILE);
 		srvRootDesc.CreateRootDescTable();
 
 		RootDescriptor uavRootDesc;
-		uavRootDesc.AppendDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0);
+		uavRootDesc.AppendDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_VOLATILE);
 		uavRootDesc.CreateRootDescTable();
 
 		//Fill in root parameters for standard pipeline
 		RootParameter rootParams;
 		rootParams.AppendRootParameterCBV(0, D3D12_SHADER_VISIBILITY_ALL);
-		rootParams.AppendRootParameterDescTable(srvRootDesc.GetRootDescTable(), D3D12_SHADER_VISIBILITY_ALL);
+		rootParams.AppendRootParameterDescTable(srvRootDesc.GetRootDescTable(), D3D12_SHADER_VISIBILITY_PIXEL);
 		rootParams.AppendRootParameterDescTable(uavRootDesc.GetRootDescTable(), D3D12_SHADER_VISIBILITY_ALL);
 
 		//Create a standard root signature
 		m_rootSignature->CreateRootSignature((UINT)rootParams.GetRootParameters().size(), 1, &rootParams.GetRootParameters()[0], &GetStandardSamplerState(),
-			D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
-			D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS |
-			D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |
-			D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS);
+											  D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 
 		//--- Compute shader ---
 		//Fill in input layout and pipeline states for shaders
@@ -91,15 +88,13 @@ namespace dx
 		};
 
 		Color uavColor;
-		uavColor.color = Vector4(0.f, 0.f, 1.f, 1.f); //Init with red color
+		uavColor.color = Vector4(1.f, 0.f, 0.f, 1.f); //Init with blue color
 		m_buffer->CreateSRVForRootTable(&uavColor, sizeof(uavColor), sizeof(Color), 1, m_srvBuffer.GetAddressOf(), m_srvBufferUploadHeap.GetAddressOf(), //SRV
 			m_srvDescHeap->GetCPUIncrementHandle(0));
 
-		//uavColor.color = Vector4(0.f, 1.f, 0.f, 1.f);
+		uavColor.color = Vector4(1.f, 0.f, 0.f, 1.f);
 		m_buffer->CreateUAVForRootTable(&uavColor, sizeof(uavColor), sizeof(Color), 1, m_uavBuffer.GetAddressOf(), m_uavBufferUploadHeap.GetAddressOf(), //UAV
 										m_srvDescHeap->GetCPUIncrementHandle(1));
-
-		//--- TODO: launch compute shader here and retrieve the data from the UAV?
 
 		//Close the command list
 		ExecuteCommandList();
@@ -109,13 +104,15 @@ namespace dx
 	void D3D::Render()
 	{
 		BeginScene(Colors::DarkGray);
-
+	
 		//Set resources and draw model
 		m_shaders->SetTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		m_model->BindBuffers(0, m_frameIndex);
-		m_srvDescHeap->SetRootDescriptorTable(1);
-
+		m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_uavBuffer.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COPY_SOURCE));
+		m_commandList->CopyResource(m_srvBuffer.Get(), m_uavBuffer.Get()); //Copt the data
+		m_srvDescHeap->SetRootDescriptorTable(1, m_srvDescHeap->GetGPUIncrementHandle(0));
 		m_model->Draw();
+		m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_uavBuffer.Get(), D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS));
 
 		EndScene();
 	}
@@ -134,19 +131,13 @@ namespace dx
 		assert(!m_commandAllocator->Reset());
 		assert(!m_commandList->Reset(m_commandAllocator.Get(), nullptr));
 
-		ID3D12Resource* pUavResource = m_uavBuffer.Get();
-		m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(pUavResource, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS));
-
+		//Set compute shader to change the color of the UAV
+		//m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_uavBuffer.Get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS));
 		m_commandList->SetPipelineState(m_shaders->GetComputeShader(Shaders::ID::BasicCompute).pipelineState.Get());
 		m_rootSignature->SetComputeRootSignature();
-
-		D3D12_GPU_DESCRIPTOR_HANDLE uavHandle = m_srvDescHeap->GetGPUIncrementHandle(0);
-
-		m_srvDescHeap->SetComputeRootDescriptorTable(2, uavHandle);
-		
-		m_shaders->SetComputeDispatch(32, 32, 1);
-
-		m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(pUavResource, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE));
+		m_srvDescHeap->SetComputeRootDescriptorTable(2, m_srvDescHeap->GetGPUIncrementHandle(1));
+		m_shaders->SetComputeDispatch(1, 1, 1);
+		//m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_uavBuffer.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
 
 		//Set required states
 		m_commandList->SetPipelineState(m_shaders->GetShaders(Shaders::ID::Triangle).pipelineState.Get());
@@ -207,6 +198,10 @@ namespace dx
 		ComPtr<ID3D12Debug> debugController;
 		if (SUCCEEDED(D3D12GetDebugInterface(__uuidof(ID3D12Debug), (void**)debugController.GetAddressOf())))
 			debugController->EnableDebugLayer();
+
+		ComPtr<ID3D12Debug1> spDebugController1;
+		debugController->QueryInterface(IID_PPV_ARGS(&spDebugController1));
+		spDebugController1->SetEnableGPUBasedValidation(true);
 #endif
 		//Create a DirectX graphics interface factory.
 		result = CreateDXGIFactory1(__uuidof(IDXGIFactory5), (void**)m_factory.GetAddressOf());
@@ -240,6 +235,7 @@ namespace dx
 			if (FAILED(result))
 				return false;
 		}
+
 		return true;
 	}
 
