@@ -32,14 +32,14 @@ namespace dx
 	void Shader::CreateComputeShader(const std::string & computePath, ID3DBlob ** blob)
 	{
 		//Compile compute shader
-		assert(!D3DCompileFromFile(ToWChar(computePath).c_str(), nullptr, nullptr, "main", "cs_5_0", D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION, 0, &blob[0], nullptr));
+		assert(!D3DCompileFromFile(ToWChar(computePath).c_str(), nullptr, nullptr, "main", "cs_5_1", D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION, 0, &blob[0], nullptr));
 	}
 
 	void Shader::CreateShaders(const std::string & vertexPath, const std::string & pixelPath, ID3DBlob ** blobs)
 	{
 		//Compile vertex and pixel shader
-		assert(!D3DCompileFromFile(ToWChar(vertexPath).c_str(), nullptr, nullptr, "main", "vs_5_0", D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION, 0, &blobs[0], nullptr));
-		assert(!D3DCompileFromFile(ToWChar(pixelPath).c_str(), nullptr, nullptr, "main", "ps_5_0", D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION, 0, &blobs[1], nullptr));
+		assert(!D3DCompileFromFile(ToWChar(vertexPath).c_str(), nullptr, nullptr, "main", "vs_5_1", D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION, 0, &blobs[0], nullptr));
+		assert(!D3DCompileFromFile(ToWChar(pixelPath).c_str(), nullptr, nullptr, "main", "ps_5_1", D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION, 0, &blobs[1], nullptr));
 	}
 
 	//Standard parameters for now

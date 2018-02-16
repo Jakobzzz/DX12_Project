@@ -54,11 +54,11 @@ namespace dx
 
 		//Desc range and root table for standard pipeline 
 		RootDescriptor srvRootDesc;
-		srvRootDesc.AppendDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
+		srvRootDesc.AppendDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DESCRIPTORS_VOLATILE);
 		srvRootDesc.CreateRootDescTable();
 
 		RootDescriptor uavRootDesc;
-		uavRootDesc.AppendDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0);
+		uavRootDesc.AppendDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_VOLATILE);
 		uavRootDesc.CreateRootDescTable();
 
 		//Fill in root parameters for standard pipeline
@@ -69,10 +69,7 @@ namespace dx
 
 		//Create a standard root signature
 		m_rootSignature->CreateRootSignature((UINT)rootParams.GetRootParameters().size(), 1, &rootParams.GetRootParameters()[0], &GetStandardSamplerState(),
-			D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
-			D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS |
-			D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |
-			D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS);
+											  D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 
 		//--- Compute shader ---
 		//Fill in input layout and pipeline states for shaders
@@ -91,15 +88,13 @@ namespace dx
 		};
 
 		Color uavColor;
-		uavColor.color = Vector4(0.f, 0.f, 1.f, 1.f); //Init with red color
+		uavColor.color = Vector4(1.f, 0.f, 0.f, 1.f); //Init with blue color
 		m_buffer->CreateSRVForRootTable(&uavColor, sizeof(uavColor), sizeof(Color), 1, m_srvBuffer.GetAddressOf(), m_srvBufferUploadHeap.GetAddressOf(), //SRV
 			m_srvDescHeap->GetCPUIncrementHandle(0));
 
 		uavColor.color = Vector4(1.f, 0.f, 0.f, 1.f);
 		m_buffer->CreateUAVForRootTable(&uavColor, sizeof(uavColor), sizeof(Color), 1, m_uavBuffer.GetAddressOf(), m_uavBufferUploadHeap.GetAddressOf(), //UAV
 										m_srvDescHeap->GetCPUIncrementHandle(1));
-
-		//--- TODO: launch compute shader here and retrieve the data from the UAV?
 
 		//Close the command list
 		ExecuteCommandList();
@@ -109,15 +104,20 @@ namespace dx
 	void D3D::Render()
 	{
 		BeginScene(Colors::DarkGray);
-
+	
 		//Set resources and draw model
 		m_shaders->SetTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		m_model->BindBuffers(0, m_frameIndex);
 
-		m_srvDescHeap->SetRootDescriptorTable(1, m_srvDescHeap->GetGPUIncrementHandle(1));
-		//m_srvDescHeap->SetRootDescriptorTable(1, m_srvDescHeap->GetGPUIncrementHandle(0));
-		//m_srvDescHeap->SetRootDescriptorTable(1, m_srvDescHeap->GetGPUIncrementHandle(1));
+		m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_srvBuffer.Get(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COPY_DEST));
+		m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_uavBuffer.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COPY_SOURCE));
 
+		m_commandList->CopyResource(m_srvBuffer.Get(), m_uavBuffer.Get()); //Copy the data
+		m_srvDescHeap->SetRootDescriptorTable(1, m_srvDescHeap->GetGPUIncrementHandle(0));
+
+		m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_uavBuffer.Get(), D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS));
+		m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_srvBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
+		
 		m_model->Draw();
 
 		EndScene();
@@ -137,6 +137,7 @@ namespace dx
 		assert(!m_commandAllocator->Reset());
 		assert(!m_commandList->Reset(m_commandAllocator.Get(), nullptr));
 
+		//Set compute shader to change the color of the UAV
 		m_commandList->SetPipelineState(m_shaders->GetComputeShader(Shaders::ID::BasicCompute).pipelineState.Get());
 		m_rootSignature->SetComputeRootSignature();
 		m_srvDescHeap->SetComputeRootDescriptorTable(2, m_srvDescHeap->GetGPUIncrementHandle(1));
@@ -201,6 +202,10 @@ namespace dx
 		ComPtr<ID3D12Debug> debugController;
 		if (SUCCEEDED(D3D12GetDebugInterface(__uuidof(ID3D12Debug), (void**)debugController.GetAddressOf())))
 			debugController->EnableDebugLayer();
+
+		ComPtr<ID3D12Debug1> spDebugController1;
+		debugController->QueryInterface(IID_PPV_ARGS(&spDebugController1));
+		spDebugController1->SetEnableGPUBasedValidation(true);
 #endif
 		//Create a DirectX graphics interface factory.
 		result = CreateDXGIFactory1(__uuidof(IDXGIFactory5), (void**)m_factory.GetAddressOf());
@@ -234,6 +239,7 @@ namespace dx
 			if (FAILED(result))
 				return false;
 		}
+
 		return true;
 	}
 
