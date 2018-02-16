@@ -71,7 +71,6 @@ namespace dx
 		m_rootSignature->CreateRootSignature((UINT)rootParams.GetRootParameters().size(), 1, &rootParams.GetRootParameters()[0], &GetStandardSamplerState(),
 											  D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 
-		//--- Compute shader ---
 		//Fill in input layout and pipeline states for shaders
 		m_shaders->CreatePipelineStateForComputeShader(Shaders::ID::BasicCompute, m_rootSignature->GetRootSignature());
 		m_shaders->CreateInputLayoutAndPipelineState(Shaders::ID::Triangle, m_rootSignature->GetRootSignature());
@@ -88,11 +87,11 @@ namespace dx
 		};
 
 		Color uavColor;
-		uavColor.color = Vector4(1.f, 0.f, 0.f, 1.f); //Init with blue color
+		uavColor.color = Vector4(1.f, 0.f, 0.f, 1.f); //Init with red color
 		m_buffer->CreateSRVForRootTable(&uavColor, sizeof(uavColor), sizeof(Color), 1, m_srvBuffer.GetAddressOf(), m_srvBufferUploadHeap.GetAddressOf(), //SRV
 			m_srvDescHeap->GetCPUIncrementHandle(0));
 
-		uavColor.color = Vector4(1.f, 0.f, 0.f, 1.f);
+		uavColor.color = Vector4(1.f, 0.f, 0.f, 1.f); //Init with red color
 		m_buffer->CreateUAVForRootTable(&uavColor, sizeof(uavColor), sizeof(Color), 1, m_uavBuffer.GetAddressOf(), m_uavBufferUploadHeap.GetAddressOf(), //UAV
 										m_srvDescHeap->GetCPUIncrementHandle(1));
 
@@ -109,15 +108,12 @@ namespace dx
 		m_shaders->SetTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		m_model->BindBuffers(0, m_frameIndex);
 
-		m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_srvBuffer.Get(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COPY_DEST));
 		m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_uavBuffer.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COPY_SOURCE));
-
+		m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_srvBuffer.Get(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COPY_DEST));
 		m_commandList->CopyResource(m_srvBuffer.Get(), m_uavBuffer.Get()); //Copy the data
 		m_srvDescHeap->SetRootDescriptorTable(1, m_srvDescHeap->GetGPUIncrementHandle(0));
-
 		m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_uavBuffer.Get(), D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS));
-		m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_srvBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
-		
+		m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_srvBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));		
 		m_model->Draw();
 
 		EndScene();
@@ -150,9 +146,7 @@ namespace dx
 		m_commandList->RSSetScissorRects(1, &m_rect);
 
 		//Indicate that the backbuffer will be used as a render target
-		CD3DX12_RESOURCE_BARRIER barrier = {};
-		barrier = barrier.Transition(m_backBufferRenderTarget[m_frameIndex].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
-		m_commandList->ResourceBarrier(1, &barrier);
+		m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_backBufferRenderTarget[m_frameIndex].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
 
 		//Get the render target view handle for the current back buffer.
 		D3D12_CPU_DESCRIPTOR_HANDLE renderTargetViewHandle = { 0 };
@@ -168,17 +162,12 @@ namespace dx
 	void D3D::EndScene()
 	{
 		//Indicate that the backbuffer will now be used to present
-		CD3DX12_RESOURCE_BARRIER barrier = {};
-		barrier = barrier.Transition(m_backBufferRenderTarget[m_frameIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
-		m_commandList->ResourceBarrier(1, &barrier);
-
+		m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_backBufferRenderTarget[m_frameIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
 		ExecuteCommandList();
 		assert(!m_swapChain->Present(0, 0));
 
 		WaitForPreviousFrame();
-
-		//Swap the current render target view buffer index so drawing is done on the correct buffer
-		m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
+		m_frameIndex = m_swapChain->GetCurrentBackBufferIndex(); //Swap the current render target view buffer index so drawing is done on the correct buffer
 	}
 
 	void D3D::ShutDown()
@@ -203,9 +192,10 @@ namespace dx
 		if (SUCCEEDED(D3D12GetDebugInterface(__uuidof(ID3D12Debug), (void**)debugController.GetAddressOf())))
 			debugController->EnableDebugLayer();
 
-		ComPtr<ID3D12Debug1> spDebugController1;
+		//Enable GPU based validation
+		/*ComPtr<ID3D12Debug1> spDebugController1;
 		debugController->QueryInterface(IID_PPV_ARGS(&spDebugController1));
-		spDebugController1->SetEnableGPUBasedValidation(true);
+		spDebugController1->SetEnableGPUBasedValidation(true);*/
 #endif
 		//Create a DirectX graphics interface factory.
 		result = CreateDXGIFactory1(__uuidof(IDXGIFactory5), (void**)m_factory.GetAddressOf());
