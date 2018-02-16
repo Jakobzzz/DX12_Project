@@ -8,15 +8,15 @@ namespace dx
 	{
 	}
 
-	void RootSignature::CreateRootSignature(const UINT & size, const UINT & staticSamplers, const D3D12_ROOT_PARAMETER * params, 
+	void RootSignature::CreateRootSignature(const UINT & size, const UINT & staticSamplers, const D3D12_ROOT_PARAMETER1 * params, 
 											const D3D12_STATIC_SAMPLER_DESC * samplers, D3D12_ROOT_SIGNATURE_FLAGS flags)
 	{
-		CD3DX12_ROOT_SIGNATURE_DESC rootDesc = {};
-		rootDesc.Init(size, params, staticSamplers, samplers, flags);
+		CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootDesc = {};
+		rootDesc.Init_1_1(size, params, staticSamplers, samplers, flags);
 
 		//Create signature from the description
 		ID3DBlob* errorBuff; ID3DBlob* signature;
-		assert(!D3D12SerializeRootSignature(&rootDesc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, &errorBuff));
+		assert(!D3DX12SerializeVersionedRootSignature(&rootDesc, D3D_ROOT_SIGNATURE_VERSION_1_1, &signature, &errorBuff));
 		assert(!m_device->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(m_rootSignature.GetAddressOf())));
 
 		//Release the blobs since we no longer need them

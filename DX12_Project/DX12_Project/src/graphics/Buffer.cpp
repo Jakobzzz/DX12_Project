@@ -96,9 +96,8 @@ namespace dx
 
 		//Transition the UAV buffer data from copy destination to UAV buffer state
 		m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(buffer[0], D3D12_RESOURCE_STATE_COPY_DEST,
-			D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE));
+			D3D12_RESOURCE_STATE_UNORDERED_ACCESS));
 
-		//D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE
 		//Describe the view
 		D3D12_UNORDERED_ACCESS_VIEW_DESC view = {};
 		view.Format = DXGI_FORMAT_UNKNOWN;
@@ -120,7 +119,7 @@ namespace dx
 
 		//Transition the SRV buffer data from copy destination to SRV buffer state
 		m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(buffer[0], D3D12_RESOURCE_STATE_COPY_DEST,
-			D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE));
+			D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
 
 		//Describe the view
 		D3D12_SHADER_RESOURCE_VIEW_DESC view = {};

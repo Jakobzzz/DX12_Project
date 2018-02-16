@@ -10,7 +10,7 @@ namespace dx
 	{
 	public:
 		RootSignature(ID3D12Device* device, ID3D12GraphicsCommandList* commandList);
-		void CreateRootSignature(const UINT & size, const UINT & staticSamplers, const D3D12_ROOT_PARAMETER* params,
+		void CreateRootSignature(const UINT & size, const UINT & staticSamplers, const D3D12_ROOT_PARAMETER1* params,
 			const D3D12_STATIC_SAMPLER_DESC* samplers, D3D12_ROOT_SIGNATURE_FLAGS flags);
 
 	public:
