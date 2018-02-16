@@ -10,10 +10,10 @@ namespace dx
 	}
 
 	//Only vertex and pixel shader here for now...
-	void Shader::LoadShaders(const Shaders::ID & id, const std::string & vertexPath, const std::string & pixelPath)
+	void Shader::LoadShaders(const Shaders::ID & id, const std::string & shaderPath, ShaderType type)
 	{
 		ShaderData data;
-		CreateShaders(vertexPath, pixelPath, data.blobs->GetAddressOf());
+		CreateShaders(shaderPath, data.blobs->GetAddressOf(), type);
 
 		auto inserted = m_standardShaders.insert(std::make_pair(id, std::move(data)));
 		assert(inserted.second);
@@ -32,14 +32,17 @@ namespace dx
 	void Shader::CreateComputeShader(const std::string & computePath, ID3DBlob ** blob)
 	{
 		//Compile compute shader
-		assert(!D3DCompileFromFile(ToWChar(computePath).c_str(), nullptr, nullptr, "main", "cs_5_1", D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION, 0, &blob[0], nullptr));
+		assert(!D3DCompileFromFile(ToWChar(computePath).c_str(), nullptr, nullptr, "CS_MAIN", "cs_5_1", D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION, 0, &blob[0], nullptr));
 	}
 
-	void Shader::CreateShaders(const std::string & vertexPath, const std::string & pixelPath, ID3DBlob ** blobs)
+	void Shader::CreateShaders(const std::string & shaderPath, ID3DBlob ** blobs, ShaderType type)
 	{
-		//Compile vertex and pixel shader
-		assert(!D3DCompileFromFile(ToWChar(vertexPath).c_str(), nullptr, nullptr, "main", "vs_5_1", D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION, 0, &blobs[0], nullptr));
-		assert(!D3DCompileFromFile(ToWChar(pixelPath).c_str(), nullptr, nullptr, "main", "ps_5_1", D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION, 0, &blobs[1], nullptr));
+		//Compile depending on shader type
+		if (type == (VS | PS))
+		{
+			assert(!D3DCompileFromFile(ToWChar(shaderPath).c_str(), nullptr, nullptr, "VS_MAIN", "vs_5_1", D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION, 0, &blobs[0], nullptr));
+			assert(!D3DCompileFromFile(ToWChar(shaderPath).c_str(), nullptr, nullptr, "PS_MAIN", "ps_5_1", D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION, 0, &blobs[1], nullptr));
+		}
 	}
 
 	//Standard parameters for now

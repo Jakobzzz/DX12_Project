@@ -11,7 +11,7 @@ namespace dx
 {
 	void D3D::LoadShaders()
 	{
-		m_shaders->LoadShaders(Shaders::ID::Triangle, "src/res/shaders/VertexShader.hlsl", "src/res/shaders/FragmentShader.hlsl");
+		m_shaders->LoadShaders(Shaders::ID::Triangle, "src/res/shaders/VertexShader.hlsl", VS | PS);
 		m_shaders->LoadComputeShader(Shaders::ID::BasicCompute, "src/res/shaders/BlurComputeShader.hlsl");
 	}
 

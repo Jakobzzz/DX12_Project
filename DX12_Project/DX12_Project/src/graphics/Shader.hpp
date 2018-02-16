@@ -13,6 +13,13 @@ namespace Shaders
 	};
 }
 
+enum ShaderType
+{
+	VS = 0,
+	PS = 0x1
+};
+DEFINE_ENUM_FLAG_OPERATORS(ShaderType);
+
 using namespace Microsoft::WRL;
 
 namespace dx
@@ -36,7 +43,7 @@ namespace dx
 
 	public:
 		Shader(ID3D12Device* device, ID3D12GraphicsCommandList* commandList);
-		void LoadShaders(const Shaders::ID & id, const std::string & vertexPath, const std::string & pixelPath);
+		void LoadShaders(const Shaders::ID & id, const std::string & shaderPath, ShaderType type);
 		void LoadComputeShader(const Shaders::ID & id, const std::string & computePath);
 		void CreateInputLayoutAndPipelineState(const Shaders::ID & id, ID3D12RootSignature* signature);
 		void CreatePipelineStateForComputeShader(const Shaders::ID & id, ID3D12RootSignature* signature);
@@ -51,7 +58,7 @@ namespace dx
 
 	private:
 		void CreateComputeShader(const std::string & computePath, ID3DBlob** blob);
-		void CreateShaders(const std::string & vertexPath, const std::string & pixelPath, ID3DBlob** blobs);
+		void CreateShaders(const std::string & shaderPath, ID3DBlob** blobs, ShaderType type);
 
 	private:
 		ID3D12Device * m_device;
