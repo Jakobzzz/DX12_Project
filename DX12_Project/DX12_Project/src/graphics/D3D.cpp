@@ -108,11 +108,17 @@ namespace dx
 		//Set resources and draw model
 		m_shaders->SetTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		m_model->BindBuffers(0, m_frameIndex);
+
+		m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_srvBuffer.Get(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COPY_DEST));
 		m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_uavBuffer.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COPY_SOURCE));
-		m_commandList->CopyResource(m_srvBuffer.Get(), m_uavBuffer.Get()); //Copt the data
+
+		m_commandList->CopyResource(m_srvBuffer.Get(), m_uavBuffer.Get()); //Copy the data
 		m_srvDescHeap->SetRootDescriptorTable(1, m_srvDescHeap->GetGPUIncrementHandle(0));
-		m_model->Draw();
+
 		m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_uavBuffer.Get(), D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS));
+		m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_srvBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
+		
+		m_model->Draw();
 
 		EndScene();
 	}
@@ -132,12 +138,10 @@ namespace dx
 		assert(!m_commandList->Reset(m_commandAllocator.Get(), nullptr));
 
 		//Set compute shader to change the color of the UAV
-		//m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_uavBuffer.Get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS));
 		m_commandList->SetPipelineState(m_shaders->GetComputeShader(Shaders::ID::BasicCompute).pipelineState.Get());
 		m_rootSignature->SetComputeRootSignature();
 		m_srvDescHeap->SetComputeRootDescriptorTable(2, m_srvDescHeap->GetGPUIncrementHandle(1));
 		m_shaders->SetComputeDispatch(1, 1, 1);
-		//m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_uavBuffer.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
 
 		//Set required states
 		m_commandList->SetPipelineState(m_shaders->GetShaders(Shaders::ID::Triangle).pipelineState.Get());
