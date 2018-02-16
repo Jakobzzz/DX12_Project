@@ -15,6 +15,7 @@ namespace dx
 
 	public:
 		void SetRootSignature();
+		void SetComputeRootSignature();
 
 	public:
 		ID3D12RootSignature * GetRootSignature() const;

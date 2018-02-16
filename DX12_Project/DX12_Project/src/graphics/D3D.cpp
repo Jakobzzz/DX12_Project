@@ -12,24 +12,30 @@ namespace dx
 	void D3D::LoadShaders()
 	{
 		m_shaders->LoadShaders(Shaders::ID::Triangle, "src/res/shaders/VertexShader.hlsl", "src/res/shaders/FragmentShader.hlsl");
+		m_shaders->LoadComputeShader(Shaders::ID::BasicCompute, "src/res/shaders/BlurComputeShader.hlsl");
 	}
 
 	void D3D::LoadTextures()
 	{
-		m_texture->LoadTexture(Textures::ID::Fatboy, "src/res/textures/fatboy.png");
-		m_texture->LoadTexture(Textures::ID::Smiley, "src/res/textures/smiley.png");
+		//m_texture->LoadTexture(Textures::ID::Fatboy, "src/res/textures/fatboy.png");
+		//m_texture->LoadTexture(Textures::ID::Smiley, "src/res/textures/smiley.png");
 	}
 
 	void D3D::LoadObjects()
 	{
+		//Standard utility
 		m_shaders = std::make_unique<Shader>(m_device.Get(), m_commandList.Get());
 		m_texture = std::make_unique<Texture>(m_device.Get(), m_commandList.Get());
 		m_buffer = std::make_unique<Buffer>(m_device.Get(), m_commandList.Get());
-		m_srvDescHeap = std::make_unique<DescriptorHeap>(m_device.Get(), m_commandList.Get(), 1);
-		m_depthStencilHeap = std::make_unique<DescriptorHeap>(m_device.Get(), m_commandList.Get(), 1);
-		m_rootSignature = std::make_unique<RootSignature>(m_device.Get(), m_commandList.Get());
 		m_camera = std::make_unique<Camera>();
 		m_model = std::make_unique<Model>(m_device.Get(), m_commandList.Get(), m_buffer.get(), m_camera.get());
+
+		//Descriptor heaps
+		m_srvDescHeap = std::make_unique<DescriptorHeap>(m_device.Get(), m_commandList.Get(), 1);
+		m_depthStencilHeap = std::make_unique<DescriptorHeap>(m_device.Get(), m_commandList.Get(), 1);
+		
+		//Root signatures
+		m_rootSignature = std::make_unique<RootSignature>(m_device.Get(), m_commandList.Get());
 	}
 
 	void D3D::Initialize(HWND hwnd)
@@ -46,34 +52,54 @@ namespace dx
 		LoadShaders();
 		LoadTextures();
 
-		//Fill in the desc range and create root table for the description
+		//Desc range and root table for standard pipeline 
 		RootDescriptor srvRootDesc;
 		srvRootDesc.AppendDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
 		srvRootDesc.CreateRootDescTable();
 
-		//Fill in root parameters
+		RootDescriptor uavRootDesc;
+		uavRootDesc.AppendDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0);
+		uavRootDesc.CreateRootDescTable();
+
+		//Fill in root parameters for standard pipeline
 		RootParameter rootParams;
-		rootParams.AppendRootParameterCBV(0, D3D12_SHADER_VISIBILITY_VERTEX);
+		rootParams.AppendRootParameterCBV(0, D3D12_SHADER_VISIBILITY_ALL);
 		rootParams.AppendRootParameterDescTable(srvRootDesc.GetRootDescTable(), D3D12_SHADER_VISIBILITY_PIXEL);
+		rootParams.AppendRootParameterDescTable(uavRootDesc.GetRootDescTable(), D3D12_SHADER_VISIBILITY_ALL);
 
 		//Create a standard root signature
-		m_rootSignature->CreateRootSignature(rootParams.GetRootParameters().size(), 1, &rootParams.GetRootParameters()[0], &GetStandardSamplerState(),
+		m_rootSignature->CreateRootSignature((UINT)rootParams.GetRootParameters().size(), 1, &rootParams.GetRootParameters()[0], &GetStandardSamplerState(),
 			D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
 			D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS |
 			D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |
 			D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS);
 
+		//--- Compute shader ---
 		//Fill in input layout and pipeline states for shaders
-		m_shaders->CreateInputLayoutAndPipelineState(Shaders::ID::Triangle, 1, m_rootSignature->GetRootSignature());
+		m_shaders->CreatePipelineStateForComputeShader(Shaders::ID::BasicCompute, m_rootSignature->GetRootSignature());
+		m_shaders->CreateInputLayoutAndPipelineState(Shaders::ID::Triangle, m_rootSignature->GetRootSignature());
 
 		//Create descriptor heaps and depth stencil buffer
-		m_srvDescHeap->CreateDescriptorHeap(1, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+		m_srvDescHeap->CreateDescriptorHeap(2, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 		m_depthStencilHeap->CreateDescriptorHeap(1, D3D12_DESCRIPTOR_HEAP_FLAG_NONE, D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
 		m_buffer->CreateDepthStencilBuffer(m_depthStencilBuffer.GetAddressOf(), m_depthViewDesc, m_depthStencilHeap->GetCPUIncrementHandle(0));
-		m_model->CreateConstantBuffers();
 
-		//One SRV
-		m_texture->CreateSRVFromTexture(Textures::ID::Fatboy, m_srvDescHeap->GetCPUIncrementHandle(0));
+		//Create the UAV buffer
+		struct Color
+		{
+			Vector4 color;
+		};
+
+		Color uavColor;
+		uavColor.color = Vector4(0.f, 0.f, 1.f, 1.f); //Init with red color
+		m_buffer->CreateSRVForRootTable(&uavColor, sizeof(uavColor), sizeof(Color), 1, m_srvBuffer.GetAddressOf(), m_srvBufferUploadHeap.GetAddressOf(), //SRV
+			m_srvDescHeap->GetCPUIncrementHandle(0));
+
+		uavColor.color = Vector4(1.f, 0.f, 0.f, 1.f);
+		m_buffer->CreateUAVForRootTable(&uavColor, sizeof(uavColor), sizeof(Color), 1, m_uavBuffer.GetAddressOf(), m_uavBufferUploadHeap.GetAddressOf(), //UAV
+										m_srvDescHeap->GetCPUIncrementHandle(1));
+
+		//--- TODO: launch compute shader here and retrieve the data from the UAV?
 
 		//Close the command list
 		ExecuteCommandList();
@@ -87,7 +113,11 @@ namespace dx
 		//Set resources and draw model
 		m_shaders->SetTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		m_model->BindBuffers(0, m_frameIndex);
-		m_srvDescHeap->SetRootDescriptorTable(1);
+
+		m_srvDescHeap->SetRootDescriptorTable(1, m_srvDescHeap->GetGPUIncrementHandle(1));
+		//m_srvDescHeap->SetRootDescriptorTable(1, m_srvDescHeap->GetGPUIncrementHandle(0));
+		//m_srvDescHeap->SetRootDescriptorTable(1, m_srvDescHeap->GetGPUIncrementHandle(1));
+
 		m_model->Draw();
 
 		EndScene();
@@ -105,9 +135,15 @@ namespace dx
 
 		//Reset resources
 		assert(!m_commandAllocator->Reset());
-		assert(!m_commandList->Reset(m_commandAllocator.Get(), m_shaders->GetShaders(Shaders::ID::Triangle).pipelineState.Get()));
+		assert(!m_commandList->Reset(m_commandAllocator.Get(), nullptr));
+
+		m_commandList->SetPipelineState(m_shaders->GetComputeShader(Shaders::ID::BasicCompute).pipelineState.Get());
+		m_rootSignature->SetComputeRootSignature();
+		m_srvDescHeap->SetComputeRootDescriptorTable(2, m_srvDescHeap->GetGPUIncrementHandle(1));
+		m_shaders->SetComputeDispatch(1, 1, 1);
 
 		//Set required states
+		m_commandList->SetPipelineState(m_shaders->GetShaders(Shaders::ID::Triangle).pipelineState.Get());
 		m_rootSignature->SetRootSignature();
 		m_commandList->RSSetViewports(1, &m_viewport);
 		m_commandList->RSSetScissorRects(1, &m_rect);
@@ -254,8 +290,8 @@ namespace dx
 
 		//Initialize the swap chain description.
 		DXGI_SWAP_CHAIN_DESC1 scDesc = {};
-		scDesc.Width = 0;
-		scDesc.Height = 0;
+		scDesc.Width = SCREEN_WIDTH;
+		scDesc.Height = SCREEN_HEIGHT;
 		scDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 		scDesc.Stereo = FALSE;
 		scDesc.SampleDesc.Count = 1;

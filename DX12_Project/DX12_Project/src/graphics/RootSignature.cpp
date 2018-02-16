@@ -29,6 +29,11 @@ namespace dx
 		m_commandList->SetGraphicsRootSignature(m_rootSignature.Get());
 	}
 
+	void RootSignature::SetComputeRootSignature()
+	{
+		m_commandList->SetComputeRootSignature(m_rootSignature.Get());
+	}
+
 	ID3D12RootSignature * RootSignature::GetRootSignature() const
 	{
 		return m_rootSignature.Get();

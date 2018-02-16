@@ -1,5 +1,11 @@
-Texture2D t1 : register(t0);
 SamplerState s1 : register(s0);
+
+struct Color
+{
+    float4 color;
+};
+
+StructuredBuffer<Color> colorBuffer : register(t0); // SRV
 
 struct PS_IN
 {
@@ -9,5 +15,5 @@ struct PS_IN
 
 float4 main(PS_IN input) : SV_TARGET
 {
-    return t1.Sample(s1, input.uv);
+    return colorBuffer[0].color;
 }
