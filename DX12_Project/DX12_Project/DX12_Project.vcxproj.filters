@@ -105,13 +105,10 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="src\res\shaders\FragmentShader.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="src\res\shaders\VertexShader.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
     <FxCompile Include="src\res\shaders\ComputeShader.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="src\res\shaders\Shaders.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
   </ItemGroup>

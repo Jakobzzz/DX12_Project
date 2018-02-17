@@ -11,8 +11,8 @@ namespace dx
 {
 	void D3D::LoadShaders()
 	{
-		m_shaders->LoadShaders(Shaders::ID::Triangle, "src/res/shaders/VertexShader.hlsl", "src/res/shaders/FragmentShader.hlsl");
-		m_shaders->LoadComputeShader(Shaders::ID::Compute, "src/res/shaders/ComputeShader.hlsl");
+		m_shaders->LoadShadersFromFile(Shaders::ID::Triangle, "src/res/shaders/Shaders.hlsl", VS | PS);
+		m_shaders->LoadShadersFromFile(Shaders::ID::Compute, "src/res/shaders/ComputeShader.hlsl", CS);
 	}
 
 	void D3D::LoadTextures()
@@ -144,7 +144,7 @@ namespace dx
 	void D3D::Simulate()
 	{
 		//Set compute shader to change the color of the UAV
-		m_commandList->SetPipelineState(m_shaders->GetComputeShader(Shaders::ID::Compute).pipelineState.Get());
+		m_commandList->SetPipelineState(m_shaders->GetShaders(Shaders::ID::Compute).pipelineState.Get());
 		m_computeRootSignature->SetComputeRootSignature();
 		m_srvUavDescHeap->SetComputeRootDescriptorTable(0, m_srvUavDescHeap->GetGPUIncrementHandle(m_frameIndex));
 		m_srvUavDescHeap->SetComputeRootDescriptorTable(1, m_srvUavDescHeap->GetGPUIncrementHandle(2));
