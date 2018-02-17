@@ -24,20 +24,20 @@ namespace dx
 	void D3D::LoadObjects()
 	{
 		//Standard utility
-		m_shaders = std::make_unique<Shader>(m_device.Get(), m_commandList.Get());
+		m_shaders = std::make_unique<Shader>(m_device.Get(), m_commandList.Get(), m_computeCommandList.Get());
 		m_texture = std::make_unique<Texture>(m_device.Get(), m_commandList.Get());
 		m_buffer = std::make_unique<Buffer>(m_device.Get(), m_commandList.Get());
 		m_camera = std::make_unique<Camera>();
 		m_model = std::make_unique<Model>(m_device.Get(), m_commandList.Get(), m_buffer.get(), m_camera.get());
 
 		//Descriptor heaps
-		m_srvUavDescHeap = std::make_unique<DescriptorHeap>(m_device.Get(), m_commandList.Get(), 1);
-		m_depthStencilHeap = std::make_unique<DescriptorHeap>(m_device.Get(), m_commandList.Get(), 1);
+		m_srvUavDescHeap = std::make_unique<DescriptorHeap>(m_device.Get(), m_commandList.Get(), m_computeCommandList.Get(), 1);
+		m_depthStencilHeap = std::make_unique<DescriptorHeap>(m_device.Get(), m_commandList.Get(), m_computeCommandList.Get(), 1);
 		
 		//Dummy comment =)
 		//Root signatures
-		m_rootSignature = std::make_unique<RootSignature>(m_device.Get(), m_commandList.Get());
-		m_computeRootSignature = std::make_unique<RootSignature>(m_device.Get(), m_commandList.Get());
+		m_rootSignature = std::make_unique<RootSignature>(m_device.Get(), m_commandList.Get(), m_computeCommandList.Get());
+		m_computeRootSignature = std::make_unique<RootSignature>(m_device.Get(), m_commandList.Get(), m_computeCommandList.Get());
 	}
 
 	void D3D::Initialize(HWND hwnd)
@@ -119,12 +119,19 @@ namespace dx
 										m_srvUavDescHeap->GetCPUIncrementHandle(2));
 
 		//Initialize the uav as compute shader resource
-		SetResourceBarrier(m_uavBuffer.GetAddressOf(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+		SetComputeResourceBarrier(m_uavBuffer.GetAddressOf(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 
-		//Close the command list
+		//Close the command lists
 		ExecuteCommandList();
-		WaitForPreviousFrame();
+		ExecuteComputeCommandList();
 
+		//Wait for the gpu to finish working before we begin
+		//simulation/rendering
+		WaitForGraphicsPipeline();
+		WaitForComputeShader();
+
+		//Set the frameIndex to 1, this is to force the compute shader to start working with the next frame
+		//while the graphics pipeline works with the current frame
 		m_frameIndex = 1;
 	}
 
@@ -145,27 +152,11 @@ namespace dx
 	void D3D::Simulate()
 	{
 		//Set compute shader to change the color of the UAV
-		m_commandList->SetPipelineState(m_shaders->GetShaders(Shaders::ID::Compute).pipelineState.Get());
+		m_computeCommandList->SetPipelineState(m_shaders->GetShaders(Shaders::ID::Compute).pipelineState.Get());
 		m_computeRootSignature->SetComputeRootSignature();
 		m_srvUavDescHeap->SetComputeRootDescriptorTable(0, m_srvUavDescHeap->GetGPUIncrementHandle(m_frameIndex));
 		m_srvUavDescHeap->SetComputeRootDescriptorTable(1, m_srvUavDescHeap->GetGPUIncrementHandle(2));
 		m_shaders->SetComputeDispatch(1, 1, 1);
-
-		//Set the srv as a copy destination resource
-		SetResourceBarrier(m_srvBuffer[m_frameIndex].GetAddressOf(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COPY_DEST);
-
-		//Set the uav as a copy source resource
-		SetResourceBarrier(m_uavBuffer.GetAddressOf(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COPY_SOURCE);
-
-		//Copy the uav data to the srv
-		m_commandList->CopyResource(m_srvBuffer[m_frameIndex].Get(), m_uavBuffer.Get());
-
-		//Set the srv as a pixel shader resource
-		SetResourceBarrier(m_srvBuffer[m_frameIndex].GetAddressOf(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-
-		//Set the uav as a compute shader resource
-		SetResourceBarrier(m_uavBuffer.GetAddressOf(), D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
-
 	}
 
 	void D3D::BeginScene(const FLOAT* color)
@@ -178,14 +169,22 @@ namespace dx
 		if (Input::GetKeyDown(Keyboard::Keys::Escape))
 			PostQuitMessage(0);
 
+
 		//Reset resources
+		assert(!m_computeCommandAllocator->Reset());
+		assert(!m_computeCommandList->Reset(m_computeCommandAllocator.Get(), nullptr));
+
 		assert(!m_commandAllocator->Reset());
 		assert(!m_commandList->Reset(m_commandAllocator.Get(), nullptr));
 
+		UpdateShaderResources();
+
 		//Run the compute shader
 		Simulate();
+		ExecuteComputeCommandList();
 
 		//Get the current back buffer
+		//to make sure that the compute shader and graphics pipeline works on different frames
 		m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
 
 		//Set required states
@@ -221,13 +220,15 @@ namespace dx
 		ExecuteCommandList();
 		assert(!m_swapChain->Present(0, 0));
 
-		WaitForPreviousFrame();
+		//Sync the compute shader with the graphics pipeline
+		WaitForGraphicsPipeline();
+		WaitForComputeShader();
 	}
 
 	void D3D::ShutDown()
 	{
 		//Close the object handle to the fence event.
-		WaitForPreviousFrame();
+		WaitForGraphicsPipeline();
 		CloseHandle(m_fenceEvent);
 
 		m_texture->Release();
@@ -318,6 +319,11 @@ namespace dx
 			renderTargetViewHandle.ptr += renderTargetViewDescriptorSize;
 		}
 
+		//Create an event object for the compute fence
+		assert(!m_device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(m_computeFence.GetAddressOf())));
+		m_fenceValue = 1;
+		m_computeFenceEvent = CreateEvent(nullptr, 0, 0, nullptr);
+
 		//Create an event object for the fence.
 		assert(!m_device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(m_fence.GetAddressOf())));
 		m_fenceValue = 1;
@@ -326,6 +332,21 @@ namespace dx
 
 	void D3D::CreateCommandsAndSwapChain(HWND hwnd)
 	{
+		//Create compute command queue, allocator and list
+		D3D12_COMMAND_QUEUE_DESC computeCommandQueueDesc;
+		ZeroMemory(&computeCommandQueueDesc, sizeof(computeCommandQueueDesc));
+		computeCommandQueueDesc.Type = D3D12_COMMAND_LIST_TYPE_COMPUTE;
+		computeCommandQueueDesc.Priority = D3D12_COMMAND_QUEUE_PRIORITY_NORMAL;
+		computeCommandQueueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
+		computeCommandQueueDesc.NodeMask = 0;
+
+		assert(!m_device->CreateCommandQueue(&computeCommandQueueDesc, __uuidof(ID3D12CommandQueue), (void**)m_computeCommandQueue.GetAddressOf()));
+		m_computeCommandQueue->SetName(L"Compute Command Queue");
+		assert(!m_device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_COMPUTE, IID_PPV_ARGS(m_computeCommandAllocator.GetAddressOf())));
+		m_computeCommandAllocator->SetName(L"Compute Command Allocator");
+		assert(!m_device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_COMPUTE, m_computeCommandAllocator.Get(), nullptr, IID_PPV_ARGS(m_computeCommandList.GetAddressOf())));
+		m_computeCommandList->SetName(L"Compute Command List");
+
 		D3D12_COMMAND_QUEUE_DESC commandQueueDesc;
 		ZeroMemory(&commandQueueDesc, sizeof(commandQueueDesc));
 		commandQueueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
@@ -335,8 +356,11 @@ namespace dx
 
 		//Create command queue, allocator and list
 		assert(!m_device->CreateCommandQueue(&commandQueueDesc, __uuidof(ID3D12CommandQueue), (void**)m_commandQueue.GetAddressOf()));
+		m_commandQueue->SetName(L"Command Queue");
 		assert(!m_device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(m_commandAllocator.GetAddressOf())));
+		m_commandAllocator->SetName(L"Command Allocator");
 		assert(!m_device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, m_commandAllocator.Get(), nullptr, IID_PPV_ARGS(m_commandList.GetAddressOf())));
+		m_commandList->SetName(L"Command List");
 
 		//Initialize the swap chain description.
 		DXGI_SWAP_CHAIN_DESC1 scDesc = {};
@@ -374,8 +398,9 @@ namespace dx
 		m_rect.bottom = static_cast<LONG>(SCREEN_HEIGHT);
 	}
 
-	void D3D::WaitForPreviousFrame()
+	void D3D::WaitForGraphicsPipeline()
 	{
+		//Wait for graphics pipeline
 		//Signal and increment the fence value.
 		const UINT64 fence = m_fenceValue;
 		m_commandQueue->Signal(m_fence.Get(), fence);
@@ -389,9 +414,47 @@ namespace dx
 		}
 	}
 
+	void D3D::WaitForComputeShader()
+	{
+		//Wait for compute shader
+		const UINT64 computeFence = m_computeFenceValue;
+		m_computeCommandQueue->Signal(m_computeFence.Get(), computeFence);
+		m_computeFenceValue++;
+
+		if (m_computeFence->GetCompletedValue() < computeFence)
+		{
+			m_computeFence->SetEventOnCompletion(computeFence, m_computeFenceEvent);
+			WaitForSingleObject(m_fenceEvent, INFINITE);
+		}
+	}
+
+	void D3D::UpdateShaderResources()
+	{
+		//Set the srv as a copy destination resource
+		SetResourceBarrier(m_srvBuffer[m_frameIndex].GetAddressOf(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COPY_DEST);
+
+		//Set the uav as a copy source resource
+		SetResourceBarrier(m_uavBuffer.GetAddressOf(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COPY_SOURCE);
+
+		//Copy the uav data to the srv
+		m_commandList->CopyResource(m_srvBuffer[m_frameIndex].Get(), m_uavBuffer.Get());
+
+		//Set the srv as a pixel shader resource
+		SetResourceBarrier(m_srvBuffer[m_frameIndex].GetAddressOf(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+
+		//Set the uav as a compute shader resource
+		SetResourceBarrier(m_uavBuffer.GetAddressOf(), D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+	}
+
 	void D3D::SetResourceBarrier(ID3D12Resource ** buffer, D3D12_RESOURCE_STATES beforeState, D3D12_RESOURCE_STATES afterState)
 	{
 		m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(*buffer, beforeState,
+			afterState));
+	}
+
+	void D3D::SetComputeResourceBarrier(ID3D12Resource ** buffer, D3D12_RESOURCE_STATES beforeState, D3D12_RESOURCE_STATES afterState)
+	{
+		m_computeCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(*buffer, beforeState,
 			afterState));
 	}
 
@@ -401,6 +464,14 @@ namespace dx
 		assert(!m_commandList->Close());
 		ID3D12CommandList* ppCommandLists[] = { m_commandList.Get() };
 		m_commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
+	}
+
+	void D3D::ExecuteComputeCommandList()
+	{
+		//Load command list and execute the recorded commands
+		assert(!m_computeCommandList->Close());
+		ID3D12CommandList* ppCommandLists[] = { m_computeCommandList.Get() };
+		m_computeCommandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
 	}
 
 	ID3D12Device* D3D::GetDevice() const

@@ -5,7 +5,8 @@
 
 namespace dx
 {
-	Shader::Shader(ID3D12Device * device, ID3D12GraphicsCommandList * commandList) : m_device(device), m_commandList(commandList)
+	Shader::Shader(ID3D12Device * device, ID3D12GraphicsCommandList * commandList, ID3D12GraphicsCommandList* computeCommandList) : 
+		m_device(device), m_commandList(commandList), m_computeCommandList(computeCommandList)
 	{
 	}
 
@@ -96,7 +97,7 @@ namespace dx
 
 	void Shader::SetComputeDispatch(const UINT & tgx, const UINT & tgy, const UINT & tgz)
 	{
-		m_commandList->Dispatch(tgx, tgy, tgz);
+		m_computeCommandList->Dispatch(tgx, tgy, tgz);
 	}
 
 	Shader::ShaderData Shader::GetShaders(const Shaders::ID & id) const

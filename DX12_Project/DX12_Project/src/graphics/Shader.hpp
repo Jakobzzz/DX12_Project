@@ -39,7 +39,7 @@ namespace dx
 		};
 
 	public:
-		Shader(ID3D12Device* device, ID3D12GraphicsCommandList* commandList);
+		Shader(ID3D12Device* device, ID3D12GraphicsCommandList* commandList, ID3D12GraphicsCommandList* computeCommandList);
 		void LoadShadersFromFile(const Shaders::ID & id, const std::string & shaderPath, ShaderType type);
 		void CreateInputLayoutAndPipelineState(const Shaders::ID & id, ID3D12RootSignature* signature);
 		void CreatePipelineStateForComputeShader(const Shaders::ID & id, ID3D12RootSignature* signature);
@@ -54,6 +54,7 @@ namespace dx
 	private:
 		ID3D12Device * m_device;
 		ID3D12GraphicsCommandList* m_commandList;
+		ID3D12GraphicsCommandList* m_computeCommandList;
 		std::map<Shaders::ID, ShaderData> m_shaders;
 	};
 }

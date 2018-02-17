@@ -4,7 +4,8 @@
 
 namespace dx
 {
-	RootSignature::RootSignature(ID3D12Device * device, ID3D12GraphicsCommandList* commandList) : m_device(device), m_commandList(commandList)
+	RootSignature::RootSignature(ID3D12Device * device, ID3D12GraphicsCommandList* commandList, ID3D12GraphicsCommandList* computeCommandList) : 
+		m_device(device), m_commandList(commandList), m_computeCommandList(computeCommandList)
 	{
 	}
 
@@ -31,7 +32,7 @@ namespace dx
 
 	void RootSignature::SetComputeRootSignature()
 	{
-		m_commandList->SetComputeRootSignature(m_rootSignature.Get());
+		m_computeCommandList->SetComputeRootSignature(m_rootSignature.Get());
 	}
 
 	ID3D12RootSignature * RootSignature::GetRootSignature() const

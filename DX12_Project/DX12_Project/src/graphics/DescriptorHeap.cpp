@@ -4,8 +4,8 @@
 
 namespace dx
 {
-	DescriptorHeap::DescriptorHeap(ID3D12Device* device, ID3D12GraphicsCommandList* commandList, const UINT & numHeaps) : m_device(device), 
-								   m_commandList(commandList), m_descHeaps(numHeaps)
+	DescriptorHeap::DescriptorHeap(ID3D12Device* device, ID3D12GraphicsCommandList* commandList, ID3D12GraphicsCommandList* computeCommandList, const UINT & numHeaps) : m_device(device), 
+								   m_commandList(commandList), m_computeCommandList(computeCommandList), m_descHeaps(numHeaps)
 	{
 	}
 
@@ -63,14 +63,14 @@ namespace dx
 		if (m_descHeaps.size() > 1)
 		{
 			ID3D12DescriptorHeap* descriptorHeaps[] = { m_descHeaps[frameIndex].Get() };
-			m_commandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
-			m_commandList->SetComputeRootDescriptorTable(rootIndex, m_descHeaps[frameIndex]->GetGPUDescriptorHandleForHeapStart());
+			m_computeCommandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
+			m_computeCommandList->SetComputeRootDescriptorTable(rootIndex, m_descHeaps[frameIndex]->GetGPUDescriptorHandleForHeapStart());
 		}
 		else
 		{
 			ID3D12DescriptorHeap* descriptorHeaps[] = { m_descHeaps[0].Get() };
-			m_commandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
-			m_commandList->SetComputeRootDescriptorTable(rootIndex, m_descHeaps[0]->GetGPUDescriptorHandleForHeapStart());
+			m_computeCommandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
+			m_computeCommandList->SetComputeRootDescriptorTable(rootIndex, m_descHeaps[0]->GetGPUDescriptorHandleForHeapStart());
 		}
 	}
 
@@ -79,14 +79,14 @@ namespace dx
 		if (m_descHeaps.size() > 1)
 		{
 			ID3D12DescriptorHeap* descriptorHeaps[] = { m_descHeaps[frameIndex].Get() };
-			m_commandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
-			m_commandList->SetComputeRootDescriptorTable(rootIndex, m_descHeaps[frameIndex]->GetGPUDescriptorHandleForHeapStart());
+			m_computeCommandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
+			m_computeCommandList->SetComputeRootDescriptorTable(rootIndex, m_descHeaps[frameIndex]->GetGPUDescriptorHandleForHeapStart());
 		}
 		else
 		{
 			ID3D12DescriptorHeap* descriptorHeaps[] = { m_descHeaps[0].Get() };
-			m_commandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
-			m_commandList->SetComputeRootDescriptorTable(rootIndex, handle);
+			m_computeCommandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
+			m_computeCommandList->SetComputeRootDescriptorTable(rootIndex, handle);
 		}
 	}
 
