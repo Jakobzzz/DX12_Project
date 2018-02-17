@@ -34,6 +34,7 @@ namespace dx
 		m_srvUavDescHeap = std::make_unique<DescriptorHeap>(m_device.Get(), m_commandList.Get(), 1);
 		m_depthStencilHeap = std::make_unique<DescriptorHeap>(m_device.Get(), m_commandList.Get(), 1);
 		
+		//Dummy comment =)
 		//Root signatures
 		m_rootSignature = std::make_unique<RootSignature>(m_device.Get(), m_commandList.Get());
 		m_computeRootSignature = std::make_unique<RootSignature>(m_device.Get(), m_commandList.Get());
