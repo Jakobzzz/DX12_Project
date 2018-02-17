@@ -154,7 +154,7 @@
     <ClInclude Include="src\utils\Window.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="src\res\shaders\BlurComputeShader.hlsl">
+    <FxCompile Include="src\res\shaders\ComputeShader.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>

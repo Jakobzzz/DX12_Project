@@ -111,7 +111,7 @@
     <FxCompile Include="src\res\shaders\VertexShader.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="src\res\shaders\BlurComputeShader.hlsl">
+    <FxCompile Include="src\res\shaders\ComputeShader.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
   </ItemGroup>

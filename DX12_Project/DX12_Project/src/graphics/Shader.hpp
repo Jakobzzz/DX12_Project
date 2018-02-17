@@ -9,7 +9,7 @@ namespace Shaders
 	enum class ID
 	{
 		Triangle,
-		BasicCompute
+		Compute
 	};
 }
 
