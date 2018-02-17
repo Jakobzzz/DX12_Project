@@ -11,8 +11,8 @@ namespace dx
 {
 	void D3D::LoadShaders()
 	{
-		m_shaders->LoadShaders(Shaders::ID::Triangle, "src/res/shaders/VertexShader.hlsl", VS | PS);
-		m_shaders->LoadComputeShader(Shaders::ID::BasicCompute, "src/res/shaders/BlurComputeShader.hlsl");
+		m_shaders->LoadShadersFromFile(Shaders::ID::Triangle, "src/res/shaders/VertexShader.hlsl", VS | PS);
+		m_shaders->LoadShadersFromFile(Shaders::ID::BasicCompute, "src/res/shaders/BlurComputeShader.hlsl", CS);
 	}
 
 	void D3D::LoadTextures()
@@ -135,7 +135,7 @@ namespace dx
 		assert(!m_commandList->Reset(m_commandAllocator.Get(), nullptr));
 
 		//Set compute shader to change the color of the UAV 
-		m_commandList->SetPipelineState(m_shaders->GetComputeShader(Shaders::ID::BasicCompute).pipelineState.Get());
+		m_commandList->SetPipelineState(m_shaders->GetShaders(Shaders::ID::BasicCompute).pipelineState.Get());
 		m_rootSignature->SetComputeRootSignature();
 		m_srvDescHeap->SetComputeRootDescriptorTable(2, m_srvDescHeap->GetGPUIncrementHandle(1));
 		m_shaders->SetComputeDispatch(1, 1, 1);
