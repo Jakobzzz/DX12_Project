@@ -19,6 +19,11 @@ namespace dx
 		}
 
 	public:
+		inline std::vector<CD3DX12_DESCRIPTOR_RANGE1> & GetDescRange()
+		{
+			return m_descRange;
+		}
+
 		inline D3D12_ROOT_DESCRIPTOR_TABLE1 GetRootDescTable() const
 		{
 			return m_rootDescTable;

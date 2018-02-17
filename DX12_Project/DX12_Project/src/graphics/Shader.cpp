@@ -9,43 +9,32 @@ namespace dx
 	{
 	}
 
-	//Only vertex and pixel shader here for now...
-	void Shader::LoadShaders(const Shaders::ID & id, const std::string & vertexPath, const std::string & pixelPath)
+	void Shader::LoadShadersFromFile(const Shaders::ID & id, const std::string & shaderPath, ShaderType type)
 	{
 		ShaderData data;
-		CreateShaders(vertexPath, pixelPath, data.blobs->GetAddressOf());
+		data.type = type;
 
-		auto inserted = m_standardShaders.insert(std::make_pair(id, std::move(data)));
+		//Compile depending on shader type
+		if (data.type == (VS | PS))
+		{
+			data.blobs.resize(2);
+			assert(!D3DCompileFromFile(ToWChar(shaderPath).c_str(), nullptr, nullptr, "VS_MAIN", "vs_5_1", D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION, 0, data.blobs[0].GetAddressOf(), nullptr));
+			assert(!D3DCompileFromFile(ToWChar(shaderPath).c_str(), nullptr, nullptr, "PS_MAIN", "ps_5_1", D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION, 0, data.blobs[1].GetAddressOf(), nullptr));
+		}
+		else if (data.type == CS)
+		{
+			data.blobs.resize(1);
+			assert(!D3DCompileFromFile(ToWChar(shaderPath).c_str(), nullptr, nullptr, "CS_MAIN", "cs_5_1", D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION, 0, data.blobs[0].GetAddressOf(), nullptr));
+		}
+
+		auto inserted = m_shaders.insert(std::make_pair(id, std::move(data)));
 		assert(inserted.second);
-	}
-
-	//Compute shader
-	void Shader::LoadComputeShader(const Shaders::ID & id, const std::string & computePath)
-	{
-		ComputeShaderData data;
-		CreateComputeShader(computePath, data.blob.GetAddressOf());
-
-		auto inserted = m_computeShaders.insert(std::make_pair(id, std::move(data)));
-		assert(inserted.second);
-	}
-
-	void Shader::CreateComputeShader(const std::string & computePath, ID3DBlob ** blob)
-	{
-		//Compile compute shader
-		assert(!D3DCompileFromFile(ToWChar(computePath).c_str(), nullptr, nullptr, "main", "cs_5_1", D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION, 0, &blob[0], nullptr));
-	}
-
-	void Shader::CreateShaders(const std::string & vertexPath, const std::string & pixelPath, ID3DBlob ** blobs)
-	{
-		//Compile vertex and pixel shader
-		assert(!D3DCompileFromFile(ToWChar(vertexPath).c_str(), nullptr, nullptr, "main", "vs_5_1", D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION, 0, &blobs[0], nullptr));
-		assert(!D3DCompileFromFile(ToWChar(pixelPath).c_str(), nullptr, nullptr, "main", "ps_5_1", D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION, 0, &blobs[1], nullptr));
 	}
 
 	//Standard parameters for now
 	void Shader::CreateInputLayoutAndPipelineState(const Shaders::ID & id, ID3D12RootSignature * signature)
 	{
-		auto found = m_standardShaders.find(id);
+		auto found = m_shaders.find(id);
 
 		//Just hardcoded input layout for now
 		D3D12_INPUT_ELEMENT_DESC inputElementDesc[] =
@@ -85,19 +74,19 @@ namespace dx
 
 	void Shader::CreatePipelineStateForComputeShader(const Shaders::ID & id, ID3D12RootSignature * signature)
 	{
-		auto found = m_computeShaders.find(id);
+		auto found = m_shaders.find(id);
 
 		//Fill in compute pipeline description
 		D3D12_COMPUTE_PIPELINE_STATE_DESC pipelineStateDesc = { 0 };
 		pipelineStateDesc.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
-		pipelineStateDesc.CS = CD3DX12_SHADER_BYTECODE(found->second.blob.Get());
+		pipelineStateDesc.CS = CD3DX12_SHADER_BYTECODE(found->second.blobs[0].Get());
 		pipelineStateDesc.pRootSignature = signature;
 
 		//Create a pipeline state object from the description
 		assert(!m_device->CreateComputePipelineState(&pipelineStateDesc, IID_PPV_ARGS(found->second.pipelineState.GetAddressOf())));
 
 		//Release blob
-		found->second.blob.Reset();
+		found->second.blobs[0].Reset();
 	}
 
 	void Shader::SetTopology(D3D12_PRIMITIVE_TOPOLOGY topology)
@@ -112,15 +101,8 @@ namespace dx
 
 	Shader::ShaderData Shader::GetShaders(const Shaders::ID & id) const
 	{
-		auto found = m_standardShaders.find(id);
-		assert(found != m_standardShaders.end());
-		return found->second;
-	}
-
-	Shader::ComputeShaderData Shader::GetComputeShader(const Shaders::ID & id) const
-	{
-		auto found = m_computeShaders.find(id);
-		assert(found != m_computeShaders.end());
+		auto found = m_shaders.find(id);
+		assert(found != m_shaders.end());
 		return found->second;
 	}
 }

@@ -108,7 +108,8 @@ namespace dx
 		m_device->CreateUnorderedAccessView(buffer[0], nullptr, &view, handle);
 	}
 
-	void Buffer::CreateSRVForRootTable(const void * data, const UINT & size, const UINT & stride, const UINT & numElements, ID3D12Resource ** buffer, ID3D12Resource ** uploadHeap, D3D12_CPU_DESCRIPTOR_HANDLE handle)
+	void Buffer::CreateSRVForRootTable(const void * data, const UINT & size, const UINT & stride, const UINT & numElements, ID3D12Resource ** buffer, ID3D12Resource ** uploadHeap, 
+										D3D12_CPU_DESCRIPTOR_HANDLE handle, D3D12_RESOURCE_STATES resourceState)
 	{
 		//Create the buffer
 		CreateBuffer(data, size, buffer, uploadHeap, D3D12_RESOURCE_FLAG_NONE);

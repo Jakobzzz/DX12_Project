@@ -194,9 +194,7 @@ namespace dx
 		m_commandList->RSSetScissorRects(1, &m_rect);
 
 		//Indicate that the backbuffer will be used as a render target
-		CD3DX12_RESOURCE_BARRIER barrier = {};
-		barrier = barrier.Transition(m_backBufferRenderTarget[m_frameIndex].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
-		m_commandList->ResourceBarrier(1, &barrier);
+		m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_backBufferRenderTarget[m_frameIndex].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
 
 		//Get the render target view handle for the current back buffer.
 		D3D12_CPU_DESCRIPTOR_HANDLE renderTargetViewHandle = { 0 };
@@ -247,9 +245,10 @@ namespace dx
 		if (SUCCEEDED(D3D12GetDebugInterface(__uuidof(ID3D12Debug), (void**)debugController.GetAddressOf())))
 			debugController->EnableDebugLayer();
 
-		ComPtr<ID3D12Debug1> spDebugController1;
+		//Enable GPU based validation
+		/*ComPtr<ID3D12Debug1> spDebugController1;
 		debugController->QueryInterface(IID_PPV_ARGS(&spDebugController1));
-		spDebugController1->SetEnableGPUBasedValidation(true);
+		spDebugController1->SetEnableGPUBasedValidation(true);*/
 #endif
 		//Create a DirectX graphics interface factory.
 		result = CreateDXGIFactory1(__uuidof(IDXGIFactory5), (void**)m_factory.GetAddressOf());
