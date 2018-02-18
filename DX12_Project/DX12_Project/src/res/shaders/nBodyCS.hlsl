@@ -110,7 +110,7 @@ float3 computeBodyAccel(float4 bodyPos, uint threadId, uint blockId)
 // all particles, using a simple Leapfrog-Verlet integration step.
 
 [numthreads(BLOCK_SIZE,1,1)]
-void NBodyUpdate(uint threadId : SV_GroupIndex, uint3 groupId : SV_GroupID, uint3 globalThreadId : SV_DispatchThreadID)
+void CS_MAIN(uint threadId : SV_GroupIndex, uint3 groupId : SV_GroupID, uint3 globalThreadId : SV_DispatchThreadID)
 {	
     float4 pos = particles[g_readOffset + globalThreadId.x]; 
     float4 vel = particles[2 * g_numParticles + globalThreadId.x]; 

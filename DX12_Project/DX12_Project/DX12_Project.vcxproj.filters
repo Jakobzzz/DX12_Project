@@ -76,9 +76,6 @@
     <ClInclude Include="src\graphics\Model.hpp">
       <Filter>Graphics</Filter>
     </ClInclude>
-    <ClInclude Include="src\graphics\SamplerStates.hpp">
-      <Filter>Graphics</Filter>
-    </ClInclude>
     <ClInclude Include="src\graphics\Shader.hpp">
       <Filter>Graphics</Filter>
     </ClInclude>
@@ -117,6 +114,9 @@
     </ClInclude>
     <ClInclude Include="src\graphics\nbody\nBodySystemCS.hpp">
       <Filter>Graphics\NBody</Filter>
+    </ClInclude>
+    <ClInclude Include="src\graphics\CommonStates.hpp">
+      <Filter>Graphics</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

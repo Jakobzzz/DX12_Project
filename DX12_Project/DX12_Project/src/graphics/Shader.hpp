@@ -10,6 +10,8 @@ namespace Shaders
 	enum class ID
 	{
 		Triangle,
+		NBody,
+		NBodyCompute,
 		Compute
 	};
 }
@@ -41,7 +43,8 @@ namespace dx
 	public:
 		Shader(ID3D12Device* device, ID3D12GraphicsCommandList* commandList);
 		void LoadShadersFromFile(const Shaders::ID & id, const std::string & shaderPath, ShaderType type);
-		void CreateInputLayoutAndPipelineState(const Shaders::ID & id, ID3D12RootSignature* signature);
+		void CreateInputLayoutAndPipelineState(const Shaders::ID & id, ID3D12RootSignature* signature, D3D12_RASTERIZER_DESC rasterDesc, 
+												D3D12_PRIMITIVE_TOPOLOGY_TYPE topologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE);
 		void CreatePipelineStateForComputeShader(const Shaders::ID & id, ID3D12RootSignature* signature);
 
 	public:

@@ -216,168 +216,104 @@ namespace dx
 	//	delete[] particleArray;
 	//}
 
-	////-----------------------------------------------------------------------------
-	//// Handle device creation (create shaders and resources)
-	////-----------------------------------------------------------------------------
-	//void NBodySystemCS::Initialize()
-	//{
-	//	HRESULT hr = S_OK;
+	//Create resources
+	void NBodySystemCS::Initialize()
+	{
+		//Create constant buffers (two for normal pipeline and one for compute shader)
+		m_buffer->CreateConstantBuffer(m_cbDrawUploadHeap->GetAddressOf(), &m_cbDrawAddress[0]);
+		m_buffer->CreateConstantBuffer(m_cbImmutableUploadHeap->GetAddressOf(), &m_cbImmutableAddress[0]);
+		m_buffer->CreateConstantBuffer(m_cbUpdateUploadHeap->GetAddressOf(), &m_cbUpdateAddress[0]);
 
-	//	WCHAR str[MAX_PATH_STR + 1];
+		// rasterizer state
+		//D3D11_RASTERIZER_DESC rsDesc;
+		//rsDesc.FillMode = D3D11_FILL_SOLID;
+		//rsDesc.CullMode = D3D11_CULL_NONE;
+		//rsDesc.FrontCounterClockwise = FALSE;
+		//rsDesc.DepthBias = 0;
+		//rsDesc.DepthBiasClamp = 0.0f;
+		//rsDesc.SlopeScaledDepthBias = 0.0f;
+		//rsDesc.DepthClipEnable = TRUE;
+		//rsDesc.ScissorEnable = FALSE;
+		//rsDesc.MultisampleEnable = FALSE;
+		//rsDesc.AntialiasedLineEnable = FALSE;
+		//V_RETURN(m_pd3dDevice->CreateRasterizerState(&rsDesc, &m_pRasterizerState));
 
-	//	m_pd3dDevice = pd3dDevice;
-	//	m_pd3dImmediateContext = pd3dImmediateContext;
+		//// Load the particle texture
+		//D3DX11_IMAGE_LOAD_INFO itex;
+		//D3DX11_IMAGE_INFO      pSrcInfo;
 
-	//	// Create shaders
-	//	// VS
-	//	ID3D10Blob* pBlobVS = NULL;
-	//	V_RETURN(CompileShaderFromFile(L"RenderParticles.hlsl", "DisplayVS_StructBuffer", "vs_4_0", &pBlobVS));
-	//	V_RETURN(m_pd3dDevice->CreateVertexShader(pBlobVS->GetBufferPointer(), pBlobVS->GetBufferSize(), NULL, &m_pVSDisplayParticleStructBuffer));
+		//DXUTFindDXSDKMediaFileCch(str, MAX_PATH_STR, L"pointsprite_grey.dds");
+		//hr = D3DX11GetImageInfoFromFile(str, NULL, &pSrcInfo, NULL);
 
-	//	// Create vertex layout
-	//	V_RETURN(pd3dDevice->CreateInputLayout(indLayout, 1, pBlobVS->GetBufferPointer(), pBlobVS->GetBufferSize(), &m_pIndLayout));
-	//	SAFE_RELEASE(pBlobVS);
+		//itex.Width = pSrcInfo.Width;
+		//itex.Height = pSrcInfo.Height;
+		//itex.Depth = pSrcInfo.Depth;
+		//itex.FirstMipLevel = 0;
+		//itex.MipLevels = 8;
+		//itex.Usage = D3D11_USAGE_DEFAULT;
+		//itex.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D10_BIND_RENDER_TARGET;
+		//itex.CpuAccessFlags = 0;
+		//itex.MiscFlags = D3D11_RESOURCE_MISC_GENERATE_MIPS;
+		//itex.Format = DXGI_FORMAT_R32_FLOAT;
+		//itex.Filter = D3DX11_FILTER_LINEAR;
+		//itex.MipFilter = D3DX11_FILTER_LINEAR;
+		//itex.pSrcInfo = &pSrcInfo;
 
-	//	// GS
-	//	ID3D10Blob* pBlobGS = NULL;
-	//	V_RETURN(CompileShaderFromFile(L"RenderParticles.hlsl", "DisplayGS", "gs_4_0", &pBlobGS));
-	//	V_RETURN(pd3dDevice->CreateGeometryShader(pBlobGS->GetBufferPointer(), pBlobGS->GetBufferSize(), NULL, &m_pGSDisplayParticle));
-	//	SAFE_RELEASE(pBlobGS);
+		//ID3D11Resource *pRes = NULL;
+		//hr = D3DX11CreateTextureFromFile(m_pd3dDevice, str, &itex, NULL, &pRes, NULL);
+		//if (FAILED(hr)) {
+		//	MessageBox(NULL, L"Unable to create texture from file!!!", L"ERROR", MB_OK | MB_SETFOREGROUND | MB_TOPMOST);
+		//	return FALSE;
+		//}
 
-	//	// PS
-	//	ID3D10Blob* pBlobPS = NULL;
-	//	V_RETURN(CompileShaderFromFile(L"RenderParticles.hlsl", "DisplayPS", "ps_4_0", &pBlobPS));
-	//	V_RETURN(pd3dDevice->CreatePixelShader(pBlobPS->GetBufferPointer(), pBlobPS->GetBufferSize(), NULL, &m_pPSDisplayParticle));
-	//	SAFE_RELEASE(pBlobPS);
+		//hr = pRes->QueryInterface(__uuidof(ID3D11Texture2D), (LPVOID*)&m_pParticleTex);
+		//pRes->Release();
 
-	//	V_RETURN(CompileShaderFromFile(L"RenderParticles.hlsl", "DisplayPSTex", "ps_4_0", &pBlobPS));
-	//	V_RETURN(pd3dDevice->CreatePixelShader(pBlobPS->GetBufferPointer(), pBlobPS->GetBufferSize(), NULL, &m_pPSDisplayParticleTex));
-	//	SAFE_RELEASE(pBlobPS);
-
-	//	// Update CS
-	//	V_RETURN(LoadComputeShader(pd3dDevice, L"nBodyCS.hlsl", "NBodyUpdate", "cs_4_0", &m_pCSUpdatePositionAndVelocity));
-
-	//	// Create constant buffers
-	//	D3D11_BUFFER_DESC cbDesc;
-	//	cbDesc.Usage = D3D11_USAGE_DYNAMIC;
-	//	cbDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	//	cbDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-	//	cbDesc.MiscFlags = 0;
-	//	cbDesc.ByteWidth = sizeof(CB_DRAW);
-	//	V_RETURN(pd3dDevice->CreateBuffer(&cbDesc, NULL, &m_pcbDraw));
-
-	//	cbDesc.ByteWidth = sizeof(CB_UPDATE);
-	//	V_RETURN(pd3dDevice->CreateBuffer(&cbDesc, NULL, &m_pcbUpdate));
-
-	//	cbDesc.Usage = D3D11_USAGE_IMMUTABLE;
-	//	cbDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	//	cbDesc.CPUAccessFlags = 0;
-	//	cbDesc.ByteWidth = sizeof(CB_IMMUTABLE);
-	//	D3D11_SUBRESOURCE_DATA initData = { &cbImmutable, 0, 0 };
-	//	V_RETURN(pd3dDevice->CreateBuffer(&cbDesc, &initData, &m_pcbImmutable));
-
-	//	// sampler state
-	//	D3D11_SAMPLER_DESC sDesc;
-	//	sDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
-	//	sDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
-	//	sDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
-	//	sDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
-	//	sDesc.MinLOD = 0;
-	//	sDesc.MaxLOD = 8;
-	//	sDesc.MipLODBias = 0;
-	//	sDesc.MaxAnisotropy = 1;
-	//	V_RETURN(m_pd3dDevice->CreateSamplerState(&sDesc, &m_pParticleSamplerState));
-
-	//	// rasterizer state
-	//	D3D11_RASTERIZER_DESC rsDesc;
-	//	rsDesc.FillMode = D3D11_FILL_SOLID;
-	//	rsDesc.CullMode = D3D11_CULL_NONE;
-	//	rsDesc.FrontCounterClockwise = FALSE;
-	//	rsDesc.DepthBias = 0;
-	//	rsDesc.DepthBiasClamp = 0.0f;
-	//	rsDesc.SlopeScaledDepthBias = 0.0f;
-	//	rsDesc.DepthClipEnable = TRUE;
-	//	rsDesc.ScissorEnable = FALSE;
-	//	rsDesc.MultisampleEnable = FALSE;
-	//	rsDesc.AntialiasedLineEnable = FALSE;
-	//	V_RETURN(m_pd3dDevice->CreateRasterizerState(&rsDesc, &m_pRasterizerState));
-
-	//	// Load the particle texture
-	//	D3DX11_IMAGE_LOAD_INFO itex;
-	//	D3DX11_IMAGE_INFO      pSrcInfo;
-
-	//	DXUTFindDXSDKMediaFileCch(str, MAX_PATH_STR, L"pointsprite_grey.dds");
-	//	hr = D3DX11GetImageInfoFromFile(str, NULL, &pSrcInfo, NULL);
-
-	//	itex.Width = pSrcInfo.Width;
-	//	itex.Height = pSrcInfo.Height;
-	//	itex.Depth = pSrcInfo.Depth;
-	//	itex.FirstMipLevel = 0;
-	//	itex.MipLevels = 8;
-	//	itex.Usage = D3D11_USAGE_DEFAULT;
-	//	itex.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D10_BIND_RENDER_TARGET;
-	//	itex.CpuAccessFlags = 0;
-	//	itex.MiscFlags = D3D11_RESOURCE_MISC_GENERATE_MIPS;
-	//	itex.Format = DXGI_FORMAT_R32_FLOAT;
-	//	itex.Filter = D3DX11_FILTER_LINEAR;
-	//	itex.MipFilter = D3DX11_FILTER_LINEAR;
-	//	itex.pSrcInfo = &pSrcInfo;
-
-	//	ID3D11Resource *pRes = NULL;
-	//	hr = D3DX11CreateTextureFromFile(m_pd3dDevice, str, &itex, NULL, &pRes, NULL);
-	//	if (FAILED(hr)) {
-	//		MessageBox(NULL, L"Unable to create texture from file!!!", L"ERROR", MB_OK | MB_SETFOREGROUND | MB_TOPMOST);
-	//		return FALSE;
-	//	}
-
-	//	hr = pRes->QueryInterface(__uuidof(ID3D11Texture2D), (LPVOID*)&m_pParticleTex);
-	//	pRes->Release();
-
-	//	D3D11_TEXTURE2D_DESC desc;
-	//	m_pParticleTex->GetDesc(&desc);
+		//D3D11_TEXTURE2D_DESC desc;
+		//m_pParticleTex->GetDesc(&desc);
 
 
-	//	D3D11_SHADER_RESOURCE_VIEW_DESC SRVDesc;
+		//D3D11_SHADER_RESOURCE_VIEW_DESC SRVDesc;
 
-	//	SRVDesc.Format = itex.Format;
-	//	SRVDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
-	//	SRVDesc.Texture2D.MipLevels = itex.MipLevels;
-	//	SRVDesc.Texture2D.MostDetailedMip = 0;
+		//SRVDesc.Format = itex.Format;
+		//SRVDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+		//SRVDesc.Texture2D.MipLevels = itex.MipLevels;
+		//SRVDesc.Texture2D.MostDetailedMip = 0;
 
-	//	hr |= m_pd3dDevice->CreateShaderResourceView(m_pParticleTex, &SRVDesc, &m_pParticleTexSRV);
+		//hr |= m_pd3dDevice->CreateShaderResourceView(m_pParticleTex, &SRVDesc, &m_pParticleTexSRV);
 
-	//	m_pd3dImmediateContext->GenerateMips(m_pParticleTexSRV);
+		//m_pd3dImmediateContext->GenerateMips(m_pParticleTexSRV);
 
-	//	// Create the blending states
-	//	D3D11_BLEND_DESC tmpBlendState;
+		//// Create the blending states
+		//D3D11_BLEND_DESC tmpBlendState;
 
-	//	tmpBlendState.AlphaToCoverageEnable = false;
-	//	tmpBlendState.IndependentBlendEnable = false;
+		//tmpBlendState.AlphaToCoverageEnable = false;
+		//tmpBlendState.IndependentBlendEnable = false;
 
-	//	for (UINT i = 0; i < 8; i++) {
-	//		tmpBlendState.RenderTarget[i].BlendEnable = false;
-	//		tmpBlendState.RenderTarget[i].SrcBlend = D3D11_BLEND_ONE;
-	//		tmpBlendState.RenderTarget[i].DestBlend = D3D11_BLEND_ONE;
-	//		tmpBlendState.RenderTarget[i].BlendOp = D3D11_BLEND_OP_ADD;
-	//		tmpBlendState.RenderTarget[i].SrcBlendAlpha = D3D11_BLEND_ZERO;
-	//		tmpBlendState.RenderTarget[i].DestBlendAlpha = D3D11_BLEND_ZERO;
-	//		tmpBlendState.RenderTarget[i].BlendOpAlpha = D3D11_BLEND_OP_ADD;
-	//		tmpBlendState.RenderTarget[i].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
-	//	}
+		//for (UINT i = 0; i < 8; i++) {
+		//	tmpBlendState.RenderTarget[i].BlendEnable = false;
+		//	tmpBlendState.RenderTarget[i].SrcBlend = D3D11_BLEND_ONE;
+		//	tmpBlendState.RenderTarget[i].DestBlend = D3D11_BLEND_ONE;
+		//	tmpBlendState.RenderTarget[i].BlendOp = D3D11_BLEND_OP_ADD;
+		//	tmpBlendState.RenderTarget[i].SrcBlendAlpha = D3D11_BLEND_ZERO;
+		//	tmpBlendState.RenderTarget[i].DestBlendAlpha = D3D11_BLEND_ZERO;
+		//	tmpBlendState.RenderTarget[i].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+		//	tmpBlendState.RenderTarget[i].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+		//}
 
-	//	tmpBlendState.RenderTarget[0].BlendEnable = true;
+		//tmpBlendState.RenderTarget[0].BlendEnable = true;
 
-	//	hr = m_pd3dDevice->CreateBlendState(&tmpBlendState, &m_pBlendingEnabled);
+		//hr = m_pd3dDevice->CreateBlendState(&tmpBlendState, &m_pBlendingEnabled);
 
-	//	// Create the depth/stencil states
-	//	D3D11_DEPTH_STENCIL_DESC tmpDsDesc;
-	//	tmpDsDesc.DepthEnable = false;
-	//	tmpDsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
-	//	tmpDsDesc.DepthFunc = D3D11_COMPARISON_LESS;
-	//	tmpDsDesc.StencilEnable = FALSE;
+		//// Create the depth/stencil states
+		//D3D11_DEPTH_STENCIL_DESC tmpDsDesc;
+		//tmpDsDesc.DepthEnable = false;
+		//tmpDsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+		//tmpDsDesc.DepthFunc = D3D11_COMPARISON_LESS;
+		//tmpDsDesc.StencilEnable = FALSE;
 
-	//	hr = m_pd3dDevice->CreateDepthStencilState(&tmpDsDesc, &m_pDepthDisabled);
-	//}
+		//hr = m_pd3dDevice->CreateDepthStencilState(&tmpDsDesc, &m_pDepthDisabled);
+	}
 }
 
 

@@ -82,7 +82,7 @@ namespace dx
 			view.SizeInBytes = (size + 255) & ~255;	//256-byte aligned CB.
 			m_device->CreateConstantBufferView(&view, handlers[i]);
 
-			//Copy the data
+			//Set pointer to the buffer address
 			CD3DX12_RANGE readRange(0, 0);
 			assert(!buffer[i]->Map(0, &readRange, reinterpret_cast<void**>(&bufferAddress[i])));
 		}

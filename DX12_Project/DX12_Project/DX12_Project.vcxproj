@@ -150,7 +150,7 @@
     <ClInclude Include="src\graphics\Model.hpp" />
     <ClInclude Include="src\graphics\RootParameter.hpp" />
     <ClInclude Include="src\graphics\RootSignature.hpp" />
-    <ClInclude Include="src\graphics\SamplerStates.hpp" />
+    <ClInclude Include="src\graphics\CommonStates.hpp" />
     <ClInclude Include="src\graphics\Shader.hpp" />
     <ClInclude Include="src\graphics\Texture.hpp" />
     <ClInclude Include="src\utils\Input.hpp" />

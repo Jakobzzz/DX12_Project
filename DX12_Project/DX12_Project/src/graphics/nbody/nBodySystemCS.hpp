@@ -39,6 +39,16 @@ namespace dx
 		ID3D12Device * m_device;
 		ID3D12GraphicsCommandList* m_commandList;
 
+	private:
+		//Constant buffers
+		ComPtr<ID3D12Resource> m_cbDrawUploadHeap[2];
+		ComPtr<ID3D12Resource> m_cbUpdateUploadHeap[2];
+		ComPtr<ID3D12Resource> m_cbImmutableUploadHeap[2];
+		UINT8* m_cbDrawAddress[2];
+		UINT8* m_cbUpdateAddress[2];
+		UINT8* m_cbImmutableAddress[2];
+
+
 		// Particle texture and resource views
 		//ID3D11Texture2D	         *m_pParticleTex;    // Texture for displaying particles
 		//   ID3D11ShaderResourceView *m_pParticleTexSRV;
@@ -58,10 +68,5 @@ namespace dx
 		//ID3D11Buffer			  *m_pStructuredBuffer;
 		//ID3D11ShaderResourceView  *m_pStructuredBufferSRV;
 		//ID3D11UnorderedAccessView *m_pStructuredBufferUAV;
-
-		//// constant buffers
-		//ID3D11Buffer			*m_pcbDraw;
-		//ID3D11Buffer			*m_pcbUpdate;
-		//ID3D11Buffer			*m_pcbImmutable;
 	};
 }

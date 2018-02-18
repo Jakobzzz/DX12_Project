@@ -1,5 +1,5 @@
 #include <graphics/D3D.hpp>
-#include <graphics/SamplerStates.hpp>
+#include <graphics/CommonStates.hpp>
 #include <graphics/RootDescriptor.hpp>
 #include <graphics/RootParameter.hpp>
 #include <utils/Utility.hpp>
@@ -12,6 +12,8 @@ namespace dx
 	void D3D::LoadShaders()
 	{
 		m_shaders->LoadShadersFromFile(Shaders::ID::Triangle, "src/res/shaders/Shaders.hlsl", VS | PS);
+		//m_shaders->LoadShadersFromFile(Shaders::ID::NBody, "src/res/shaders/RenderParticles.hlsl", VS | GS | PS);
+		//m_shaders->LoadShadersFromFile(Shaders::ID::NBodyCompute, "src/res/shaders/nBodyCS.hlsl", CS);
 		m_shaders->LoadShadersFromFile(Shaders::ID::Compute, "src/res/shaders/ComputeShader.hlsl", CS);
 	}
 
@@ -65,7 +67,7 @@ namespace dx
 		rootParams.AppendRootParameterDescTable(graphicsRootDesc.GetRootDescTable(), D3D12_SHADER_VISIBILITY_PIXEL);
 
 		//Create a standard root signature
-		m_rootSignature->CreateRootSignature((UINT)rootParams.GetRootParameters().size(), 1, &rootParams.GetRootParameters()[0], &GetStandardSamplerState(),
+		m_rootSignature->CreateRootSignature((UINT)rootParams.GetRootParameters().size(), 1, &rootParams.GetRootParameters()[0], &GetStandardSamplerDesc(),
 											  D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 
 		//--- Compute shader ---
@@ -81,7 +83,7 @@ namespace dx
 
 		//Fill in input layout and pipeline states for shaders
 		m_shaders->CreatePipelineStateForComputeShader(Shaders::ID::Compute, m_computeRootSignature->GetRootSignature());
-		m_shaders->CreateInputLayoutAndPipelineState(Shaders::ID::Triangle, m_rootSignature->GetRootSignature());
+		m_shaders->CreateInputLayoutAndPipelineState(Shaders::ID::Triangle, m_rootSignature->GetRootSignature(), GetNoCullRasterizerDesc());
 
 		//Create descriptor heaps and depth stencil buffer
 		m_srvUavDescHeap->CreateDescriptorHeap(2, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);

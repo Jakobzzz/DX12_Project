@@ -70,7 +70,7 @@ struct DisplayPS_OUTPUT
 //--------------------------------------------------------------------------------------
 // Vertex Shader
 //--------------------------------------------------------------------------------------
-DisplayVS_OUTPUT DisplayVS_StructBuffer( VS_Input_Indices In)
+DisplayVS_OUTPUT VS_MAIN( VS_Input_Indices In)
 {
     DisplayVS_OUTPUT Output = (DisplayVS_OUTPUT) 0;
     
@@ -87,7 +87,7 @@ DisplayVS_OUTPUT DisplayVS_StructBuffer( VS_Input_Indices In)
 //--------------------------------------------------------------------------------------
 // Pixel Shader
 //--------------------------------------------------------------------------------------
-DisplayPS_OUTPUT DisplayPSTex(DisplayVS_OUTPUT In) : SV_TARGET
+DisplayPS_OUTPUT PS_MAIN(DisplayVS_OUTPUT In) : SV_TARGET
 { 
     DisplayPS_OUTPUT output;
 
@@ -109,7 +109,7 @@ DisplayPS_OUTPUT DisplayPSTex(DisplayVS_OUTPUT In) : SV_TARGET
 //
 //--------------------------------------------------------------------------------------
 [maxvertexcount(4)]
-void DisplayGS(point DisplayVS_OUTPUT input[1], inout TriangleStream<DisplayVS_OUTPUT> SpriteStream)
+void GS_MAIN(point DisplayVS_OUTPUT input[1], inout TriangleStream<DisplayVS_OUTPUT> SpriteStream)
 {
     DisplayVS_OUTPUT output;
     
