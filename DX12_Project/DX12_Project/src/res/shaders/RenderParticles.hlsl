@@ -3,37 +3,23 @@
 //--------------------------------------------------------------------------------------
 
 //Texture2D <float4>g_ParticleTex : TEXTURE0;
-StructuredBuffer<float4> g_particles;
+StructuredBuffer<float4> g_particles : register(t0);
 
 //--------------------------------------------------------------------------------------
 // Global constants
 //--------------------------------------------------------------------------------------
-
-cbuffer cbDraw
+cbuffer cbDraw : register(b0)
 {
     float4x4 g_mWorldViewProjection;
     float	 g_fPointSize;
     uint     g_readOffset;
 };
 
-cbuffer cbImmutable
+cbuffer cbImmutable : register(b1)
 {
-    float4 g_positions[4] : packoffset(c0) =
-    {
-        float4(0.5f, -0.5f, 0.f, 0.f),
-        float4(0.5f, 0.5f, 0.f, 0.f),
-        float4(-0.5f,-0.5f, 0.f, 0.f),
-        float4(-0.5f, 0.5f, 0.f, 0.f),
-    };
-    //float4 g_texcoords[4] : packoffset(c4) = 
-    //{ 
-    //    float4(1,0, 0, 0), 
-    //    float4(1,1, 0, 0),
-    //    float4(0,0, 0, 0),
-    //    float4(0,1, 0, 0),
-    //};
-};
-
+    float4 g_positions[4];
+    //float4 g_texcoords[4];
+}
 
 //--------------------------------------------------------------------------------------
 // Samplers
@@ -57,14 +43,9 @@ struct VS_Input_Indices
 
 struct DisplayVS_OUTPUT
 {
-    float4 Position   : SV_POSITION;   // vertex position 
-    //float2 uv         : TEXCOORD0;
-    float  PointSize  : PSIZE;		   // point size;
-};
-
-struct DisplayPS_OUTPUT
-{
-    float4 RGBColor;
+    float4 Position : SV_POSITION;   // vertex position 
+    //float2 uv : TEXCOORD0;
+    float  PointSize : PSIZE;		   // point size;
 };
 
 //--------------------------------------------------------------------------------------
@@ -87,13 +68,9 @@ DisplayVS_OUTPUT VS_MAIN( VS_Input_Indices In)
 //--------------------------------------------------------------------------------------
 // Pixel Shader
 //--------------------------------------------------------------------------------------
-DisplayPS_OUTPUT PS_MAIN(DisplayVS_OUTPUT In) : SV_TARGET
+float4 PS_MAIN(DisplayVS_OUTPUT In) : SV_TARGET
 { 
-    DisplayPS_OUTPUT output;
-
-    output.RGBColor = float4(0.3f, 1.f, 0.2f, 1.f);
-    return output;
-
+    return float4(0.3f, 1.f, 0.2f, 1.f);
     //float tex = g_ParticleTex.Sample(LinearSampler, In.uv).x;
 	
     //if (tex.x < .05) 
@@ -113,9 +90,7 @@ void GS_MAIN(point DisplayVS_OUTPUT input[1], inout TriangleStream<DisplayVS_OUT
 {
     DisplayVS_OUTPUT output;
     
-	//
-	// Emit two new triangles
-	//
+    //Emit two new triangles
 	[unroll]
     for (uint i = 0; i < 4; ++i)
     {

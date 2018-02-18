@@ -2,7 +2,7 @@
 //#define LOOP_UNROLL 8 //Uncomment this or?
 
 // Constants used by the compute shader
-cbuffer cbUpdate
+cbuffer cbUpdate : register(b0)
 {
 	float g_timestep;
 	float g_softeningSquared;
@@ -14,7 +14,7 @@ cbuffer cbUpdate
 // all positions, then all velocities
 // We must combine into a single UAV because DirectCompute does 
 // not support multiple UAVs on "downlevel" (i.e. DX10) hardware
-RWStructuredBuffer<float4> particles;
+RWStructuredBuffer<float4> particles : register(u0);
 
 // This function computes the gravitational attraction between two bodies
 // at positions bi and bj.  The mass of the bodies is stored in the w 

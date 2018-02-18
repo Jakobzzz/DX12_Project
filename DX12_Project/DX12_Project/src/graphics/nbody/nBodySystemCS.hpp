@@ -23,16 +23,17 @@ namespace dx
 	public:
 		NBodySystemCS(ID3D12Device* device, ID3D12GraphicsCommandList* commandList, Buffer* buffer, Camera* camera);
 		void Initialize();
-		void UpdateBodies(Shader* shader, RootSignature* signature, float dt, const UINT & frameIndex);  //Update the simulation
-		void ResetBodies(BodyData* config); //Reset the simulation
-		void RenderBodies(const Matrix* world); // Render the particles
+		void UpdateBodies(Shader* shader, RootSignature* signature, float dt, const UINT & frameIndex);
+		void ResetBodies(BodyData* config);
+		void RenderBodies(Shader* shader, RootSignature* signature, Matrix world, const UINT & frameIndex);
 
 	public:
 		void SetPointSize(const float & size);
+
+	public:
 		float GetPointSize() const;
 
 	private:
-		float m_fAspectRatio;
 		float m_fPointSize;
 		UINT m_readBuffer;
 
@@ -45,8 +46,8 @@ namespace dx
 	private:
 		//Constant buffers
 		ComPtr<ID3D12Resource> m_cbDrawUploadHeap[2];
-		ComPtr<ID3D12Resource> m_cbUpdateUploadHeap[2];
 		ComPtr<ID3D12Resource> m_cbImmutableUploadHeap[2];
+		ComPtr<ID3D12Resource> m_cbUpdateUploadHeap[2];
 		UINT8* m_cbDrawAddress[2];
 		UINT8* m_cbUpdateAddress[2];
 		UINT8* m_cbImmutableAddress[2];
@@ -61,27 +62,5 @@ namespace dx
 
 		//Descriptor heap
 		std::unique_ptr<DescriptorHeap> m_srvUavDescHeap;
-
-
-
-		// Particle texture and resource views
-		//ID3D11Texture2D	         *m_pParticleTex;    // Texture for displaying particles
-		//   ID3D11ShaderResourceView *m_pParticleTexSRV;
-
-		//// Vertex layout
-		//ID3D11InputLayout *m_pIndLayout;
-
-		//Render states
-		//ID3D11BlendState		*m_pBlendingEnabled;
-		//ID3D11SamplerState		*m_pParticleSamplerState;
-		//ID3D11RasterizerState   *m_pRasterizerState;
-
-		//// structured buffer
-		//   ID3D11Texture1D           *m_pBodiesTex1D[2];
-		//   ID3D11ShaderResourceView  *m_pBodiesTexSRV[2];
-		//   ID3D11UnorderedAccessView *m_pBodiesTexUAV[2];
-		//ID3D11Buffer			  *m_pStructuredBuffer;
-		//ID3D11ShaderResourceView  *m_pStructuredBufferSRV;
-		//ID3D11UnorderedAccessView *m_pStructuredBufferUAV;
 	};
 }
