@@ -45,7 +45,6 @@ namespace dx
 		void EndScene();
 		void ExecuteCommandList();
 		void WaitForPreviousFrame();
-		void SetResourceBarrier(ID3D12Resource** buffer, D3D12_RESOURCE_STATES beforeState, D3D12_RESOURCE_STATES afterState);
 
 	private:
 		std::unique_ptr<Texture> m_texture;
@@ -64,8 +63,8 @@ namespace dx
 		ComPtr<ID3D12Resource> m_uavBufferUploadHeap;
 
 		//For SRV
-		ComPtr<ID3D12Resource> m_srvBuffer[2];
-		ComPtr<ID3D12Resource> m_srvBufferUploadHeap[2];
+		ComPtr<ID3D12Resource> m_srvBuffer;
+		ComPtr<ID3D12Resource> m_srvBufferUploadHeap;
 
 	private:
 		ComPtr<ID3D12Device> m_device;

@@ -52,7 +52,9 @@ namespace dx
 		pipelineStateDesc.InputLayout = inputLayoutDesc;
 		pipelineStateDesc.pRootSignature = signature;
 		pipelineStateDesc.VS = CD3DX12_SHADER_BYTECODE(found->second.blobs[0].Get());
-		pipelineStateDesc.PS = CD3DX12_SHADER_BYTECODE(found->second.blobs[1].Get());
+		pipelineStateDesc.PS = CD3DX12_SHADER_BYTECODE(found->second.blobs[1].Get());	
+		if(found->second.type == (VS | GS | PS))
+			pipelineStateDesc.GS = CD3DX12_SHADER_BYTECODE(found->second.blobs[2].Get());
 		pipelineStateDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
 		pipelineStateDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
 		pipelineStateDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
