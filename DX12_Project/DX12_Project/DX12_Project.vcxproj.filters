@@ -23,6 +23,9 @@
     <Filter Include="Graphics\Camera">
       <UniqueIdentifier>{85f3a94b-c42d-44cf-8a27-35dbcbb97ffb}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Graphics\NBody">
+      <UniqueIdentifier>{44d3d0a4-0eeb-4def-a2eb-c149b4c60f73}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
@@ -55,6 +58,12 @@
     </ClCompile>
     <ClCompile Include="src\graphics\Camera.cpp">
       <Filter>Graphics\Camera</Filter>
+    </ClCompile>
+    <ClCompile Include="src\graphics\nbody\nBodyCS.cpp">
+      <Filter>Graphics\NBody</Filter>
+    </ClCompile>
+    <ClCompile Include="src\graphics\nbody\nBodySystemCS.cpp">
+      <Filter>Graphics\NBody</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -103,12 +112,24 @@
     <ClInclude Include="src\graphics\Camera.hpp">
       <Filter>Graphics\Camera</Filter>
     </ClInclude>
+    <ClInclude Include="src\graphics\nbody\nBodyCS.hpp">
+      <Filter>Graphics\NBody</Filter>
+    </ClInclude>
+    <ClInclude Include="src\graphics\nbody\nBodySystemCS.hpp">
+      <Filter>Graphics\NBody</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="src\res\shaders\ComputeShader.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
     <FxCompile Include="src\res\shaders\Shaders.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="src\res\shaders\nBodyCS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="src\res\shaders\RenderParticles.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
   </ItemGroup>
