@@ -20,10 +20,10 @@ cbuffer cbImmutable
 {
     float4 g_positions[4] : packoffset(c0) =
     {
-        float4(  0.5, -0.5, 0, 0),
-        float4(  0.5,  0.5, 0, 0),
-        float4( -0.5, -0.5, 0, 0),
-        float4( -0.5,  0.5, 0, 0),
+        float4(0.5f, -0.5f, 0.f, 0.f),
+        float4(0.5f, 0.5f, 0.f, 0.f),
+        float4(-0.5f,-0.5f, 0.f, 0.f),
+        float4(-0.5f, 0.5f, 0.f, 0.f),
     };
     //float4 g_texcoords[4] : packoffset(c4) = 
     //{ 

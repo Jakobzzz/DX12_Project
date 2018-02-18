@@ -3,6 +3,11 @@
 #include <memory>
 #include <graphics/Buffer.hpp>
 #include <graphics/Camera.hpp>
+#include <graphics/DescriptorHeap.hpp>
+#include <graphics/RootSignature.hpp>
+#include <graphics/Shader.hpp>
+
+#define NUM_BODIES 10000U
 
 namespace dx
 {
@@ -11,16 +16,15 @@ namespace dx
 	public:
 		struct BodyData
 		{
-			unsigned int nBodies;
-			float* position;
-			float* velocity;
+			Vector4 position;
+			Vector4 velocity;
 		};
 
 	public:
 		NBodySystemCS(ID3D12Device* device, ID3D12GraphicsCommandList* commandList, Buffer* buffer, Camera* camera);
 		void Initialize();
-		void UpdateBodies(const float & dt);  //Update the simulation
-		void ResetBodies(BodyData config); //Reset the simulation
+		void UpdateBodies(Shader* shader, RootSignature* signature, float dt, const UINT & frameIndex);  //Update the simulation
+		void ResetBodies(BodyData* config); //Reset the simulation
 		void RenderBodies(const Matrix* world); // Render the particles
 
 	public:
@@ -30,7 +34,6 @@ namespace dx
 	private:
 		float m_fAspectRatio;
 		float m_fPointSize;
-		UINT m_numBodies;
 		UINT m_readBuffer;
 
 	private:
@@ -47,6 +50,18 @@ namespace dx
 		UINT8* m_cbDrawAddress[2];
 		UINT8* m_cbUpdateAddress[2];
 		UINT8* m_cbImmutableAddress[2];
+
+		//SRV buffer
+		ComPtr<ID3D12Resource> m_srvBuffer;
+		ComPtr<ID3D12Resource> m_srvBufferUploadHeap;
+
+		//UAV buffer
+		ComPtr<ID3D12Resource> m_uavBuffer;
+		ComPtr<ID3D12Resource> m_uavBufferUploadHeap;
+
+		//Descriptor heap
+		std::unique_ptr<DescriptorHeap> m_srvUavDescHeap;
+
 
 
 		// Particle texture and resource views
