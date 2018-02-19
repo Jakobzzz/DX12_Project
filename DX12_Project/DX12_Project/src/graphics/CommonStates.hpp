@@ -3,7 +3,7 @@
 
 namespace dx
 {
-	static D3D12_STATIC_SAMPLER_DESC GetStandardSamplerState()
+	static D3D12_STATIC_SAMPLER_DESC GetStandardSamplerDesc()
 	{
 		D3D12_STATIC_SAMPLER_DESC sampler = {};
 		sampler.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
@@ -21,5 +21,14 @@ namespace dx
 		sampler.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
 		return sampler;
+	}
+
+	static D3D12_RASTERIZER_DESC GetNoCullRasterizerDesc()
+	{
+		D3D12_RASTERIZER_DESC rasterDesc = {};
+		rasterDesc.CullMode = D3D12_CULL_MODE_NONE;
+		rasterDesc.FillMode = D3D12_FILL_MODE_SOLID;
+
+		return rasterDesc;
 	}
 }
