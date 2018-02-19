@@ -12,6 +12,7 @@
 #include <graphics/Shader.hpp>
 #include <graphics/Model.hpp>
 #include <graphics/Camera.hpp>
+#include <graphics/nbody/nBody.hpp>
 
 using namespace DirectX;
 
@@ -48,23 +49,13 @@ namespace dx
 
 	private:
 		std::unique_ptr<Texture> m_texture;
-		std::unique_ptr<DescriptorHeap> m_srvUavDescHeap;
 		std::unique_ptr<DescriptorHeap> m_depthStencilHeap;
 		std::unique_ptr<RootSignature> m_rootSignature;
 		std::unique_ptr<RootSignature> m_computeRootSignature;
 		std::unique_ptr<Shader> m_shaders;
 		std::unique_ptr<Buffer> m_buffer;
-		std::unique_ptr<Model> m_model;
 		std::unique_ptr<Camera> m_camera;
-
-	private:
-		//For UAV test
-		ComPtr<ID3D12Resource> m_uavBuffer;
-		ComPtr<ID3D12Resource> m_uavBufferUploadHeap;
-
-		//For SRV
-		ComPtr<ID3D12Resource> m_srvBuffer;
-		ComPtr<ID3D12Resource> m_srvBufferUploadHeap;
+		std::unique_ptr<NBody> m_nBodySystem;
 
 	private:
 		ComPtr<ID3D12Device> m_device;

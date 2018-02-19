@@ -89,8 +89,12 @@ namespace dx
 		assert(!m_device->CreateGraphicsPipelineState(&pipelineStateDesc, IID_PPV_ARGS(found->second.pipelineState.GetAddressOf())));
 
 		//Release the blobs
-		found->second.blobs[0].Reset();
-		found->second.blobs[1].Reset();
+		if (found->second.type == (VS | GS | PS))
+		{
+			found->second.blobs[0].Reset();
+			found->second.blobs[1].Reset();
+			found->second.blobs[2].Reset();
+		}
 	}
 
 	void Shader::CreatePipelineStateForComputeShader(const Shaders::ID & id, ID3D12RootSignature * signature)

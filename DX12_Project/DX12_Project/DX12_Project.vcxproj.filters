@@ -59,7 +59,7 @@
     <ClCompile Include="src\graphics\Camera.cpp">
       <Filter>Graphics\Camera</Filter>
     </ClCompile>
-    <ClCompile Include="src\graphics\nbody\nBodySystemCS.cpp">
+    <ClCompile Include="src\graphics\nbody\nBody.cpp">
       <Filter>Graphics\NBody</Filter>
     </ClCompile>
   </ItemGroup>
@@ -106,11 +106,11 @@
     <ClInclude Include="src\graphics\Camera.hpp">
       <Filter>Graphics\Camera</Filter>
     </ClInclude>
-    <ClInclude Include="src\graphics\nbody\nBodySystemCS.hpp">
-      <Filter>Graphics\NBody</Filter>
-    </ClInclude>
     <ClInclude Include="src\graphics\CommonStates.hpp">
       <Filter>Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="src\graphics\nbody\nBody.hpp">
+      <Filter>Graphics\NBody</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -11,10 +11,10 @@ namespace dx
 {
 	void D3D::LoadShaders()
 	{
-		m_shaders->LoadShadersFromFile(Shaders::ID::Triangle, "src/res/shaders/Shaders.hlsl", VS | PS);
-		//m_shaders->LoadShadersFromFile(Shaders::ID::NBody, "src/res/shaders/RenderParticles.hlsl", VS | GS | PS);
-		//m_shaders->LoadShadersFromFile(Shaders::ID::NBodyCompute, "src/res/shaders/nBodyCS.hlsl", CS);
-		m_shaders->LoadShadersFromFile(Shaders::ID::Compute, "src/res/shaders/ComputeShader.hlsl", CS);
+		//m_shaders->LoadShadersFromFile(Shaders::ID::Triangle, "src/res/shaders/Shaders.hlsl", VS | PS);
+		m_shaders->LoadShadersFromFile(Shaders::ID::NBody, "src/res/shaders/RenderParticles.hlsl", VS | GS | PS);
+		m_shaders->LoadShadersFromFile(Shaders::ID::NBodyCompute, "src/res/shaders/nBodyCS.hlsl", CS);
+		//m_shaders->LoadShadersFromFile(Shaders::ID::Compute, "src/res/shaders/ComputeShader.hlsl", CS);
 	}
 
 	void D3D::LoadTextures()
@@ -30,10 +30,9 @@ namespace dx
 		m_texture = std::make_unique<Texture>(m_device.Get(), m_commandList.Get());
 		m_buffer = std::make_unique<Buffer>(m_device.Get(), m_commandList.Get());
 		m_camera = std::make_unique<Camera>();
-		m_model = std::make_unique<Model>(m_device.Get(), m_commandList.Get(), m_buffer.get(), m_camera.get());
+		m_nBodySystem = std::make_unique<NBody>(m_device.Get(), m_commandList.Get(), m_buffer.get(), m_camera.get());
 
 		//Descriptor heaps
-		m_srvUavDescHeap = std::make_unique<DescriptorHeap>(m_device.Get(), m_commandList.Get(), 1);
 		m_depthStencilHeap = std::make_unique<DescriptorHeap>(m_device.Get(), m_commandList.Get(), 1);
 		
 		//Root signatures
@@ -64,10 +63,10 @@ namespace dx
 		//Fill in root parameters for standard pipeline
 		RootParameter rootParams;
 		rootParams.AppendRootParameterCBV(0, D3D12_SHADER_VISIBILITY_ALL);
-		rootParams.AppendRootParameterDescTable(graphicsRootDesc.GetRootDescTable(), D3D12_SHADER_VISIBILITY_PIXEL);
+		rootParams.AppendRootParameterDescTable(graphicsRootDesc.GetRootDescTable(), D3D12_SHADER_VISIBILITY_ALL);
 
 		//Create a standard root signature
-		m_rootSignature->CreateRootSignature((UINT)rootParams.GetRootParameters().size(), 1, &rootParams.GetRootParameters()[0], &GetStandardSamplerDesc(),
+		m_rootSignature->CreateRootSignature((UINT)rootParams.GetRootParameters().size(), 0, &rootParams.GetRootParameters()[0], nullptr,
 											  D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 
 		//--- Compute shader ---
@@ -76,34 +75,20 @@ namespace dx
 		uavRootDesc.CreateRootDescTable();
 
 		RootParameter computeRootParams;
+		computeRootParams.AppendRootParameterCBV(0, D3D12_SHADER_VISIBILITY_ALL);
 		computeRootParams.AppendRootParameterDescTable(uavRootDesc.GetRootDescTable(), D3D12_SHADER_VISIBILITY_ALL);
 
-		m_computeRootSignature->CreateRootSignature((UINT)computeRootParams.GetRootParameters().size(), 0, &computeRootParams.GetRootParameters()[0], NULL, 
+		m_computeRootSignature->CreateRootSignature((UINT)computeRootParams.GetRootParameters().size(), 0, &computeRootParams.GetRootParameters()[0], nullptr, 
 													D3D12_ROOT_SIGNATURE_FLAG_NONE);
 
 		//Fill in input layout and pipeline states for shaders
-		m_shaders->CreatePipelineStateForComputeShader(Shaders::ID::Compute, m_computeRootSignature->GetRootSignature());
-		m_shaders->CreateInputLayoutAndPipelineState(Shaders::ID::Triangle, m_rootSignature->GetRootSignature(), GetNoCullRasterizerDesc());
+		m_shaders->CreatePipelineStateForComputeShader(Shaders::ID::NBodyCompute, m_computeRootSignature->GetRootSignature());
+		m_shaders->CreateInputLayoutAndPipelineState(Shaders::ID::NBody, m_rootSignature->GetRootSignature(), 
+													 GetNoCullRasterizerDesc(), D3D12_PRIMITIVE_TOPOLOGY_TYPE_POINT);
 
 		//Create descriptor heaps and depth stencil buffer
-		m_srvUavDescHeap->CreateDescriptorHeap(2, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 		m_depthStencilHeap->CreateDescriptorHeap(1, D3D12_DESCRIPTOR_HEAP_FLAG_NONE, D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
 		m_buffer->CreateDepthStencilBuffer(m_depthStencilBuffer.GetAddressOf(), m_depthViewDesc, m_depthStencilHeap->GetCPUIncrementHandle(0));
-
-		//Create the UAV buffer
-		struct Color
-		{
-			Vector4 color;
-		};
-
-		Color uavColor;
-		uavColor.color = Vector4(0.f, 1.f, 0.f, 1.f); //Init with green color
-		m_buffer->CreateSRVForRootTable(&uavColor, sizeof(uavColor), sizeof(Color), 1, m_srvBuffer.GetAddressOf(), m_srvBufferUploadHeap.GetAddressOf(), //SRV
-			m_srvUavDescHeap->GetCPUIncrementHandle(0));
-
-		uavColor.color = Vector4(0.f, 0.0f, 0.f, 1.f);
-		m_buffer->CreateUAVForRootTable(&uavColor, sizeof(uavColor), sizeof(Color), 1, m_uavBuffer.GetAddressOf(), m_uavBufferUploadHeap.GetAddressOf(), //UAV
-										m_srvUavDescHeap->GetCPUIncrementHandle(1));
 
 		//Close the command list
 		ExecuteCommandList();
@@ -114,32 +99,10 @@ namespace dx
 	{
 		BeginScene(Colors::DarkGray);
 	
-		//Set resources and draw model
-		m_shaders->SetTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		m_model->BindBuffers(0, m_frameIndex);
-		
-		m_srvUavDescHeap->SetRootDescriptorTable(1, m_srvUavDescHeap->GetGPUIncrementHandle(0));
-		m_model->Draw();
+		//Set resources for normal pipeline
+		m_nBodySystem->RenderBodies(m_shaders.get(), m_rootSignature.get(), m_frameIndex);
 
 		EndScene();
-	}
-
-	void D3D::Simulate()
-	{
-		//Set compute shader to change the color of the UAV
-		m_commandList->SetPipelineState(m_shaders->GetShaders(Shaders::ID::Compute).pipelineState.Get());
-		m_computeRootSignature->SetComputeRootSignature();
-		m_srvUavDescHeap->SetComputeRootDescriptorTable(0, m_srvUavDescHeap->GetGPUIncrementHandle(1));
-		m_shaders->SetComputeDispatch(1, 1, 1);
-
-		//Copy the UAV data to the SRV
-		m_buffer->SetResourceBarrier(m_uavBuffer.GetAddressOf(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COPY_SOURCE);
-		m_buffer->SetResourceBarrier(m_srvBuffer.GetAddressOf(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COPY_DEST);
-
-		m_commandList->CopyResource(m_srvBuffer.Get(), m_uavBuffer.Get());
-
-		m_buffer->SetResourceBarrier(m_srvBuffer.GetAddressOf(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-		m_buffer->SetResourceBarrier(m_uavBuffer.GetAddressOf(), D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 	}
 
 	void D3D::BeginScene(const FLOAT* color)
@@ -157,14 +120,10 @@ namespace dx
 		assert(!m_commandList->Reset(m_commandAllocator.Get(), nullptr));
 
 		//Run the compute shader
-		Simulate();
+		m_nBodySystem->UpdateBodies(m_shaders.get(), m_computeRootSignature.get(), m_frameIndex);
 
 		//Get the current back buffer
 		m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
-
-		//Set required states
-		m_commandList->SetPipelineState(m_shaders->GetShaders(Shaders::ID::Triangle).pipelineState.Get());
-		m_rootSignature->SetRootSignature();
 		m_commandList->RSSetViewports(1, &m_viewport);
 		m_commandList->RSSetScissorRects(1, &m_rect);
 

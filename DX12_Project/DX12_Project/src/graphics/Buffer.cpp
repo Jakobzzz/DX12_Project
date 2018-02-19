@@ -170,6 +170,11 @@ namespace dx
 		m_commandList->SetGraphicsRootConstantBufferView(rootIndex, buffer[frameIndex]->GetGPUVirtualAddress());
 	}
 
+	void Buffer::BindConstantBufferComputeForRootDescriptor(const UINT & rootIndex, const UINT & frameIndex, ID3D12Resource ** buffer)
+	{
+		m_commandList->SetComputeRootConstantBufferView(rootIndex, buffer[frameIndex]->GetGPUVirtualAddress());
+	}
+
 	void Buffer::SetResourceBarrier(ID3D12Resource ** buffer, D3D12_RESOURCE_STATES stateBefore, D3D12_RESOURCE_STATES stateAfter)
 	{
 		m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(*buffer, stateBefore, stateAfter));

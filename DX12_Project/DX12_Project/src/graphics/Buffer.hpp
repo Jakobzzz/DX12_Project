@@ -29,6 +29,7 @@ namespace dx
 		void BindVertexBuffer(const UINT & location, D3D12_VERTEX_BUFFER_VIEW & view);
 		void BindIndexBuffer(D3D12_INDEX_BUFFER_VIEW & view);
 		void BindConstantBufferForRootDescriptor(const UINT & rootIndex, const UINT & frameIndex, ID3D12Resource** buffer);
+		void BindConstantBufferComputeForRootDescriptor(const UINT & rootIndex, const UINT & frameIndex, ID3D12Resource** buffer);
 
 	public:
 		void SetResourceBarrier(ID3D12Resource ** buffer, D3D12_RESOURCE_STATES stateBefore, D3D12_RESOURCE_STATES stateAfter);
