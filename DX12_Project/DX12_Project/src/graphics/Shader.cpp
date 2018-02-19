@@ -63,7 +63,7 @@ namespace dx
 		}
 
 		D3D12_INPUT_LAYOUT_DESC inputLayoutDesc = {};
-		inputLayoutDesc.NumElements = inputElementDesc.size();
+		inputLayoutDesc.NumElements = (UINT)inputElementDesc.size();
 		inputLayoutDesc.pInputElementDescs = &inputElementDesc[0];
 
 		//Fill in the pipeline description
