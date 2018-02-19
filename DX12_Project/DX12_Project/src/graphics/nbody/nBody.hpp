@@ -7,8 +7,7 @@
 #include <graphics/RootSignature.hpp>
 #include <graphics/Shader.hpp>
 
-#define NUM_BODIES 1000U
-#define POINT_SIZE 1.0f
+#define NUM_BODIES 1U
 
 struct BodyData
 {

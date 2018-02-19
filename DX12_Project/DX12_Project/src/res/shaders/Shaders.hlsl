@@ -4,42 +4,75 @@
 struct VS_IN
 {
     float3 pos : POSITION;
-    float2 uv : TEXCOORD;
 };
 
 struct VS_OUT
 {
+    float3 pos : POSITION;
+};
+
+struct GS_OUT
+{
     float4 pos : SV_Position;
-    float2 uv : TEXCOORD;
 };
 
 cbuffer matrixBuffer : register(b0)
 {
-    float4x4 WVP;
+   float4x4 WVP;
+};
+
+cbuffer cbImmutable
+{
+    float4 g_positions[4] =
+    {
+        float4(0.5f, -0.5f, 0.f, 0.f),
+        float4(0.5f, 0.5f, 0.f, 0.f),
+        float4(-0.5f, -0.5f, 0.f, 0.f),
+        float4(-0.5f, 0.5f, 0.f, 0.f),
+    };
+}
+
+cbuffer cbPointSize
+{
+    static float g_pointSize = 1.f;
 };
 
 VS_OUT VS_MAIN(VS_IN input)
 {
     VS_OUT output;
 
-    output.pos = mul(float4(input.pos, 1.f), WVP);
-    output.uv = input.uv;
+    output.pos = input.pos;
     return output;
+}
+
+//--------------------------------------------------------------------------------------
+// Geometry shader
+//--------------------------------------------------------------------------------------
+[maxvertexcount(4)]
+void GS_MAIN(point VS_OUT input[1], inout TriangleStream<GS_OUT> SpriteStream)
+{
+    GS_OUT output;
+    
+    float4 v[4];
+    v[0] = float4(input[0].pos, 1.f) + g_positions[0];
+    v[1] = float4(input[0].pos, 1.f) + g_positions[1];
+    v[2] = float4(input[0].pos, 1.f) + g_positions[2];
+    v[3] = float4(input[0].pos, 1.f) + g_positions[3];
+
+    //Emit two new triangles
+	[unroll]
+    for (uint i = 0; i < 4; ++i)
+    {
+        output.pos = mul(v[i], WVP);
+        SpriteStream.Append(output);
+    }
+    SpriteStream.RestartStrip();
 }
 
 //--------------------------------------------------------------------------------------
 // Pixel Shader
 //--------------------------------------------------------------------------------------
-SamplerState s1 : register(s0);
-
-struct Color
+float4 PS_MAIN(GS_OUT input) : SV_TARGET
 {
-    float4 color;
-};
-
-StructuredBuffer<Color> colorBuffer : register(t0); // SRV
-
-float4 PS_MAIN(VS_OUT input) : SV_TARGET
-{
-    return colorBuffer[0].color;
+    return float4(1.f, 0.f, 0.f, 1.f);
 }

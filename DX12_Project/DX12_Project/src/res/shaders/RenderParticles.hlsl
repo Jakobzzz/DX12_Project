@@ -1,10 +1,10 @@
 //--------------------------------------------------------------------------------------
 // Global variables
-//--------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------
 struct BodyData
 {
     float4 pos;
-    float velocity;
+    float4 velocity;
 };
 
 StructuredBuffer<BodyData> g_particles : register(t0);
@@ -15,7 +15,6 @@ StructuredBuffer<BodyData> g_particles : register(t0);
 cbuffer cbDraw : register(b0)
 {
     float4x4 g_mWorldViewProjection;
-    float g_fPointSize;
 };
 
 cbuffer cbImmutable
@@ -29,13 +28,17 @@ cbuffer cbImmutable
     };
 }
 
+cbuffer cbPointSize
+{
+    static float g_pointSize = 1.f;
+};
+
 //--------------------------------------------------------------------------------------
 // Vertex shader and pixel shader input/output structures
 //--------------------------------------------------------------------------------------
 struct DisplayVS_OUTPUT
 {
     float4 Position : SV_POSITION;  
-    float  PointSize : PSIZE;
 };
 
 //--------------------------------------------------------------------------------------
@@ -44,11 +47,8 @@ struct DisplayVS_OUTPUT
 DisplayVS_OUTPUT VS_MAIN(uint id : SV_VERTEXID)
 {
     DisplayVS_OUTPUT output;
-        
-    //Transform the position from object space to homogeneous projection space
-    output.Position = mul(g_particles[id].pos, g_mWorldViewProjection);
-    output.PointSize = g_fPointSize;
-         
+    
+    output.Position = mul(g_particles[id].pos, g_mWorldViewProjection);  
     return output;    
 }
 
@@ -72,8 +72,7 @@ void GS_MAIN(point DisplayVS_OUTPUT input[1], inout TriangleStream<DisplayVS_OUT
 	[unroll]
     for (uint i = 0; i < 4; ++i)
     {
-        output.Position = input[0].Position + float4(g_positions[i].xy * input[0].PointSize, 0.f, 0.f);
-        output.PointSize = input[0].PointSize;
+        output.Position = input[0].Position + float4(g_positions[i].xy * g_pointSize, 0.f, 0.f);
         SpriteStream.Append(output);
     }
     SpriteStream.RestartStrip();
