@@ -8,33 +8,30 @@
 #include <graphics/Shader.hpp>
 
 #define NUM_BODIES 10000U
+#define POINT_SIZE 1.0f
+
+struct BodyData
+{
+	Vector4 position;
+	Vector4 velocity;
+};
 
 namespace dx
 {
 	class NBodySystemCS
 	{
 	public:
-		struct BodyData
-		{
-			Vector4 position;
-			Vector4 velocity;
-		};
-
-	public:
 		NBodySystemCS(ID3D12Device* device, ID3D12GraphicsCommandList* commandList, Buffer* buffer, Camera* camera);
-		void Initialize();
+		void InitializeBodies();
 		void UpdateBodies(Shader* shader, RootSignature* signature, float dt, const UINT & frameIndex);
-		void ResetBodies(BodyData* config);
-		void RenderBodies(Shader* shader, RootSignature* signature, Matrix world, const UINT & frameIndex);
-
-	public:
-		void SetPointSize(const float & size);
-
-	public:
-		float GetPointSize() const;
+		void RenderBodies(Shader* shader, RootSignature* signature, const UINT & frameIndex);
 
 	private:
-		float m_fPointSize;
+		void Initialize();
+
+	private:
+		float m_clusterScale = 1.54f;
+		float m_velocityScale = 8.0f;
 		UINT m_readBuffer;
 
 	private:

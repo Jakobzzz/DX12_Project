@@ -38,8 +38,10 @@ CB_IMMUTABLE cbImmutable =
 namespace dx
 {
 	NBodySystemCS::NBodySystemCS(ID3D12Device* device, ID3D12GraphicsCommandList* commandList, Buffer* buffer, Camera* camera) : m_device(device), 
-								 m_commandList(commandList), m_buffer(buffer), m_camera(camera), m_readBuffer(0)
+								 m_commandList(commandList), m_buffer(buffer), m_camera(camera), m_readBuffer(0), m_clusterScale(1.54f), m_velocityScale(8.0f)
 	{
+		Initialize();
+		InitializeBodies();
 	}
 
 	//Create resources
@@ -55,27 +57,15 @@ namespace dx
 		m_srvUavDescHeap->CreateDescriptorHeap(2, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 	}
 
-	//Reset to initial state
-	void NBodySystemCS::ResetBodies(BodyData* configData)
-	{
-		//Create SRV buffer for normal pipeline
-		m_buffer->CreateSRVForRootTable(configData, sizeof(configData), sizeof(BodyData), NUM_BODIES, m_srvBuffer.GetAddressOf(),
-			m_srvBufferUploadHeap.GetAddressOf(), m_srvUavDescHeap->GetCPUIncrementHandle(0));
-
-		//Create UAV buffer for compute shader
-		m_buffer->CreateUAVForRootTable(configData, sizeof(configData), sizeof(BodyData), NUM_BODIES, m_uavBuffer.GetAddressOf(),
-			m_uavBufferUploadHeap.GetAddressOf(), m_srvUavDescHeap->GetCPUIncrementHandle(1));
-	}
-
-	// Render the bodies as particles using sprites
-	void NBodySystemCS::RenderBodies(Shader* shader, RootSignature* signature, Matrix world, const UINT & frameIndex)
+	//Render the bodies as particles using sprites
+	void NBodySystemCS::RenderBodies(Shader* shader, RootSignature* signature, const UINT & frameIndex)
 	{
 		//Set constant buffer data for normal pipeline
 		CB_DRAW cbDraw;
-		//world = XMMatrixIdentity();
+		Matrix world = XMMatrixIdentity();
 		Matrix WVP = world * m_camera->GetViewProjectionMatrix();
 		cbDraw.g_mWorldViewProjection = XMMatrixTranspose(WVP);
-		cbDraw.g_fPointSize = m_fPointSize;
+		cbDraw.g_fPointSize = POINT_SIZE;
 		cbDraw.g_readOffset = m_readBuffer * NUM_BODIES; //Unsure about this
 
 		m_buffer->SetConstantBufferData(&cbDraw, sizeof(cbDraw), frameIndex, &m_cbDrawAddress[0]);
@@ -126,14 +116,47 @@ namespace dx
 		m_readBuffer = 1 - m_readBuffer; //Unsure about this
 	}
 
-	void NBodySystemCS::SetPointSize(const float & size)
+	void NBodySystemCS::InitializeBodies()
 	{
-		m_fPointSize = size;
-	}
+		BodyData* bodyData = new BodyData[NUM_BODIES];
+		float vscale = m_clusterScale * m_velocityScale;
+		float inner = 2.5f * m_clusterScale;
+		float outer = 4.0f * m_clusterScale;
 
-	float NBodySystemCS::GetPointSize() const
-	{
-		return m_fPointSize;
+		unsigned int i = 0;
+		while (i < NUM_BODIES)
+		{
+			Vector4 point = Vector4(rand() / (float)RAND_MAX * 2 - 1);
+			point.Normalize();
+			
+			//Init positions
+			float multp = (inner + (outer - inner) * rand() / (float)RAND_MAX);
+			bodyData[i].position = Vector4(point.x * multp, point.y * multp, point.z * multp, 1.0f);
+
+			//Init velocities
+			Vector4 axis = Vector4(0.f, 0.f, 1.f, 1.f);
+			axis.Normalize();
+
+			if (1 - axis.Dot(point) < 1e-6)
+			{
+				axis.x = point.y;
+				axis.y = point.x;
+				axis.Normalize();
+			}
+
+			Vector4 velocity = Vector4(bodyData[i].position);
+			auto res = velocity.Cross(velocity, axis);
+			bodyData[i].velocity = Vector4(res.x * vscale, res.y * vscale, res.z * vscale, 1.f);
+			i++;
+		}
+
+		//Create SRV buffer for normal pipeline
+		m_buffer->CreateSRVForRootTable(bodyData, sizeof(bodyData), sizeof(BodyData), NUM_BODIES, m_srvBuffer.GetAddressOf(),
+			m_srvBufferUploadHeap.GetAddressOf(), m_srvUavDescHeap->GetCPUIncrementHandle(0));
+
+		//Create UAV buffer for compute shader
+		m_buffer->CreateUAVForRootTable(bodyData, sizeof(bodyData), sizeof(BodyData), NUM_BODIES, m_uavBuffer.GetAddressOf(),
+			m_uavBufferUploadHeap.GetAddressOf(), m_srvUavDescHeap->GetCPUIncrementHandle(1));
 	}
 }
 

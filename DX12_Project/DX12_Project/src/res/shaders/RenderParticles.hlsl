@@ -3,7 +3,13 @@
 //--------------------------------------------------------------------------------------
 
 //Texture2D <float4>g_ParticleTex : TEXTURE0;
-StructuredBuffer<float4> g_particles : register(t0);
+struct BodyData
+{
+    float4 pos;
+    float velocity;
+};
+
+StructuredBuffer<BodyData> g_particles : register(t0);
 
 //--------------------------------------------------------------------------------------
 // Global constants
@@ -34,13 +40,6 @@ cbuffer cbImmutable : register(b1)
 //--------------------------------------------------------------------------------------
 // Vertex shader and pixel shader input/output structures
 //--------------------------------------------------------------------------------------
-
-
-struct VS_Input_Indices
-{
-    uint pId : SV_VertexID;   
-};
-
 struct DisplayVS_OUTPUT
 {
     float4 Position : SV_POSITION;   // vertex position 
@@ -51,14 +50,12 @@ struct DisplayVS_OUTPUT
 //--------------------------------------------------------------------------------------
 // Vertex Shader
 //--------------------------------------------------------------------------------------
-DisplayVS_OUTPUT VS_MAIN( VS_Input_Indices In)
+DisplayVS_OUTPUT VS_MAIN(uint id : SV_VERTEXID)
 {
     DisplayVS_OUTPUT Output = (DisplayVS_OUTPUT) 0;
-    
-    float4 pos = g_particles[g_readOffset + In.pId];
-    
+        
      // Transform the position from object space to homogeneous projection space
-    Output.Position  = mul(pos, g_mWorldViewProjection);
+    Output.Position = mul(g_particles[id].pos, g_mWorldViewProjection);
     Output.PointSize = g_fPointSize;
     //Output.uv = float2(0.f, 0.f);
          

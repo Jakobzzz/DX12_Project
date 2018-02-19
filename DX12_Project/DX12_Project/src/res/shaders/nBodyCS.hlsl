@@ -109,18 +109,18 @@ float3 computeBodyAccel(float4 bodyPos, uint threadId, uint blockId)
 // and then integrates the velocity and position to get the new state of
 // all particles, using a simple Leapfrog-Verlet integration step.
 
-[numthreads(BLOCK_SIZE,1,1)]
+[numthreads(BLOCK_SIZE, 1 ,1)]
 void CS_MAIN(uint threadId : SV_GroupIndex, uint3 groupId : SV_GroupID, uint3 globalThreadId : SV_DispatchThreadID)
 {	
     float4 pos = particles[g_readOffset + globalThreadId.x]; 
     float4 vel = particles[2 * g_numParticles + globalThreadId.x]; 
 	  
 	// compute acceleration
-	float3 accel = computeBodyAccel(pos, threadId, groupId);
+	float3 accel = computeBodyAccel(pos, threadId, groupId.x);
 	
 	// Leapfrog-Verlet integration of velocity and position
 	vel.xyz += accel * g_timestep;
-	pos.xyz += vel   * g_timestep;
+	pos.xyz += vel * g_timestep;
     
 	particles[g_writeOffset + globalThreadId.x] = pos;
 	particles[2 * g_numParticles + globalThreadId.x] = vel;
