@@ -11,10 +11,8 @@ namespace dx
 {
 	void D3D::LoadShaders()
 	{
-		//m_shaders->LoadShadersFromFile(Shaders::ID::Triangle, "src/res/shaders/Shaders.hlsl", VS | PS);
 		m_shaders->LoadShadersFromFile(Shaders::ID::NBody, "src/res/shaders/RenderParticles.hlsl", VS | GS | PS);
 		m_shaders->LoadShadersFromFile(Shaders::ID::NBodyCompute, "src/res/shaders/nBodyCS.hlsl", CS);
-		//m_shaders->LoadShadersFromFile(Shaders::ID::Compute, "src/res/shaders/ComputeShader.hlsl", CS);
 	}
 
 	void D3D::LoadTextures()
@@ -58,7 +56,7 @@ namespace dx
 		//--- Standard shader ---
 		//Desc range and root table for standard pipeline 
 		RootDescriptor graphicsRootDesc;
-		graphicsRootDesc.AppendDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DESCRIPTORS_VOLATILE);
+		graphicsRootDesc.AppendDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_VOLATILE);
 		graphicsRootDesc.CreateRootDescTable();
 
 		//Fill in root parameters for standard pipeline

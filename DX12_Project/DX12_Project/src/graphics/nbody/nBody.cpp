@@ -4,7 +4,6 @@
 struct CB_DRAW
 {
 	Matrix g_mWorldViewProjection;
-	float g_fPointSize;
 };
 
 //Constant buffer for the simulation update compute shader
@@ -44,7 +43,6 @@ namespace dx
 		Matrix world = XMMatrixIdentity();
 		Matrix WVP = world * m_camera->GetViewProjectionMatrix();
 		cbDraw.g_mWorldViewProjection = XMMatrixTranspose(WVP);
-		cbDraw.g_fPointSize = POINT_SIZE;
 
 		m_buffer->SetConstantBufferData(&cbDraw, sizeof(cbDraw), frameIndex, &m_cbDrawAddress[0]);
 
