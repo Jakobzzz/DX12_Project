@@ -44,7 +44,7 @@ namespace dx
 		CB_DRAW cbDraw;
 		Matrix world = XMMatrixIdentity();
 		Matrix WVP = world * m_camera->GetViewProjectionMatrix();
-		cbDraw.g_mWorldViewProjection = XMMatrixTranspose(WVP);
+		cbDraw.g_mWorldViewProjection = WVP;
 
 		m_buffer->SetConstantBufferData(&cbDraw, sizeof(cbDraw), frameIndex, &m_cbDrawAddress[0]);
 

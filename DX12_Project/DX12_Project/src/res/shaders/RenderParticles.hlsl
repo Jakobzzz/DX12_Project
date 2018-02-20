@@ -17,7 +17,7 @@ SamplerState g_particleSampler : register(s0);
 //--------------------------------------------------------------------------------------
 cbuffer cbDraw : register(b0)
 {
-    float4x4 g_mWorldViewProjection;
+    row_major float4x4 g_mWorldViewProjection;
 };
 
 cbuffer cbImmutable
@@ -66,7 +66,7 @@ VS_OUT VS_MAIN(uint id : SV_VERTEXID)
 {
     VS_OUT output;
     
-    output.position = g_particles[id].pos;
+    output.position = mul(g_particles[id].pos, g_mWorldViewProjection);
     output.uv = float2(0.f, 0.f);
     return output;    
 }
@@ -96,7 +96,7 @@ void GS_MAIN(point VS_OUT input[1], inout TriangleStream<GS_OUT> SpriteStream)
 	[unroll]
     for (uint i = 0; i < 4; ++i)
     {
-        output.position = mul(input[0].position + g_positions[i] * g_pointSize, g_mWorldViewProjection);
+        output.position = input[0].position + float4(g_positions[i].xy * g_pointSize, 0.f, 0.f);
         output.uv = g_texcoords[i];
         SpriteStream.Append(output);
     }
