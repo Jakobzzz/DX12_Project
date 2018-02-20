@@ -6,6 +6,7 @@
 #include <utils/Input.hpp>
 #include <assert.h>
 #include <DirectXColors.h>
+#include <iostream>
 
 namespace dx
 {
