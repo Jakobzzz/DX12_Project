@@ -5,6 +5,7 @@
 #include <graphics/Camera.hpp>
 #include <graphics/DescriptorHeap.hpp>
 #include <graphics/RootSignature.hpp>
+#include <graphics/Texture.hpp>
 #include <graphics/Shader.hpp>
 
 //Test data values
@@ -22,7 +23,7 @@ namespace dx
 	class NBody
 	{
 	public:
-		NBody(ID3D12Device* device, ID3D12GraphicsCommandList* commandList, Buffer* buffer, Camera* camera);
+		NBody(ID3D12Device* device, ID3D12GraphicsCommandList* commandList, Buffer* buffer, Camera* camera, Texture* texture);
 		void UpdateBodies(Shader* shader, RootSignature* signature, const UINT & frameIndex);
 		void RenderBodies(Shader* shader, RootSignature* signature, const UINT & frameIndex);
 
@@ -37,6 +38,7 @@ namespace dx
 	private:
 		Camera * m_camera;
 		Buffer * m_buffer;
+		Texture * m_texture;
 		ID3D12Device * m_device;
 		ID3D12GraphicsCommandList* m_commandList;
 

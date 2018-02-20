@@ -17,8 +17,7 @@ namespace dx
 
 	void D3D::LoadTextures()
 	{
-		//m_texture->LoadTexture(Textures::ID::Fatboy, "src/res/textures/fatboy.png");
-		//m_texture->LoadTexture(Textures::ID::Smiley, "src/res/textures/smiley.png");
+		m_texture->LoadTexture(Textures::ID::Particle, "src/res/textures/star.png");
 	}
 
 	void D3D::LoadObjects()
@@ -28,7 +27,6 @@ namespace dx
 		m_texture = std::make_unique<Texture>(m_device.Get(), m_commandList.Get());
 		m_buffer = std::make_unique<Buffer>(m_device.Get(), m_commandList.Get());
 		m_camera = std::make_unique<Camera>();
-		m_nBodySystem = std::make_unique<NBody>(m_device.Get(), m_commandList.Get(), m_buffer.get(), m_camera.get());
 
 		//Descriptor heaps
 		m_depthStencilHeap = std::make_unique<DescriptorHeap>(m_device.Get(), m_commandList.Get(), 1);
@@ -52,10 +50,14 @@ namespace dx
 		LoadShaders();
 		LoadTextures();
 
+		//Init the NBody system
+		m_nBodySystem = std::make_unique<NBody>(m_device.Get(), m_commandList.Get(), m_buffer.get(), m_camera.get(), m_texture.get());
+
 		//--- Standard shader ---
 		//Desc range and root table for standard pipeline 
 		RootDescriptor graphicsRootDesc;
 		graphicsRootDesc.AppendDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_VOLATILE);
+		graphicsRootDesc.AppendDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 1, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_VOLATILE);
 		graphicsRootDesc.CreateRootDescTable();
 
 		//Fill in root parameters for standard pipeline
@@ -64,8 +66,8 @@ namespace dx
 		rootParams.AppendRootParameterDescTable(graphicsRootDesc.GetRootDescTable(), D3D12_SHADER_VISIBILITY_ALL);
 
 		//Create a standard root signature
-		m_rootSignature->CreateRootSignature((UINT)rootParams.GetRootParameters().size(), 0, &rootParams.GetRootParameters()[0], nullptr,
-											  D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+		m_rootSignature->CreateRootSignature((UINT)rootParams.GetRootParameters().size(), 1, &rootParams.GetRootParameters()[0], 
+											  &GetStandardSamplerDesc(), D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 
 		//--- Compute shader ---
 		RootDescriptor uavRootDesc;
@@ -82,7 +84,7 @@ namespace dx
 		//Fill in input layout and pipeline states for shaders
 		m_shaders->CreatePipelineStateForComputeShader(Shaders::ID::NBodyCompute, m_computeRootSignature->GetRootSignature());
 		m_shaders->CreateInputLayoutAndPipelineState(Shaders::ID::NBody, m_rootSignature->GetRootSignature(), 
-													 GetNoCullRasterizerDesc(), D3D12_PRIMITIVE_TOPOLOGY_TYPE_POINT);
+													 GetNoCullRasterizerDesc(), GetParticleBlendState(), D3D12_PRIMITIVE_TOPOLOGY_TYPE_POINT);
 
 		//Create descriptor heaps and depth stencil buffer
 		m_depthStencilHeap->CreateDescriptorHeap(1, D3D12_DESCRIPTOR_HEAP_FLAG_NONE, D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
@@ -95,7 +97,7 @@ namespace dx
 
 	void D3D::Render()
 	{
-		BeginScene(Colors::DarkGray);
+		BeginScene(Colors::Black);
 	
 		//Set resources for normal pipeline
 		m_nBodySystem->RenderBodies(m_shaders.get(), m_rootSignature.get(), m_frameIndex);

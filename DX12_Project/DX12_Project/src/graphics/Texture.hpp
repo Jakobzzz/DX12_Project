@@ -8,8 +8,7 @@ namespace Textures
 {
 	enum class ID
 	{
-		Fatboy,
-		Smiley
+		Particle
 	};
 }
 

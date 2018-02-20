@@ -38,8 +38,8 @@ namespace dx
 		assert(inserted.second);
 	}
 
-	//Standard parameters for now
-	void Shader::CreateInputLayoutAndPipelineState(const Shaders::ID & id, ID3D12RootSignature * signature, D3D12_RASTERIZER_DESC rasterDesc,  D3D12_PRIMITIVE_TOPOLOGY_TYPE topologyType)
+	void Shader::CreateInputLayoutAndPipelineState(const Shaders::ID & id, ID3D12RootSignature * signature, D3D12_RASTERIZER_DESC rasterDesc, D3D12_BLEND_DESC blendDesc,
+												   D3D12_PRIMITIVE_TOPOLOGY_TYPE topologyType)
 	{
 		auto found = m_shaders.find(id);
 
@@ -80,7 +80,7 @@ namespace dx
 		pipelineStateDesc.SampleDesc.Quality = 0;
 		pipelineStateDesc.SampleMask = 0xffffffff;
 		pipelineStateDesc.RasterizerState = rasterDesc;
-		pipelineStateDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+		pipelineStateDesc.BlendState = blendDesc;
 		pipelineStateDesc.NumRenderTargets = 1;
 		pipelineStateDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
 
