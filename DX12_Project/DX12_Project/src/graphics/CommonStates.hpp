@@ -31,4 +31,28 @@ namespace dx
 
 		return rasterDesc;
 	}
+
+	static D3D12_BLEND_DESC GetParticleBlendState()
+	{
+		D3D12_BLEND_DESC blendDesc = { 0 };
+		
+		blendDesc.AlphaToCoverageEnable = false;
+		blendDesc.IndependentBlendEnable = false;
+
+		for (UINT i = 0; i < 8; i++) 
+		{
+			blendDesc.RenderTarget[i].BlendEnable = false;
+			blendDesc.RenderTarget[i].SrcBlend = D3D12_BLEND_ONE;
+			blendDesc.RenderTarget[i].DestBlend = D3D12_BLEND_ONE;
+			blendDesc.RenderTarget[i].BlendOp = D3D12_BLEND_OP_ADD;
+			blendDesc.RenderTarget[i].SrcBlendAlpha = D3D12_BLEND_ZERO;
+			blendDesc.RenderTarget[i].DestBlendAlpha = D3D12_BLEND_ZERO;
+			blendDesc.RenderTarget[i].BlendOpAlpha = D3D12_BLEND_OP_ADD;
+			blendDesc.RenderTarget[i].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+		}
+
+		blendDesc.RenderTarget[0].BlendEnable = true;
+		return blendDesc;
+	}
+
 }

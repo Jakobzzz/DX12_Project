@@ -16,8 +16,8 @@ struct CB_UPDATE
 
 namespace dx
 {
-	NBody::NBody(ID3D12Device* device, ID3D12GraphicsCommandList* commandList, Buffer* buffer, Camera* camera) : m_device(device), 
-								 m_commandList(commandList), m_buffer(buffer), m_camera(camera), m_clusterScale(1.54f), m_velocityScale(8.0f)
+	NBody::NBody(ID3D12Device* device, ID3D12GraphicsCommandList* commandList, Buffer* buffer, Camera* camera, Texture* texture) : m_device(device), 
+								 m_commandList(commandList), m_buffer(buffer), m_camera(camera), m_texture(texture), m_clusterScale(1.54f), m_velocityScale(8.0f)
 	{
 		Initialize();
 		InitializeBodies();
@@ -32,7 +32,7 @@ namespace dx
 
 		//Descriptor heap
 		m_srvUavDescHeap = std::make_unique<DescriptorHeap>(m_device, m_commandList, 1);
-		m_srvUavDescHeap->CreateDescriptorHeap(2, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+		m_srvUavDescHeap->CreateDescriptorHeap(3, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 	}
 
 	//Render the bodies as particles using sprites
@@ -50,7 +50,7 @@ namespace dx
 		m_commandList->SetPipelineState(shader->GetShaders(Shaders::ID::NBody).pipelineState.Get());
 		signature->SetRootSignature();
 		m_buffer->BindConstantBufferForRootDescriptor(0, frameIndex, m_cbDrawUploadHeap->GetAddressOf()); //Root index 0
-		m_srvUavDescHeap->SetRootDescriptorTable(1, m_srvUavDescHeap->GetGPUIncrementHandle(0)); //Root index 1 for SRV
+		m_srvUavDescHeap->SetRootDescriptorTable(1, m_srvUavDescHeap->GetGPUIncrementHandle(0)); //Root index 1 for SRV table
 		shader->SetTopology(D3D_PRIMITIVE_TOPOLOGY_POINTLIST);
 
 		//Draw particles
@@ -71,7 +71,7 @@ namespace dx
 		m_commandList->SetPipelineState(shader->GetShaders(Shaders::ID::NBodyCompute).pipelineState.Get());
 		signature->SetComputeRootSignature();
 		m_buffer->BindConstantBufferComputeForRootDescriptor(0, frameIndex, m_cbUpdateUploadHeap->GetAddressOf()); //Root index 0
-		m_srvUavDescHeap->SetComputeRootDescriptorTable(1, m_srvUavDescHeap->GetGPUIncrementHandle(1)); //Root index 1 for UAV
+		m_srvUavDescHeap->SetComputeRootDescriptorTable(1, m_srvUavDescHeap->GetGPUIncrementHandle(2)); //Root index 1 for UAV table
 		shader->SetComputeDispatch(NUM_BODIES / 256, 1, 1);
 
 		//Copy the UAV data to the SRV
@@ -92,7 +92,11 @@ namespace dx
 		unsigned int i = 0;
 		while (i < NUM_BODIES)
 		{
-			Vector4 point = Vector4(rand() / (float)RAND_MAX * 2 - 1);
+			Vector4 point;
+			point.x = rand() / (float)RAND_MAX * 2 - 1;
+			point.y = rand() / (float)RAND_MAX * 2 - 1;
+			point.z = rand() / (float)RAND_MAX * 2 - 1;
+			point.w = 1.f;
 			point.Normalize();
 			
 			//Init positions
@@ -120,9 +124,12 @@ namespace dx
 		m_buffer->CreateSRVForRootTable(bodyData, sizeof(BodyData) * NUM_BODIES, sizeof(BodyData), NUM_BODIES, m_srvBuffer.GetAddressOf(),
 			m_srvBufferUploadHeap.GetAddressOf(), m_srvUavDescHeap->GetCPUIncrementHandle(0), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
 
+		//Create SRV from texture
+		m_texture->CreateSRVFromTexture(Textures::ID::Particle, m_srvUavDescHeap->GetCPUIncrementHandle(1));
+
 		//Create UAV buffer for compute shader
 		m_buffer->CreateUAVForRootTable(bodyData, sizeof(BodyData) * NUM_BODIES, sizeof(BodyData), NUM_BODIES, m_uavBuffer.GetAddressOf(),
-			m_uavBufferUploadHeap.GetAddressOf(), m_srvUavDescHeap->GetCPUIncrementHandle(1));
+			m_uavBufferUploadHeap.GetAddressOf(), m_srvUavDescHeap->GetCPUIncrementHandle(2));
 
 		//Release memory
 		delete[] bodyData;

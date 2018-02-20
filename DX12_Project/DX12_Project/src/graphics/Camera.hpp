@@ -10,8 +10,8 @@ namespace dx
 	class Camera
 	{
 	public:
-		Camera(const Vector3 & camPosition = Vector3(0.0f, 0.0f, -0.5f), const Vector3 & camTarget = Vector3(0.0f, 0.0f, 0.0f),
-			   const Vector3 & camUp = Vector3(0.0f, 1.0f, 0.0f), const float & speed = 150.0f, const float & sensitivity = 0.3f);
+		Camera(const Vector3 & camPosition = Vector3(0.0f, 0.0f, 0.0f), const Vector3 & camTarget = Vector3(0.0f, 0.0f, -50.0f),
+			   const Vector3 & camUp = Vector3(0.0f, 1.0f, 0.0f), const float & speed = 250.0f, const float & sensitivity = 0.3f);
 		void Update(const float & dt);
 
 	public:
