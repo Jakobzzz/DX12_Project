@@ -26,7 +26,7 @@ namespace dx
 	}
 
 	void Buffer::CreateIndexBuffer(const void * data, const UINT & size, ID3D12Resource ** buffer, ID3D12Resource ** uploadHeap, 
-								   D3D12_INDEX_BUFFER_VIEW & view)
+									D3D12_INDEX_BUFFER_VIEW & view)
 	{
 		//Create the buffer
 		CreateBuffer(data, size, buffer, uploadHeap, D3D12_RESOURCE_FLAG_NONE);
@@ -88,14 +88,14 @@ namespace dx
 		}
 	}
 
-	void Buffer::CreateUAVForRootTable(const void* data, const UINT & size, const UINT & stride, const UINT & numElements, 
-										ID3D12Resource** buffer, ID3D12Resource** uploadHeap, D3D12_CPU_DESCRIPTOR_HANDLE handle)
+	void Buffer::CreateUAVForRootTable(const void* data, const UINT & size, const UINT & stride, const UINT & numElements, ID3D12Resource** buffer, ID3D12Resource** uploadHeap, 
+										D3D12_CPU_DESCRIPTOR_HANDLE handle, D3D12_RESOURCE_STATES resourceState)
 	{
 		//Create the buffer
 		CreateBuffer(data, size, buffer, uploadHeap, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
 
 		//Transition the data from copy state
-		SetResourceBarrier(buffer, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+		SetResourceBarrier(buffer, D3D12_RESOURCE_STATE_COPY_DEST, resourceState);
 
 		//Describe the view
 		D3D12_UNORDERED_ACCESS_VIEW_DESC view = {};
@@ -115,7 +115,7 @@ namespace dx
 										D3D12_CPU_DESCRIPTOR_HANDLE handle, D3D12_RESOURCE_STATES resourceState)
 	{
 		//Create the buffer
-		CreateBuffer(data, size, buffer, uploadHeap, D3D12_RESOURCE_FLAG_NONE);
+		CreateBuffer(data, size, buffer, uploadHeap, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
 
 		//Transition the data from copy state
 		SetResourceBarrier(buffer, D3D12_RESOURCE_STATE_COPY_DEST, resourceState);
@@ -193,12 +193,12 @@ namespace dx
 		uploadHeap[0]->SetName(L"Buffer Upload Resource Heap");
 
 		//Store buffer in upload heap
-		D3D12_SUBRESOURCE_DATA dataType = { 0 };
-		dataType.pData = data;
-		dataType.RowPitch = size;
-		dataType.SlicePitch = size;
+		D3D12_SUBRESOURCE_DATA subData = { 0 };
+		subData.pData = data;
+		subData.RowPitch = size;
+		subData.SlicePitch = size;
 
 		//Copy data from upload heap to default heap
-		UpdateSubresources(m_commandList, buffer[0], uploadHeap[0], 0, 0, 1, &dataType);
+		UpdateSubresources<1>(m_commandList, buffer[0], uploadHeap[0], 0, 0, 1, &subData);
 	}
 }

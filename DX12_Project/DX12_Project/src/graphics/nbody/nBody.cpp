@@ -70,12 +70,16 @@ namespace dx
 		cbUpdate.g_numParticles = NUM_BODIES;
 		m_buffer->SetConstantBufferData(&cbUpdate, sizeof(cbUpdate), frameIndex, &m_cbUpdateAddress[0]);
 
+		//m_buffer->SetResourceBarrier(m_srvBuffer.GetAddressOf(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+
 		//Set NBody compute shader
 		m_commandList->SetPipelineState(shader->GetShaders(Shaders::ID::NBodyCompute).pipelineState.Get());
 		signature->SetComputeRootSignature();
 		m_buffer->BindConstantBufferComputeForRootDescriptor(0, frameIndex, m_cbUpdateUploadHeap->GetAddressOf()); //Root index 0
 		m_srvUavDescHeap->SetComputeRootDescriptorTable(1, m_srvUavDescHeap->GetGPUIncrementHandle(2)); //Root index 1 for UAV table
 		shader->SetComputeDispatch(NUM_BODIES / 256, 1, 1);
+
+		//m_buffer->SetResourceBarrier(m_srvBuffer.GetAddressOf(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
 
 		//Copy the UAV data to the SRV
 		m_buffer->SetResourceBarrier(m_uavBuffer.GetAddressOf(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COPY_SOURCE);
@@ -132,7 +136,7 @@ namespace dx
 
 		//Create UAV buffer for compute shader
 		m_buffer->CreateUAVForRootTable(bodyData, sizeof(BodyData) * NUM_BODIES, sizeof(BodyData), NUM_BODIES, m_uavBuffer.GetAddressOf(),
-			m_uavBufferUploadHeap.GetAddressOf(), m_srvUavDescHeap->GetCPUIncrementHandle(2));
+			m_uavBufferUploadHeap.GetAddressOf(), m_srvUavDescHeap->GetCPUIncrementHandle(2), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
 
 		//Release memory
 		delete[] bodyData;
