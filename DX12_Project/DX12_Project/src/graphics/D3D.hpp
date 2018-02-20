@@ -54,8 +54,7 @@ namespace dx
 		std::unique_ptr<Shader> m_shaders;
 		std::unique_ptr<Buffer> m_buffer;
 		std::unique_ptr<Camera> m_camera;
-		std::unique_ptr<Model> m_model;
-		//std::unique_ptr<NBody> m_nBodySystem;
+		std::unique_ptr<NBody> m_nBodySystem;
 
 	private:
 		ComPtr<ID3D12Device> m_device;

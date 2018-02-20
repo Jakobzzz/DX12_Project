@@ -11,10 +11,8 @@ namespace dx
 {
 	void D3D::LoadShaders()
 	{
-		m_shaders->LoadShadersFromFile(Shaders::ID::Triangle, "src/res/shaders/Shaders.hlsl", VS | GS | PS);
-		//m_shaders->LoadShadersFromFile(Shaders::ID::NBody, "src/res/shaders/RenderParticles.hlsl", VS | GS | PS);
-		//m_shaders->LoadShadersFromFile(Shaders::ID::NBodyCompute, "src/res/shaders/nBodyCS.hlsl", CS);
-		//m_shaders->LoadShadersFromFile(Shaders::ID::Compute, "src/res/shaders/ComputeShader.hlsl", CS);
+		m_shaders->LoadShadersFromFile(Shaders::ID::NBody, "src/res/shaders/RenderParticles.hlsl", VS | GS | PS);
+		m_shaders->LoadShadersFromFile(Shaders::ID::NBodyCompute, "src/res/shaders/nBodyCS.hlsl", CS);
 	}
 
 	void D3D::LoadTextures()
@@ -30,8 +28,7 @@ namespace dx
 		m_texture = std::make_unique<Texture>(m_device.Get(), m_commandList.Get());
 		m_buffer = std::make_unique<Buffer>(m_device.Get(), m_commandList.Get());
 		m_camera = std::make_unique<Camera>();
-		m_model = std::make_unique<Model>(m_device.Get(), m_commandList.Get(), m_buffer.get(), m_camera.get());
-		//m_nBodySystem = std::make_unique<NBody>(m_device.Get(), m_commandList.Get(), m_buffer.get(), m_camera.get());
+		m_nBodySystem = std::make_unique<NBody>(m_device.Get(), m_commandList.Get(), m_buffer.get(), m_camera.get());
 
 		//Descriptor heaps
 		m_depthStencilHeap = std::make_unique<DescriptorHeap>(m_device.Get(), m_commandList.Get(), 1);
@@ -57,21 +54,21 @@ namespace dx
 
 		//--- Standard shader ---
 		//Desc range and root table for standard pipeline 
-		/*RootDescriptor graphicsRootDesc;
+		RootDescriptor graphicsRootDesc;
 		graphicsRootDesc.AppendDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_VOLATILE);
-		graphicsRootDesc.CreateRootDescTable();*/
+		graphicsRootDesc.CreateRootDescTable();
 
 		//Fill in root parameters for standard pipeline
 		RootParameter rootParams;
 		rootParams.AppendRootParameterCBV(0, D3D12_SHADER_VISIBILITY_ALL);
-		//rootParams.AppendRootParameterDescTable(graphicsRootDesc.GetRootDescTable(), D3D12_SHADER_VISIBILITY_ALL);
+		rootParams.AppendRootParameterDescTable(graphicsRootDesc.GetRootDescTable(), D3D12_SHADER_VISIBILITY_ALL);
 
 		//Create a standard root signature
 		m_rootSignature->CreateRootSignature((UINT)rootParams.GetRootParameters().size(), 0, &rootParams.GetRootParameters()[0], nullptr,
 											  D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 
 		//--- Compute shader ---
-		/*RootDescriptor uavRootDesc;
+		RootDescriptor uavRootDesc;
 		uavRootDesc.AppendDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_VOLATILE);
 		uavRootDesc.CreateRootDescTable();
 
@@ -80,13 +77,11 @@ namespace dx
 		computeRootParams.AppendRootParameterDescTable(uavRootDesc.GetRootDescTable(), D3D12_SHADER_VISIBILITY_ALL);
 
 		m_computeRootSignature->CreateRootSignature((UINT)computeRootParams.GetRootParameters().size(), 0, &computeRootParams.GetRootParameters()[0], nullptr, 
-													D3D12_ROOT_SIGNATURE_FLAG_NONE);*/
+													D3D12_ROOT_SIGNATURE_FLAG_NONE);
 
 		//Fill in input layout and pipeline states for shaders
-		//m_shaders->CreatePipelineStateForComputeShader(Shaders::ID::NBodyCompute, m_computeRootSignature->GetRootSignature());
-		/*m_shaders->CreateInputLayoutAndPipelineState(Shaders::ID::NBody, m_rootSignature->GetRootSignature(), 
-													 GetNoCullRasterizerDesc(), D3D12_PRIMITIVE_TOPOLOGY_TYPE_POINT);*/
-		m_shaders->CreateInputLayoutAndPipelineState(Shaders::ID::Triangle, m_rootSignature->GetRootSignature(),
+		m_shaders->CreatePipelineStateForComputeShader(Shaders::ID::NBodyCompute, m_computeRootSignature->GetRootSignature());
+		m_shaders->CreateInputLayoutAndPipelineState(Shaders::ID::NBody, m_rootSignature->GetRootSignature(), 
 													 GetNoCullRasterizerDesc(), D3D12_PRIMITIVE_TOPOLOGY_TYPE_POINT);
 
 		//Create descriptor heaps and depth stencil buffer
@@ -102,14 +97,8 @@ namespace dx
 	{
 		BeginScene(Colors::DarkGray);
 	
-		m_commandList->SetPipelineState(m_shaders->GetShaders(Shaders::ID::Triangle).pipelineState.Get());
-		m_shaders->SetTopology(D3D_PRIMITIVE_TOPOLOGY_POINTLIST);
-		m_rootSignature->SetRootSignature();
-		m_model->BindBuffers(0, m_frameIndex);
-		m_model->Draw();
-
 		//Set resources for normal pipeline
-		//m_nBodySystem->RenderBodies(m_shaders.get(), m_rootSignature.get(), m_frameIndex);
+		m_nBodySystem->RenderBodies(m_shaders.get(), m_rootSignature.get(), m_frameIndex);
 
 		EndScene();
 	}
@@ -129,7 +118,7 @@ namespace dx
 		assert(!m_commandList->Reset(m_commandAllocator.Get(), nullptr));
 
 		//Run the compute shader
-		//m_nBodySystem->UpdateBodies(m_shaders.get(), m_computeRootSignature.get(), m_frameIndex);
+		m_nBodySystem->UpdateBodies(m_shaders.get(), m_computeRootSignature.get(), m_frameIndex);
 
 		//Get the current back buffer
 		m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();

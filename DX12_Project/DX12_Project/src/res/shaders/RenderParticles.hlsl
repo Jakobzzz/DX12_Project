@@ -19,7 +19,7 @@ cbuffer cbDraw : register(b0)
 
 cbuffer cbImmutable
 {
-    float4 g_positions[4]  =
+    static float4 g_positions[4]  =
     {
         float4(0.5f, -0.5f, 0.f, 0.f),
         float4(0.5f, 0.5f, 0.f, 0.f),
