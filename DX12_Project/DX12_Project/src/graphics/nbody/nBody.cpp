@@ -14,6 +14,8 @@ struct CB_UPDATE
 	UINT g_numParticles;
 };
 
+FLOAT blendFactors[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+
 namespace dx
 {
 	NBody::NBody(ID3D12Device* device, ID3D12GraphicsCommandList* commandList, Buffer* buffer, Camera* camera, Texture* texture) : m_device(device), 
@@ -47,6 +49,7 @@ namespace dx
 		m_buffer->SetConstantBufferData(&cbDraw, sizeof(cbDraw), frameIndex, &m_cbDrawAddress[0]);
 
 		//Set the normal NBody shader and root signature
+		m_commandList->OMSetBlendFactor(blendFactors);
 		m_commandList->SetPipelineState(shader->GetShaders(Shaders::ID::NBody).pipelineState.Get());
 		signature->SetRootSignature();
 		m_buffer->BindConstantBufferForRootDescriptor(0, frameIndex, m_cbDrawUploadHeap->GetAddressOf()); //Root index 0
