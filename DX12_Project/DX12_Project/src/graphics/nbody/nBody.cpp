@@ -72,7 +72,7 @@ namespace dx
 		signature->SetComputeRootSignature();
 		m_buffer->BindConstantBufferComputeForRootDescriptor(0, frameIndex, m_cbUpdateUploadHeap->GetAddressOf()); //Root index 0
 		m_srvUavDescHeap->SetComputeRootDescriptorTable(1, m_srvUavDescHeap->GetGPUIncrementHandle(2)); //Root index 1 for UAV table
-		shader->SetComputeDispatch(NUM_BODIES / 256, 1, 1);
+		shader->SetComputeDispatch(static_cast<int>(ceil(NUM_BODIES / 256)), 1, 1);
 
 		//Copy the UAV data to the SRV
 		m_buffer->SetResourceBarrier(m_uavBuffer.GetAddressOf(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COPY_SOURCE);
@@ -100,14 +100,16 @@ namespace dx
 			point.Normalize();
 			
 			//Init positions
-			float multp = (inner + (outer - inner) * rand() / (float)RAND_MAX);
-			bodyData[i].position = Vector4(point.x * multp, point.y * multp, point.z * multp, 1.0f);
+			point.x *= (inner + (outer - inner) * rand() / (float)RAND_MAX);
+			point.y *= (inner + (outer - inner) * rand() / (float)RAND_MAX);
+			point.z *= (inner + (outer - inner) * rand() / (float)RAND_MAX);
+			bodyData[i].position = Vector4(point.x, point.y, point.z, 1.0f);
 
 			//Init velocities
 			Vector4 axis = Vector4(0.f, 0.f, 1.f, 1.f);
 			axis.Normalize();
 
-			if (1 - axis.Dot(point) < 1e-6)
+			if ((1 - (point.Dot(axis))) < 1e-6)
 			{
 				axis.x = point.y;
 				axis.y = point.x;

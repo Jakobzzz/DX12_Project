@@ -64,9 +64,10 @@ struct GS_OUT
 //--------------------------------------------------------------------------------------
 VS_OUT VS_MAIN(uint id : SV_VERTEXID)
 {
-    VS_OUT output;
+    VS_OUT output = (VS_OUT) 0;
     
-    output.position = g_particles[id].pos;
+    float4 pos = g_particles[id].pos;
+    output.position = mul(pos, g_mWorldViewProjection);
     output.uv = float2(0.f, 0.f);
     return output;    
 }
@@ -96,7 +97,7 @@ void GS_MAIN(point VS_OUT input[1], inout TriangleStream<GS_OUT> SpriteStream)
 	[unroll]
     for (uint i = 0; i < 4; ++i)
     {
-        output.position = mul(input[0].position + g_positions[i] * g_pointSize, g_mWorldViewProjection);
+        output.position = input[0].position + float4(g_positions[i] * g_pointSize);
         output.uv = g_texcoords[i];
         SpriteStream.Append(output);
     }
