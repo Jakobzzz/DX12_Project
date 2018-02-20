@@ -6,9 +6,7 @@ namespace dx
 	//One triangle
 	Model::Vertex vertices[] =
 	{
-		XMFLOAT3({ 0.0f, 0.05f, 0.0f }), XMFLOAT2({ 0.5f , -0.99f }),
-		XMFLOAT3({ 0.05f, -0.05f, 0.0f }), XMFLOAT2({ 1.49f, 1.1f }),
-		XMFLOAT3({ -0.05f,  -0.05f, 0.0f }), XMFLOAT2({ -0.51f, 1.1f })
+		XMFLOAT3({ 0.0f, 0.05f, 0.0f })
 	};
 
 	Model::Model(ID3D12Device* device, ID3D12GraphicsCommandList* commandList, Buffer* buffer, Camera* camera) : m_device(device), m_commandList(commandList), 
