@@ -13,6 +13,7 @@
 #include <graphics/Model.hpp>
 #include <graphics/Camera.hpp>
 #include <graphics/nbody/nBody.hpp>
+#include <utils/Utility.hpp>
 
 using namespace DirectX;
 
@@ -65,7 +66,7 @@ namespace dx
 		ComPtr<IDXGIFactory5> m_factory;
 		ComPtr<ID3D12Fence> m_fence;
 		ComPtr<ID3D12CommandAllocator> m_commandAllocator;
-		ComPtr<ID3D12Resource> m_backBufferRenderTarget[2];
+		ComPtr<ID3D12Resource> m_backBufferRenderTarget[FRAME_BUFFERS];
 		ComPtr<ID3D12Resource> m_depthStencilBuffer;
 
 	private:

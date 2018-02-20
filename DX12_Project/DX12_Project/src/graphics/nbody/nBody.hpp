@@ -7,10 +7,11 @@
 #include <graphics/RootSignature.hpp>
 #include <graphics/Texture.hpp>
 #include <graphics/Shader.hpp>
+#include <utils/Utility.hpp>
 
 //Test data values
 //1024, 4096, 8192, 14336, 16384, 28672, 30720, 32768, 57344, 61440, 65536 
-#define NUM_BODIES 57344
+#define NUM_BODIES 65536
 
 struct BodyData
 {
@@ -44,10 +45,10 @@ namespace dx
 
 	private:
 		//Constant buffers
-		ComPtr<ID3D12Resource> m_cbDrawUploadHeap[2];
-		ComPtr<ID3D12Resource> m_cbUpdateUploadHeap[2];
-		UINT8* m_cbDrawAddress[2];
-		UINT8* m_cbUpdateAddress[2];
+		ComPtr<ID3D12Resource> m_cbDrawUploadHeap[FRAME_BUFFERS];
+		ComPtr<ID3D12Resource> m_cbUpdateUploadHeap[FRAME_BUFFERS];
+		UINT8* m_cbDrawAddress[FRAME_BUFFERS];
+		UINT8* m_cbUpdateAddress[FRAME_BUFFERS];
 
 		//SRV buffer
 		ComPtr<ID3D12Resource> m_srvBuffer;
