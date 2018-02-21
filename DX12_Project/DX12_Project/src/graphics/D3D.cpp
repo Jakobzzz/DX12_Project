@@ -94,6 +94,9 @@ namespace dx
 		//Close the command list
 		ExecuteCommandList();
 		WaitForPreviousFrame();
+
+		//Start frame index
+		m_frameIndex = 0;
 	}
 
 	void D3D::Render()

@@ -134,6 +134,41 @@ namespace dx
 		m_device->CreateShaderResourceView(buffer[0], &view, handle);
 	}
 
+	void Buffer::CreateSharedSRVUAVForTable(const void * data, const UINT & size, const UINT & stride, const UINT & numElements, ID3D12Resource ** buffer, ID3D12Resource ** uploadHeap, D3D12_CPU_DESCRIPTOR_HANDLE handle1, D3D12_CPU_DESCRIPTOR_HANDLE handle2, D3D12_RESOURCE_STATES resourceState)
+	{
+		//Create the buffer
+		CreateBuffer(data, size, buffer, uploadHeap, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
+
+		//Transition the data from copy state
+		SetResourceBarrier(buffer, D3D12_RESOURCE_STATE_COPY_DEST, resourceState);
+
+		//Describe the view
+		D3D12_SHADER_RESOURCE_VIEW_DESC view = {};
+		view.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+		view.Format = DXGI_FORMAT_UNKNOWN;
+		view.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
+		view.Buffer.FirstElement = 0;
+		view.Buffer.NumElements = numElements;
+		view.Buffer.StructureByteStride = stride;
+		view.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
+
+		//Describe the view
+		D3D12_UNORDERED_ACCESS_VIEW_DESC view1 = {};
+		view1.Format = DXGI_FORMAT_UNKNOWN;
+		view1.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
+		view1.Buffer.FirstElement = 0;
+		view1.Buffer.NumElements = numElements;
+		view1.Buffer.StructureByteStride = stride;
+		view1.Buffer.CounterOffsetInBytes = 0;
+		view1.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_NONE;
+
+		//Create the SRV
+		m_device->CreateShaderResourceView(buffer[0], &view, handle1);
+
+		//Create the UAV
+		m_device->CreateUnorderedAccessView(buffer[0], nullptr, &view1, handle2);
+	}
+
 	void Buffer::CreateDepthStencilBuffer(ID3D12Resource ** buffer, D3D12_DEPTH_STENCIL_VIEW_DESC & view, D3D12_CPU_DESCRIPTOR_HANDLE handle)
 	{
 		view.Format = DXGI_FORMAT_D32_FLOAT;
