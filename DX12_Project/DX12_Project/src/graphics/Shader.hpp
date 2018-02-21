@@ -9,10 +9,8 @@ namespace Shaders
 {
 	enum class ID
 	{
-		Triangle,
 		NBody,
 		NBodyCompute,
-		Compute
 	};
 }
 

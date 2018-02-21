@@ -44,7 +44,7 @@ namespace dx
 		CB_DRAW cbDraw;
 		Matrix world = XMMatrixIdentity();
 		Matrix WVP = world * m_camera->GetViewProjectionMatrix();
-		cbDraw.g_mWorldViewProjection = XMMatrixTranspose(WVP);
+		cbDraw.g_mWorldViewProjection = WVP;
 
 		m_buffer->SetConstantBufferData(&cbDraw, sizeof(cbDraw), frameIndex, &m_cbDrawAddress[0]);
 
@@ -79,6 +79,8 @@ namespace dx
 		cbUpdate.g_softeningSquared = 0.01f;
 		cbUpdate.g_numParticles = NUM_BODIES;
 		m_buffer->SetConstantBufferData(&cbUpdate, sizeof(cbUpdate), frameIndex, &m_cbUpdateAddress[0]);
+
+		m_buffer->SetResourceBarrier(m_srvBuffer.GetAddressOf(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 
 		//Set NBody compute shader
 		m_computeCommandList->SetPipelineState(shader->GetShaders(Shaders::ID::NBodyCompute).pipelineState.Get());
@@ -128,16 +130,12 @@ namespace dx
 			i++;
 		}
 
-		//Create SRV buffer for normal pipeline
-		m_buffer->CreateSRVForRootTable(bodyData, sizeof(BodyData) * NUM_BODIES, sizeof(BodyData), NUM_BODIES, m_srvBuffer.GetAddressOf(),
-			m_srvBufferUploadHeap.GetAddressOf(), m_srvUavDescHeap->GetCPUIncrementHandle(0), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+		//Create SRV | UAV buffer for pipelines
+		m_buffer->CreateSharedSRVUAVForTable(bodyData, sizeof(BodyData) * NUM_BODIES, sizeof(BodyData), NUM_BODIES, m_srvBuffer.GetAddressOf(), m_srvBufferUploadHeap.GetAddressOf(), 
+											 m_srvUavDescHeap->GetCPUIncrementHandle(0), m_srvUavDescHeap->GetCPUIncrementHandle(2), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
 
 		//Create SRV from texture
 		m_texture->CreateSRVFromTexture(Textures::ID::Particle, m_srvUavDescHeap->GetCPUIncrementHandle(1));
-
-		//Create UAV buffer for compute shader
-		m_buffer->CreateUAVForRootTable(bodyData, sizeof(BodyData) * NUM_BODIES, sizeof(BodyData), NUM_BODIES, m_uavBuffer.GetAddressOf(),
-			m_uavBufferUploadHeap.GetAddressOf(), m_srvUavDescHeap->GetCPUIncrementHandle(2));
 
 		//Release memory
 		delete[] bodyData;

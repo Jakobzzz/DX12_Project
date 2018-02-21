@@ -47,14 +47,7 @@ namespace dx
 		//Input layouts
 		std::vector<D3D12_INPUT_ELEMENT_DESC> inputElementDesc;
 
-		if (id == Shaders::ID::Triangle)
-		{
-			inputElementDesc =
-			{
-				{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-			};
-		}
-		else if (id == Shaders::ID::NBody)
+		if (id == Shaders::ID::NBody)
 		{
 			inputElementDesc =
 			{

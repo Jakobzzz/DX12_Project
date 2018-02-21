@@ -134,8 +134,6 @@ namespace dx
 		assert(!m_commandAllocator->Reset());
 		assert(!m_commandList->Reset(m_commandAllocator.Get(), nullptr));
 
-		m_nBodySystem->UpdateResources();
-
 		//Run the compute shader
 		m_nBodySystem->UpdateBodies(m_shaders.get(), m_computeRootSignature.get(), m_frameIndex);
 
