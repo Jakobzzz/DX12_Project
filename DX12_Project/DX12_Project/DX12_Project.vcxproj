@@ -129,7 +129,6 @@
     <ClCompile Include="src\graphics\Core.cpp" />
     <ClCompile Include="src\graphics\D3D.cpp" />
     <ClCompile Include="src\graphics\DescriptorHeap.cpp" />
-    <ClCompile Include="src\graphics\Model.cpp" />
     <ClCompile Include="src\graphics\nbody\nBody.cpp" />
     <ClCompile Include="src\graphics\RootSignature.cpp" />
     <ClCompile Include="src\graphics\Shader.cpp" />
@@ -145,7 +144,6 @@
     <ClInclude Include="src\graphics\DescriptorHeap.hpp" />
     <ClInclude Include="src\graphics\nbody\nBody.hpp" />
     <ClInclude Include="src\graphics\RootDescriptor.hpp" />
-    <ClInclude Include="src\graphics\Model.hpp" />
     <ClInclude Include="src\graphics\RootParameter.hpp" />
     <ClInclude Include="src\graphics\RootSignature.hpp" />
     <ClInclude Include="src\graphics\CommonStates.hpp" />
@@ -156,11 +154,6 @@
     <ClInclude Include="src\utils\Window.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="src\res\shaders\ComputeShader.hlsl">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-    </FxCompile>
     <FxCompile Include="src\res\shaders\nBodyCS.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
@@ -170,12 +163,6 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-    </FxCompile>
-    <FxCompile Include="src\res\shaders\Shaders.hlsl">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
     </FxCompile>
   </ItemGroup>
   <ItemGroup>

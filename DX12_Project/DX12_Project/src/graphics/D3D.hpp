@@ -10,7 +10,6 @@
 #include <graphics/DescriptorHeap.hpp>
 #include <graphics/RootSignature.hpp>
 #include <graphics/Shader.hpp>
-#include <graphics/Model.hpp>
 #include <graphics/Camera.hpp>
 #include <graphics/nbody/nBody.hpp>
 
