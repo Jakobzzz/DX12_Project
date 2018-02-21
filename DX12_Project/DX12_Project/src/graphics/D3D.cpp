@@ -105,7 +105,6 @@ namespace dx
 		//Set resources for normal pipeline
 		m_nBodySystem->RenderBodies(m_shaders.get(), m_rootSignature.get(), m_frameIndex);
 		
-
 		EndScene();
 	}
 
