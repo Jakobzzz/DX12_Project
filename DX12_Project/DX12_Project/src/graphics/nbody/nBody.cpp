@@ -60,16 +60,6 @@ namespace dx
 		m_commandList->DrawInstanced(NUM_BODIES, 1, 0, 0);
 	}
 
-	void NBody::UpdateResources()
-	{
-		//Copy the UAV data to the SRV
-		m_buffer->SetResourceBarrier(m_uavBuffer.GetAddressOf(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COPY_SOURCE);
-		m_buffer->SetResourceBarrier(m_srvBuffer.GetAddressOf(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COPY_DEST);
-		m_commandList->CopyResource(m_srvBuffer.Get(), m_uavBuffer.Get());
-		m_buffer->SetResourceBarrier(m_srvBuffer.GetAddressOf(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
-		m_buffer->SetResourceBarrier(m_uavBuffer.GetAddressOf(), D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
-	}
-
 	//Update the positions and velocities of all bodies in the system
 	void NBody::UpdateBodies(Shader* shader, RootSignature* signature, const UINT & frameIndex)
 	{
@@ -88,6 +78,7 @@ namespace dx
 		m_buffer->BindConstantBufferComputeForRootDescriptor(0, frameIndex, m_cbUpdateUploadHeap->GetAddressOf()); //Root index 0
 		m_srvUavDescHeap->SetComputeRootDescriptorTable(1, m_srvUavDescHeap->GetGPUIncrementHandle(2)); //Root index 1 for UAV table
 		shader->SetComputeDispatch(static_cast<int>(ceil(NUM_BODIES / 256)), 1, 1);
+		m_buffer->SetResourceBarrier(m_srvBuffer.GetAddressOf(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
 	}
 
 	void NBody::InitializeBodies()

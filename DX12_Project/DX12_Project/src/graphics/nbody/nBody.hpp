@@ -27,7 +27,6 @@ namespace dx
 		NBody(ID3D12Device* device, ID3D12GraphicsCommandList* commandList, ID3D12GraphicsCommandList* computeCommandList, Buffer* buffer, Camera* camera, Texture* texture);
 		void UpdateBodies(Shader* shader, RootSignature* signature, const UINT & frameIndex);
 		void RenderBodies(Shader* shader, RootSignature* signature, const UINT & frameIndex);
-		void UpdateResources();
 
 	private:
 		void Initialize();
