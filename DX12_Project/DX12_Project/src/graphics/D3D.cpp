@@ -26,11 +26,11 @@ namespace dx
 		//Standard utility
 		m_shaders = std::make_unique<Shader>(m_device.Get(), m_commandList.Get(), m_computeCommandList.Get());
 		m_texture = std::make_unique<Texture>(m_device.Get(), m_commandList.Get());
-		m_buffer = std::make_unique<Buffer>(m_device.Get(), m_commandList.Get());
+		m_buffer = std::make_unique<Buffer>(m_device.Get(), m_commandList.Get(), m_computeCommandList.Get());
 		m_camera = std::make_unique<Camera>();
 
 		//Descriptor heaps
-		m_depthStencilHeap = std::make_unique<DescriptorHeap>(m_device.Get(), m_commandList.Get(), 1);
+		m_depthStencilHeap = std::make_unique<DescriptorHeap>(m_device.Get(), m_commandList.Get(), m_computeCommandList.Get(), 1);
 		
 		//Dummy comment =)
 		//Root signatures
@@ -53,7 +53,7 @@ namespace dx
 		LoadTextures();
 
 		//Init the NBody system
-		m_nBodySystem = std::make_unique<NBody>(m_device.Get(), m_commandList.Get(), m_buffer.get(), m_camera.get(), m_texture.get());
+		m_nBodySystem = std::make_unique<NBody>(m_device.Get(), m_commandList.Get(), m_computeCommandList.Get(), m_buffer.get(), m_camera.get(), m_texture.get());
 
 		//--- Standard shader ---
 		//Desc range and root table for standard pipeline 
@@ -134,8 +134,12 @@ namespace dx
 		assert(!m_commandAllocator->Reset());
 		assert(!m_commandList->Reset(m_commandAllocator.Get(), nullptr));
 
+		m_nBodySystem->UpdateResources();
+
 		//Run the compute shader
 		m_nBodySystem->UpdateBodies(m_shaders.get(), m_computeRootSignature.get(), m_frameIndex);
+
+		ExecuteComputeCommandList();
 
 		//Get the current back buffer
 		//to make sure that the compute shader and graphics pipeline works on different frames
@@ -174,8 +178,9 @@ namespace dx
 
 	void D3D::ShutDown()
 	{
-		//Close the object handle to the fence event.
+		//Close the object handle to the fence event
 		WaitForGraphicsPipeline();
+		WaitForComputeShader();
 		CloseHandle(m_fenceEvent);
 
 		m_texture->Release();
@@ -373,12 +378,6 @@ namespace dx
 			m_computeFence->SetEventOnCompletion(computeFence, m_computeFenceEvent);
 			WaitForSingleObject(m_fenceEvent, INFINITE);
 		}
-	}
-
-	void D3D::SetComputeResourceBarrier(ID3D12Resource ** buffer, D3D12_RESOURCE_STATES beforeState, D3D12_RESOURCE_STATES afterState)
-	{
-		m_computeCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(*buffer, beforeState,
-			afterState));
 	}
 
 	void D3D::ExecuteCommandList()

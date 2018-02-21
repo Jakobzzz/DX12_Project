@@ -10,7 +10,7 @@ namespace dx
 	class Buffer
 	{
 	public:
-		Buffer(ID3D12Device* device, ID3D12GraphicsCommandList* commandList);
+		Buffer(ID3D12Device* device, ID3D12GraphicsCommandList* commandList, ID3D12GraphicsCommandList* computeCommandList);
 
 	public:
 		void CreateVertexBuffer(const void* data, const UINT & size, const UINT & stride, ID3D12Resource** buffer, 
@@ -40,5 +40,6 @@ namespace dx
 	private:
 		ID3D12Device* m_device;
 		ID3D12GraphicsCommandList* m_commandList;
+		ID3D12GraphicsCommandList* m_computeCommandList;
 	};
 }

@@ -5,7 +5,8 @@
 
 namespace dx
 {
-	Buffer::Buffer(ID3D12Device* device, ID3D12GraphicsCommandList* commandList) : m_device(device), m_commandList(commandList)
+	Buffer::Buffer(ID3D12Device* device, ID3D12GraphicsCommandList* commandList, ID3D12GraphicsCommandList* computeCommandList) : 
+		m_device(device), m_commandList(commandList), m_computeCommandList(computeCommandList)
 	{
 	}
 
@@ -172,7 +173,7 @@ namespace dx
 
 	void Buffer::BindConstantBufferComputeForRootDescriptor(const UINT & rootIndex, const UINT & frameIndex, ID3D12Resource ** buffer)
 	{
-		m_commandList->SetComputeRootConstantBufferView(rootIndex, buffer[frameIndex]->GetGPUVirtualAddress());
+		m_computeCommandList->SetComputeRootConstantBufferView(rootIndex, buffer[frameIndex]->GetGPUVirtualAddress());
 	}
 
 	void Buffer::SetResourceBarrier(ID3D12Resource ** buffer, D3D12_RESOURCE_STATES stateBefore, D3D12_RESOURCE_STATES stateAfter)

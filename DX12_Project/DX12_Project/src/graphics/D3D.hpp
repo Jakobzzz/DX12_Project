@@ -48,9 +48,6 @@ namespace dx
 		void ExecuteComputeCommandList();
 		void WaitForGraphicsPipeline();
 		void WaitForComputeShader();
-		void UpdateShaderResources();
-		void SetResourceBarrier(ID3D12Resource** buffer, D3D12_RESOURCE_STATES beforeState, D3D12_RESOURCE_STATES afterState);
-		void SetComputeResourceBarrier(ID3D12Resource** buffer, D3D12_RESOURCE_STATES beforeState, D3D12_RESOURCE_STATES afterState);
 
 	private:
 		std::unique_ptr<Texture> m_texture;
@@ -73,6 +70,7 @@ namespace dx
 		ComPtr<IDXGIFactory5> m_factory;
 		ComPtr<ID3D12Fence> m_fence;
 		ComPtr<ID3D12Fence> m_computeFence;
+		ComPtr<ID3D12CommandAllocator> m_computeCommandAllocator;
 		ComPtr<ID3D12CommandAllocator> m_commandAllocator;
 		ComPtr<ID3D12Resource> m_backBufferRenderTarget[FRAME_BUFFERS];
 		ComPtr<ID3D12Resource> m_depthStencilBuffer;

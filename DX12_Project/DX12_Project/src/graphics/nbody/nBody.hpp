@@ -11,7 +11,7 @@
 
 //Test data values
 //1024, 4096, 8192, 14336, 16384, 28672, 30720, 32768, 57344, 61440, 65536 
-#define NUM_BODIES 65536
+#define NUM_BODIES 61440
 
 struct BodyData
 {
@@ -24,9 +24,10 @@ namespace dx
 	class NBody
 	{
 	public:
-		NBody(ID3D12Device* device, ID3D12GraphicsCommandList* commandList, Buffer* buffer, Camera* camera, Texture* texture);
+		NBody(ID3D12Device* device, ID3D12GraphicsCommandList* commandList, ID3D12GraphicsCommandList* computeCommandList, Buffer* buffer, Camera* camera, Texture* texture);
 		void UpdateBodies(Shader* shader, RootSignature* signature, const UINT & frameIndex);
 		void RenderBodies(Shader* shader, RootSignature* signature, const UINT & frameIndex);
+		void UpdateResources();
 
 	private:
 		void Initialize();
@@ -42,6 +43,7 @@ namespace dx
 		Texture * m_texture;
 		ID3D12Device * m_device;
 		ID3D12GraphicsCommandList* m_commandList;
+		ID3D12GraphicsCommandList* m_computeCommandList;
 
 	private:
 		//Constant buffers
