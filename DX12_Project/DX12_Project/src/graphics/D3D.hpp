@@ -12,6 +12,8 @@
 #include <graphics/Shader.hpp>
 #include <graphics/Model.hpp>
 #include <graphics/Camera.hpp>
+#include <graphics/nbody/nBody.hpp>
+#include <utils/Utility.hpp>
 
 using namespace DirectX;
 
@@ -23,7 +25,6 @@ namespace dx
 		void ShutDown();
 		void Initialize(HWND hwnd);
 		void Render();
-		void Simulate();
 
 	public:
 		ID3D12Device * GetDevice() const;
@@ -53,23 +54,13 @@ namespace dx
 
 	private:
 		std::unique_ptr<Texture> m_texture;
-		std::unique_ptr<DescriptorHeap> m_srvUavDescHeap;
 		std::unique_ptr<DescriptorHeap> m_depthStencilHeap;
 		std::unique_ptr<RootSignature> m_rootSignature;
 		std::unique_ptr<RootSignature> m_computeRootSignature;
 		std::unique_ptr<Shader> m_shaders;
 		std::unique_ptr<Buffer> m_buffer;
-		std::unique_ptr<Model> m_model;
 		std::unique_ptr<Camera> m_camera;
-
-	private:
-		//For UAV test
-		ComPtr<ID3D12Resource> m_uavBuffer;
-		ComPtr<ID3D12Resource> m_uavBufferUploadHeap;
-
-		//For SRV
-		ComPtr<ID3D12Resource> m_srvBuffer[2];
-		ComPtr<ID3D12Resource> m_srvBufferUploadHeap[2];
+		std::unique_ptr<NBody> m_nBodySystem;
 
 	private:
 		ComPtr<ID3D12Device> m_device;
@@ -83,8 +74,7 @@ namespace dx
 		ComPtr<ID3D12Fence> m_fence;
 		ComPtr<ID3D12Fence> m_computeFence;
 		ComPtr<ID3D12CommandAllocator> m_commandAllocator;
-		ComPtr<ID3D12CommandAllocator> m_computeCommandAllocator;
-		ComPtr<ID3D12Resource> m_backBufferRenderTarget[2];
+		ComPtr<ID3D12Resource> m_backBufferRenderTarget[FRAME_BUFFERS];
 		ComPtr<ID3D12Resource> m_depthStencilBuffer;
 
 	private:
