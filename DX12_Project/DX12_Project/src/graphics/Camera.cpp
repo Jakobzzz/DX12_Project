@@ -74,6 +74,11 @@ namespace dx
 		}
 	}
 
+	void Camera::SetPosition(const Vector3 & position)
+	{
+		m_cameraPos = position;
+	}
+
 	void Camera::SetFOV(const float & angle)
 	{
 		m_fov = angle;

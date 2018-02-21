@@ -15,6 +15,7 @@ namespace dx
 		void Update(const float & dt);
 
 	public:
+		void SetPosition(const Vector3 & position);
 		void SetFOV(const float & angle);
 
 	public:
