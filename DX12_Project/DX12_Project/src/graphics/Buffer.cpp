@@ -216,6 +216,11 @@ namespace dx
 		m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(*buffer, stateBefore, stateAfter));
 	}
 
+	void Buffer::SetComputeResourceBarrier(ID3D12Resource ** buffer, D3D12_RESOURCE_STATES stateBefore, D3D12_RESOURCE_STATES stateAfter)
+	{
+		m_computeCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(*buffer, stateBefore, stateAfter));
+	}
+
 	void Buffer::CreateBuffer(const void * data, const UINT & size, ID3D12Resource ** buffer, ID3D12Resource ** uploadHeap, D3D12_RESOURCE_FLAGS flags)
 	{
 		//Create default heap for buffer

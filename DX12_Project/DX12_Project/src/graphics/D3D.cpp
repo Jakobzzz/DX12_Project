@@ -139,11 +139,9 @@ namespace dx
 		if (Input::GetKeyDown(Keyboard::Keys::Escape))
 			PostQuitMessage(0);
 
-
 		//Reset resourcee
 		assert(!m_commandAllocator->Reset());
 		assert(!m_commandList->Reset(m_commandAllocator.Get(), nullptr));
-
 
 		//Get the current back buffer
 		//to make sure that the compute shader and graphics pipeline works on different frames

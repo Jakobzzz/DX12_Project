@@ -35,6 +35,7 @@ namespace dx
 
 	public:
 		void SetResourceBarrier(ID3D12Resource ** buffer, D3D12_RESOURCE_STATES stateBefore, D3D12_RESOURCE_STATES stateAfter);
+		void SetComputeResourceBarrier(ID3D12Resource ** buffer, D3D12_RESOURCE_STATES stateBefore, D3D12_RESOURCE_STATES stateAfter);
 
 	private:
 		void CreateBuffer(const void* data, const UINT & size, ID3D12Resource** buffer, ID3D12Resource** uploadHeap, D3D12_RESOURCE_FLAGS flags);
