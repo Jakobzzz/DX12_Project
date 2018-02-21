@@ -35,6 +35,11 @@ namespace dx
 		m_mouseTracker.Update(m_mouseState);
 	}
 
+	void Input::ResetScrollWheelValue()
+	{
+		m_mouse->ResetScrollWheelValue();
+	}
+
 	bool Input::GetKeyDown(Keyboard::Keys key)
 	{
 		return m_keyboardTracker.IsKeyPressed(key);
@@ -61,6 +66,7 @@ namespace dx
 		case MouseButton::MIDDLE:
 			return (m_mouseTracker.middleButton == m_mouseTracker.PRESSED);
 		}
+
 		return false;
 	}
 

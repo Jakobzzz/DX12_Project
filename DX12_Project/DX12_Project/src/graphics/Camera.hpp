@@ -15,10 +15,14 @@ namespace dx
 		void Update(const float & dt);
 
 	public:
+		void SetFOV(const float & angle);
+
+	public:
 		Matrix GetViewMatrix() const;
 		Matrix GetViewProjectionMatrix() const;
 		Matrix GetProjectionMatrix() const;
 		Vector3 GetCameraPosition() const;
+		float GetFOV() const;
 
 	private:
 		void MoveCamera(const float & dt);
@@ -36,6 +40,7 @@ namespace dx
 		float m_camPitch;
 		float m_movementSpeed;
 		float m_mouseSensivity;
+		float m_fov;
 	};
 }
 

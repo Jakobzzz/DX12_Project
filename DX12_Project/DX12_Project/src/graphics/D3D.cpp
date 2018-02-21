@@ -57,8 +57,7 @@ namespace dx
 		//--- Standard shader ---
 		//Desc range and root table for standard pipeline 
 		RootDescriptor graphicsRootDesc;
-		graphicsRootDesc.AppendDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_VOLATILE);
-		graphicsRootDesc.AppendDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 1, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_VOLATILE);
+		graphicsRootDesc.AppendDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 2, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_VOLATILE);
 		graphicsRootDesc.CreateRootDescTable();
 
 		//Fill in root parameters for standard pipeline
@@ -284,7 +283,7 @@ namespace dx
 		scDesc.BufferCount = FRAME_BUFFERS;
 		scDesc.Scaling = DXGI_SCALING_NONE;
 		scDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
-		scDesc.Flags = 0;
+		scDesc.Flags = DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT;
 		scDesc.AlphaMode = DXGI_ALPHA_MODE_UNSPECIFIED;
 
 		//Finally create the swap chain using the swap chain description.	
