@@ -31,18 +31,16 @@ namespace dx
 		if (Input::GetKey(Keyboard::Keys::A))
 			m_cameraPos -= XMVector3Normalize(XMVector3Cross(m_camUp, m_camTarget)) * velocity;
 
-		//Zoom functionality
+		//Zoom functionality which adjusts the camera position instead of fov angle
 		if (Input::GetMouseScrollWheel() > 0)
 		{
-			if(m_fov <= 90 && m_fov > 20)
-				m_fov -= 5.f;
+			m_cameraPos += m_camTarget * 50.f;
 			Input::ResetScrollWheelValue();
 		}
 
 		if (Input::GetMouseScrollWheel() < 0)
 		{
-			if (m_fov >= 20 && m_fov < 90)
-				m_fov += 5.f;
+			m_cameraPos -= m_camTarget * 50.f;
 			Input::ResetScrollWheelValue();
 		}
 	}
