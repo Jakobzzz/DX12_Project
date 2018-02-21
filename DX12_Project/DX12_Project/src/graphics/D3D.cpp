@@ -108,12 +108,25 @@ namespace dx
 
 	void D3D::Render()
 	{
+		Simulate();
+
 		BeginScene(Colors::Black);
 	
 		//Set resources for normal pipeline
 		m_nBodySystem->RenderBodies(m_shaders.get(), m_rootSignature.get(), m_frameIndex);
 
 		EndScene();
+	}
+
+	void D3D::Simulate()
+	{
+		assert(!m_computeCommandAllocator->Reset());
+		assert(!m_computeCommandList->Reset(m_computeCommandAllocator.Get(), nullptr));
+
+		//Run the compute shader
+		m_nBodySystem->UpdateBodies(m_shaders.get(), m_computeRootSignature.get(), m_frameIndex);
+
+		ExecuteComputeCommandList();
 	}
 
 	void D3D::BeginScene(const FLOAT* color)
@@ -127,17 +140,10 @@ namespace dx
 			PostQuitMessage(0);
 
 
-		//Reset resources
-		assert(!m_computeCommandAllocator->Reset());
-		assert(!m_computeCommandList->Reset(m_computeCommandAllocator.Get(), nullptr));
-
+		//Reset resourcee
 		assert(!m_commandAllocator->Reset());
 		assert(!m_commandList->Reset(m_commandAllocator.Get(), nullptr));
 
-		//Run the compute shader
-		m_nBodySystem->UpdateBodies(m_shaders.get(), m_computeRootSignature.get(), m_frameIndex);
-
-		ExecuteComputeCommandList();
 
 		//Get the current back buffer
 		//to make sure that the compute shader and graphics pipeline works on different frames
@@ -374,7 +380,7 @@ namespace dx
 		if (m_computeFence->GetCompletedValue() < computeFence)
 		{
 			m_computeFence->SetEventOnCompletion(computeFence, m_computeFenceEvent);
-			WaitForSingleObject(m_fenceEvent, INFINITE);
+			WaitForSingleObject(m_computeFenceEvent, INFINITE);
 		}
 	}
 

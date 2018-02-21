@@ -11,7 +11,7 @@
 
 //Test data values
 //1024, 4096, 8192, 14336, 16384, 28672, 30720, 32768, 57344, 61440, 65536 
-#define NUM_BODIES 61440
+#define NUM_BODIES 32768
 
 struct BodyData
 {

@@ -24,6 +24,7 @@ namespace dx
 		void ShutDown();
 		void Initialize(HWND hwnd);
 		void Render();
+		void Simulate();
 
 	public:
 		ID3D12Device * GetDevice() const;
