@@ -101,7 +101,9 @@ namespace dx
 
 		//Set the frameIndex to 1, this is to force the compute shader to start working with the next frame
 		//while the graphics pipeline works with the current frame
-		m_srvIndex = m_swapChain->GetCurrentBackBufferIndex() + 1;
+		m_srvIndex = 2;
+
+		m_frameIndex = 1;
 	}
 
 	void D3D::Render()
@@ -121,18 +123,18 @@ namespace dx
 		//Wait for the compute queue to finish before we execute another
 		WaitForComputeShader();
 
-		if (m_srvIndex > FRAME_BUFFERS - 1)
-			m_srvIndex = 0;
+		if (m_srvIndex == 2)
+			m_srvIndex = 3;
+		else
+			m_srvIndex = 2;
 
 		assert(!m_computeCommandAllocator->Reset());
 		assert(!m_computeCommandList->Reset(m_computeCommandAllocator.Get(), nullptr));
 
 		//Run the compute shader
-		m_nBodySystem->UpdateBodies(m_shaders.get(), m_computeRootSignature.get(), m_srvIndex);
+		m_nBodySystem->UpdateBodies(m_shaders.get(), m_computeRootSignature.get(), m_frameIndex, m_srvIndex);
 
 		ExecuteComputeCommandList();
-
-		m_srvIndex++;
 	}
 
 	void D3D::BeginScene(const FLOAT* color)
@@ -147,6 +149,10 @@ namespace dx
 
 		//Wait for the 3D queue to finish before we execute another
 		WaitForGraphicsPipeline();
+
+		//Get the current back buffer
+		//to make sure that the compute shader and graphics pipeline works on different frames
+		m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
 
 		//Reset resourcee
 		assert(!m_commandAllocator->Reset());
@@ -178,10 +184,6 @@ namespace dx
 
 		ExecuteCommandList();
 		assert(!m_swapChain->Present(1, 0));
-		
-		//Get the current back buffer
-		//to make sure that the compute shader and graphics pipeline works on different frames
-		m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
 	}
 
 	void D3D::ShutDown()

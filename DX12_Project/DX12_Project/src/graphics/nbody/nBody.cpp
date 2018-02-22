@@ -67,7 +67,7 @@ namespace dx
 	}
 
 	//Update the positions and velocities of all bodies in the system
-	void NBody::UpdateBodies(Shader* shader, RootSignature* signature, const UINT & frameIndex)
+	void NBody::UpdateBodies(Shader* shader, RootSignature* signature, const UINT & frameIndex, const UINT & srvIndex)
 	{
 		//Update the data for the compute constant buffer
 		CB_UPDATE cbUpdate;
@@ -76,19 +76,13 @@ namespace dx
 		cbUpdate.g_numParticles = NUM_BODIES;
 		m_buffer->SetConstantBufferData(&cbUpdate, sizeof(cbUpdate), frameIndex, &m_cbUpdateAddress[0]);
 
-		int index = 0;
-		if (frameIndex == 0)
-			index = 2;
-		else
-			index = 3;
-
 		m_buffer->SetComputeResourceBarrier(m_srvBuffer[frameIndex].GetAddressOf(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 
 		//Set NBody compute shader
 		m_computeCommandList->SetPipelineState(shader->GetShaders(Shaders::ID::NBodyCompute).pipelineState.Get());
 		signature->SetComputeRootSignature();
 		m_buffer->BindConstantBufferComputeForRootDescriptor(0, frameIndex, m_cbUpdateUploadHeap->GetAddressOf()); //Root index 0
-		m_srvUavDescHeap->SetComputeRootDescriptorTable(1, m_srvUavDescHeap->GetGPUIncrementHandle(index)); //Root index 1 for UAV table
+		m_srvUavDescHeap->SetComputeRootDescriptorTable(1, m_srvUavDescHeap->GetGPUIncrementHandle(srvIndex)); //Root index 1 for UAV table
 		shader->SetComputeDispatch(static_cast<int>(ceil(NUM_BODIES / 256)), 1, 1);
 		m_buffer->SetComputeResourceBarrier(m_srvBuffer[frameIndex].GetAddressOf(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
 	}
