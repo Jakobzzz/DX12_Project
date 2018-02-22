@@ -150,6 +150,7 @@
     <ClInclude Include="src\graphics\Shader.hpp" />
     <ClInclude Include="src\graphics\Texture.hpp" />
     <ClInclude Include="src\utils\Input.hpp" />
+    <ClInclude Include="src\utils\StepTimer.h" />
     <ClInclude Include="src\utils\Utility.hpp" />
     <ClInclude Include="src\utils\Window.hpp" />
   </ItemGroup>

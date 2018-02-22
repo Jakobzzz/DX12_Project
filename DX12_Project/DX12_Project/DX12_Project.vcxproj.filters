@@ -106,6 +106,9 @@
     <ClInclude Include="src\graphics\nbody\nBody.hpp">
       <Filter>Graphics\NBody</Filter>
     </ClInclude>
+    <ClInclude Include="src\utils\StepTimer.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="src\res\shaders\nBodyCS.hlsl">

@@ -28,6 +28,7 @@ namespace dx
 		m_texture = std::make_unique<Texture>(m_device.Get(), m_commandList.Get());
 		m_buffer = std::make_unique<Buffer>(m_device.Get(), m_commandList.Get());
 		m_camera = std::make_unique<Camera>();
+		m_timer = std::make_unique<StepTimer>();
 
 		//Descriptor heaps
 		m_depthStencilHeap = std::make_unique<DescriptorHeap>(m_device.Get(), m_commandList.Get(), 1);
@@ -39,6 +40,9 @@ namespace dx
 
 	void D3D::Initialize(HWND hwnd)
 	{
+		//Pass the hwnd
+		m_hwnd = hwnd;
+
 		//Initialize DirectX12 functionality and input
 		Input::Initialize(hwnd);
 		FindAndCreateDevice();
@@ -106,11 +110,15 @@ namespace dx
 		m_nBodySystem->RenderBodies(m_shaders.get(), m_rootSignature.get(), m_frameIndex);
 		
 		EndScene();
+
+		std::string title = "FPS: " + std::to_string(m_timer->GetFramesPerSecond());
+		SetWindowText(m_hwnd, title.c_str());
 	}
 
 	void D3D::BeginScene(const FLOAT* color)
 	{
 		//WaitForSingleObjectEx(m_swapChain->GetFrameLatencyWaitableObject(), 100, FALSE);
+		m_timer->Tick(NULL);
 
 		//Update the input and camera
 		Input::Update();
@@ -154,7 +162,7 @@ namespace dx
 		m_commandList->ResourceBarrier(1, &barrier);
 
 		ExecuteCommandList();
-		assert(!m_swapChain->Present(1, 0));
+		assert(!m_swapChain->Present(0, 0));
 
 		WaitForPreviousFrame();
 	}
