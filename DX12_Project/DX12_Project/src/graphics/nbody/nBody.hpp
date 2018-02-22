@@ -11,7 +11,7 @@
 
 //Test data values
 //1024, 4096, 8192, 14336, 16384, 28672, 30720, 32768, 57344, 61440, 65536 
-#define NUM_BODIES 30720
+#define NUM_BODIES 1024
 
 struct BodyData
 {
@@ -54,10 +54,6 @@ namespace dx
 		//SRV buffer
 		ComPtr<ID3D12Resource> m_srvBuffer[FRAME_BUFFERS];
 		ComPtr<ID3D12Resource> m_srvBufferUploadHeap[FRAME_BUFFERS];
-
-		//UAV buffer
-		ComPtr<ID3D12Resource> m_uavBuffer;
-		ComPtr<ID3D12Resource> m_uavBufferUploadHeap;
 
 		//Descriptor heap
 		std::unique_ptr<DescriptorHeap> m_srvUavDescHeap;

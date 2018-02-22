@@ -95,6 +95,9 @@ namespace dx
 		ExecuteCommandList();
 		ExecuteComputeCommandList();
 
+		//Wait for 3D queue to finish initalize
+		WaitForGraphicsPipeline();
+
 		//Set the frameIndex to 1, this is to force the compute shader to start working with the next frame
 		//while the graphics pipeline works with the current frame
 		m_srvIndex = m_swapChain->GetCurrentBackBufferIndex() + 1;
@@ -173,7 +176,7 @@ namespace dx
 		m_commandList->ResourceBarrier(1, &barrier);
 
 		ExecuteCommandList();
-		assert(!m_swapChain->Present(0, 0));
+		assert(!m_swapChain->Present(1, 0));
 		
 		//Get the current back buffer
 		//to make sure that the compute shader and graphics pipeline works on different frames
