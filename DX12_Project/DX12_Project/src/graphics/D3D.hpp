@@ -77,6 +77,7 @@ namespace dx
 
 	private:
 		UINT m_frameIndex;
+		UINT m_srvIndex;
 		HANDLE m_fenceEvent;
 		HANDLE m_computeFenceEvent;
 		UINT64 m_fenceValue;

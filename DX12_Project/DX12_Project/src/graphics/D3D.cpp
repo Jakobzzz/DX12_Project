@@ -96,14 +96,9 @@ namespace dx
 		ExecuteCommandList();
 		ExecuteComputeCommandList();
 
-		//Wait for the gpu to finish working before we begin
-		//simulation/rendering
-		WaitForGraphicsPipeline();
-		WaitForComputeShader();
-
 		//Set the frameIndex to 1, this is to force the compute shader to start working with the next frame
 		//while the graphics pipeline works with the current frame
-		m_frameIndex = 1;
+		m_srvIndex = m_swapChain->GetCurrentBackBufferIndex() + 1;
 	}
 
 	void D3D::Render()
@@ -123,13 +118,18 @@ namespace dx
 		//Wait for the compute queue to finish before we execute another
 		WaitForComputeShader();
 
+		if (m_srvIndex > FRAME_BUFFERS - 1)
+			m_srvIndex = 0;
+
 		assert(!m_computeCommandAllocator->Reset());
 		assert(!m_computeCommandList->Reset(m_computeCommandAllocator.Get(), nullptr));
 
 		//Run the compute shader
-		m_nBodySystem->UpdateBodies(m_shaders.get(), m_computeRootSignature.get(), m_frameIndex);
+		m_nBodySystem->UpdateBodies(m_shaders.get(), m_computeRootSignature.get(), m_srvIndex);
 
 		ExecuteComputeCommandList();
+
+		m_srvIndex++;
 	}
 
 	void D3D::BeginScene(const FLOAT* color)
@@ -149,9 +149,6 @@ namespace dx
 		assert(!m_commandAllocator->Reset());
 		assert(!m_commandList->Reset(m_commandAllocator.Get(), nullptr));
 
-		//Get the current back buffer
-		//to make sure that the compute shader and graphics pipeline works on different frames
-		m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
 		m_commandList->RSSetViewports(1, &m_viewport);
 		m_commandList->RSSetScissorRects(1, &m_rect);
 
@@ -179,6 +176,9 @@ namespace dx
 		ExecuteCommandList();
 		assert(!m_swapChain->Present(0, 0));
 		
+		//Get the current back buffer
+		//to make sure that the compute shader and graphics pipeline works on different frames
+		m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
 	}
 
 	void D3D::ShutDown()
