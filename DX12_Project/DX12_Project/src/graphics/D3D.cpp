@@ -28,11 +28,11 @@ namespace dx
 		m_texture = std::make_unique<Texture>(m_device.Get(), m_commandList.Get());
 		m_buffer = std::make_unique<Buffer>(m_device.Get(), m_commandList.Get(), m_computeCommandList.Get());
 		m_camera = std::make_unique<Camera>();
+		m_timer = std::make_unique<StepTimer>();
 
 		//Descriptor heaps
 		m_depthStencilHeap = std::make_unique<DescriptorHeap>(m_device.Get(), m_commandList.Get(), m_computeCommandList.Get(), 1);
 		
-		//Dummy comment =)
 		//Root signatures
 		m_rootSignature = std::make_unique<RootSignature>(m_device.Get(), m_commandList.Get(), m_computeCommandList.Get());
 		m_computeRootSignature = std::make_unique<RootSignature>(m_device.Get(), m_commandList.Get(), m_computeCommandList.Get());
@@ -40,10 +40,13 @@ namespace dx
 
 	void D3D::Initialize(HWND hwnd)
 	{
+		//Store the hwnd
+		m_hwnd = hwnd;
+
 		//Initialize DirectX12 functionality and input
-		Input::Initialize(hwnd);
+		Input::Initialize(m_hwnd);
 		FindAndCreateDevice();
-		CreateCommandsAndSwapChain(hwnd);
+		CreateCommandsAndSwapChain(m_hwnd);
 		CreateRenderTargetsAndFences();
 		CreateViewportAndScissorRect();
 
@@ -106,6 +109,8 @@ namespace dx
 
 	void D3D::Render()
 	{
+		m_timer->Tick(NULL);
+		
 		Simulate();
 
 		BeginScene(Colors::Black);
@@ -114,6 +119,9 @@ namespace dx
 		m_nBodySystem->RenderBodies(m_shaders.get(), m_rootSignature.get(), m_frameIndex);
 		
 		EndScene();
+
+		std::string title = "FPS: " + std::to_string(m_timer->GetFramesPerSecond());
+		SetWindowText(m_hwnd, title.c_str());
 	}
 
 	void D3D::Simulate()
@@ -177,7 +185,7 @@ namespace dx
 		m_commandList->ResourceBarrier(1, &barrier);
 
 		ExecuteCommandList();
-		assert(!m_swapChain->Present(1, 0));
+		assert(!m_swapChain->Present(0, 0));
 		
 		//Get the current back buffer
 		//to make sure that the compute shader and graphics pipeline works on different frames
