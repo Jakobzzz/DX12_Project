@@ -54,11 +54,7 @@ namespace dx
 		m_commandList->SetPipelineState(shader->GetShaders(Shaders::ID::NBody).pipelineState.Get());
 		signature->SetRootSignature();
 		m_buffer->BindConstantBufferForRootDescriptor(0, frameIndex, m_cbDrawUploadHeap->GetAddressOf()); //Root index 0
-		if (frameIndex == 0)
-			m_srvUavDescHeap->SetRootDescriptorTable(1, m_srvUavDescHeap->GetGPUIncrementHandle(0)); //Root index 1 for SRV table
-		else
-			m_srvUavDescHeap->SetRootDescriptorTable(1, m_srvUavDescHeap->GetGPUIncrementHandle(1)); //Root index 1 for SRV table
-
+			m_srvUavDescHeap->SetRootDescriptorTable(1, m_srvUavDescHeap->GetGPUIncrementHandle(frameIndex)); //Root index 1 for SRV table
 		m_srvUavDescHeap->SetRootDescriptorTable(2, m_srvUavDescHeap->GetGPUIncrementHandle(4)); //Root index 1 for SRV table
 		shader->SetTopology(D3D_PRIMITIVE_TOPOLOGY_POINTLIST);
 

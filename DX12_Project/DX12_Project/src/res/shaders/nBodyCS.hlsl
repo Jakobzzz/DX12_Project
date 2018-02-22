@@ -14,8 +14,6 @@ struct BodyData
     float4 velocity;
 };
 
-static float g_particleMass = 6.67300e-11f * 10000.0f * 10000.0f * 10000.0f;
-
 RWStructuredBuffer<BodyData> particles : register(u0);
 
 // This function computes the gravitational attraction between two bodies
@@ -31,7 +29,7 @@ float3 BodyBodyInteraction(float4 bi, float4 bj)
     float invDist = 1.0f / sqrt(distSqr);
 	float invDistCube =  invDist * invDist * invDist;
 
-    float s = g_particleMass * invDistCube;
+    float s = bj.w * invDistCube;
 
     return r * s;
 }
