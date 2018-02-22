@@ -3,6 +3,7 @@
 #include <assert.h>
 #include <utils/Utility.hpp>
 #include <utils/Input.hpp>
+#include <iostream>
 
 namespace dx
 {
