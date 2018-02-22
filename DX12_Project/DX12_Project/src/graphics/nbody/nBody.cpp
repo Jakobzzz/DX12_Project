@@ -34,7 +34,7 @@ namespace dx
 
 		//Descriptor heap
 		m_srvUavDescHeap = std::make_unique<DescriptorHeap>(m_device, m_commandList, m_computeCommandList, 1);
-		m_srvUavDescHeap->CreateDescriptorHeap(3, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+		m_srvUavDescHeap->CreateDescriptorHeap(5, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 	}
 
 	//Render the bodies as particles using sprites
@@ -54,7 +54,12 @@ namespace dx
 		m_commandList->SetPipelineState(shader->GetShaders(Shaders::ID::NBody).pipelineState.Get());
 		signature->SetRootSignature();
 		m_buffer->BindConstantBufferForRootDescriptor(0, frameIndex, m_cbDrawUploadHeap->GetAddressOf()); //Root index 0
-		m_srvUavDescHeap->SetRootDescriptorTable(1, m_srvUavDescHeap->GetGPUIncrementHandle(0)); //Root index 1 for SRV table
+		if (frameIndex == 0)
+			m_srvUavDescHeap->SetRootDescriptorTable(1, m_srvUavDescHeap->GetGPUIncrementHandle(0)); //Root index 1 for SRV table
+		else
+			m_srvUavDescHeap->SetRootDescriptorTable(1, m_srvUavDescHeap->GetGPUIncrementHandle(1)); //Root index 1 for SRV table
+
+		m_srvUavDescHeap->SetRootDescriptorTable(2, m_srvUavDescHeap->GetGPUIncrementHandle(4)); //Root index 1 for SRV table
 		shader->SetTopology(D3D_PRIMITIVE_TOPOLOGY_POINTLIST);
 
 		//Draw particles
@@ -71,13 +76,19 @@ namespace dx
 		cbUpdate.g_numParticles = NUM_BODIES;
 		m_buffer->SetConstantBufferData(&cbUpdate, sizeof(cbUpdate), frameIndex, &m_cbUpdateAddress[0]);
 
+		int index = 0;
+		if (frameIndex == 0)
+			index = 2;
+		else
+			index = 3;
+
 		m_buffer->SetComputeResourceBarrier(m_srvBuffer[frameIndex].GetAddressOf(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 
 		//Set NBody compute shader
 		m_computeCommandList->SetPipelineState(shader->GetShaders(Shaders::ID::NBodyCompute).pipelineState.Get());
 		signature->SetComputeRootSignature();
 		m_buffer->BindConstantBufferComputeForRootDescriptor(0, frameIndex, m_cbUpdateUploadHeap->GetAddressOf()); //Root index 0
-		m_srvUavDescHeap->SetComputeRootDescriptorTable(1, m_srvUavDescHeap->GetGPUIncrementHandle(2)); //Root index 1 for UAV table
+		m_srvUavDescHeap->SetComputeRootDescriptorTable(1, m_srvUavDescHeap->GetGPUIncrementHandle(index)); //Root index 1 for UAV table
 		shader->SetComputeDispatch(static_cast<int>(ceil(NUM_BODIES / 256)), 1, 1);
 		m_buffer->SetComputeResourceBarrier(m_srvBuffer[frameIndex].GetAddressOf(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
 	}
@@ -123,12 +134,15 @@ namespace dx
 		}
 
 		//Create SRV | UAV buffer for pipelines
-		for (unsigned int i = 0; i < FRAME_BUFFERS; ++i)
-			m_buffer->CreateSharedSRVUAVForTable(bodyData, sizeof(BodyData) * NUM_BODIES, sizeof(BodyData), NUM_BODIES, m_srvBuffer[i].GetAddressOf(), m_srvBufferUploadHeap[i].GetAddressOf(), 
-											 m_srvUavDescHeap->GetCPUIncrementHandle(0), m_srvUavDescHeap->GetCPUIncrementHandle(2), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+		m_buffer->CreateSharedSRVUAVForTable(bodyData, sizeof(BodyData) * NUM_BODIES, sizeof(BodyData), NUM_BODIES, m_srvBuffer[0].GetAddressOf(), m_srvBufferUploadHeap[0].GetAddressOf(), 
+												m_srvUavDescHeap->GetCPUIncrementHandle(0), m_srvUavDescHeap->GetCPUIncrementHandle(2), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+
+
+		m_buffer->CreateSharedSRVUAVForTable(bodyData, sizeof(BodyData) * NUM_BODIES, sizeof(BodyData), NUM_BODIES, m_srvBuffer[1].GetAddressOf(), m_srvBufferUploadHeap[1].GetAddressOf(),
+												m_srvUavDescHeap->GetCPUIncrementHandle(1), m_srvUavDescHeap->GetCPUIncrementHandle(3), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
 
 		//Create SRV from texture
-		m_texture->CreateSRVFromTexture(Textures::ID::Particle, m_srvUavDescHeap->GetCPUIncrementHandle(1));
+		m_texture->CreateSRVFromTexture(Textures::ID::Particle, m_srvUavDescHeap->GetCPUIncrementHandle(4));
 
 		//Release memory
 		delete[] bodyData;

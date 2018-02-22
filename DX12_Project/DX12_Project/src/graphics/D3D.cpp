@@ -58,13 +58,14 @@ namespace dx
 		//--- Standard shader ---
 		//Desc range and root table for standard pipeline 
 		RootDescriptor graphicsRootDesc;
-		graphicsRootDesc.AppendDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 2, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_VOLATILE);
-		graphicsRootDesc.CreateRootDescTable();
+		graphicsRootDesc.AppendDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_VOLATILE);
+		graphicsRootDesc.AppendDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 1, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_VOLATILE);
 
 		//Fill in root parameters for standard pipeline
 		RootParameter rootParams;
 		rootParams.AppendRootParameterCBV(0, D3D12_SHADER_VISIBILITY_ALL);
-		rootParams.AppendRootParameterDescTable(graphicsRootDesc.GetRootDescTable(), D3D12_SHADER_VISIBILITY_ALL);
+		rootParams.AppendRootParameterDescTable(1, &graphicsRootDesc.GetDescRange()[0], D3D12_SHADER_VISIBILITY_ALL);
+		rootParams.AppendRootParameterDescTable(1, &graphicsRootDesc.GetDescRange()[1], D3D12_SHADER_VISIBILITY_ALL);
 
 		//Create a standard root signature
 		m_rootSignature->CreateRootSignature((UINT)rootParams.GetRootParameters().size(), 1, &rootParams.GetRootParameters()[0], 
