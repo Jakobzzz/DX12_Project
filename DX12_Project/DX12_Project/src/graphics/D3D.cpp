@@ -191,7 +191,7 @@ namespace dx
 		m_commandList->ResourceBarrier(1, &barrier);
 
 		ExecuteCommandList();
-		assert(!m_swapChain->Present(1, 0));
+		assert(!m_swapChain->Present(0, 0));
 	}
 
 	void D3D::ShutDown()
