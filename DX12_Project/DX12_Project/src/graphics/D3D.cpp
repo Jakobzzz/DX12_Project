@@ -120,6 +120,9 @@ namespace dx
 
 	void D3D::Simulate()
 	{
+		//Wait for the compute queue to finish before we execute another
+		WaitForComputeShader();
+
 		assert(!m_computeCommandAllocator->Reset());
 		assert(!m_computeCommandList->Reset(m_computeCommandAllocator.Get(), nullptr));
 
@@ -138,6 +141,9 @@ namespace dx
 		//Exit application
 		if (Input::GetKeyDown(Keyboard::Keys::Escape))
 			PostQuitMessage(0);
+
+		//Wait for the 3D queue to finish before we execute another
+		WaitForGraphicsPipeline();
 
 		//Reset resourcee
 		assert(!m_commandAllocator->Reset());
@@ -172,10 +178,7 @@ namespace dx
 
 		ExecuteCommandList();
 		assert(!m_swapChain->Present(0, 0));
-
-		//Sync the compute shader with the graphics pipeline
-		WaitForGraphicsPipeline();
-		WaitForComputeShader();
+		
 	}
 
 	void D3D::ShutDown()
