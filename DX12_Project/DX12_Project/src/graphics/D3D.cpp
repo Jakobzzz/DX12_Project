@@ -110,6 +110,8 @@ namespace dx
 
 	void D3D::BeginScene(const FLOAT* color)
 	{
+		//WaitForSingleObjectEx(m_swapChain->GetFrameLatencyWaitableObject(), 100, FALSE);
+
 		//Update the input and camera
 		Input::Update();
 		m_camera->Update(0.00001f);
@@ -152,7 +154,7 @@ namespace dx
 		m_commandList->ResourceBarrier(1, &barrier);
 
 		ExecuteCommandList();
-		assert(!m_swapChain->Present(0, 0));
+		assert(!m_swapChain->Present(1, 0));
 
 		WaitForPreviousFrame();
 	}
