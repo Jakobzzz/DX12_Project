@@ -13,6 +13,7 @@
 #include <graphics/Camera.hpp>
 #include <graphics/nbody/nBody.hpp>
 #include <utils/Utility.hpp>
+#include <utils/StepTimer.h>
 
 using namespace DirectX;
 
@@ -58,6 +59,7 @@ namespace dx
 		std::unique_ptr<Buffer> m_buffer;
 		std::unique_ptr<Camera> m_camera;
 		std::unique_ptr<NBody> m_nBodySystem;
+		std::unique_ptr<StepTimer> m_timer;
 
 	private:
 		ComPtr<ID3D12Device> m_device;
@@ -85,5 +87,6 @@ namespace dx
 		D3D12_VIEWPORT m_viewport;
 		D3D12_RECT m_rect;
 		D3D12_DEPTH_STENCIL_VIEW_DESC m_depthViewDesc;
+		HWND m_hwnd;
 	};
 }
