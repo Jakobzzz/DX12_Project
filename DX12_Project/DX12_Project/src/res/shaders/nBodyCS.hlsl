@@ -19,7 +19,7 @@ RWStructuredBuffer<BodyData> particles : register(u0);
 // This function computes the gravitational attraction between two bodies
 // at positions bi and bj. The mass of the bodies is stored in the w 
 // component
-float3 BodyBodyInteraction(float4 bi, float4 bj) 
+float3 BodyBodyInteraction(float4 bi, float4 bj, int particles) 
 {
     float3 r = bi - bj;
 
@@ -45,9 +45,13 @@ float3 Gravitation(float4 myPos, float3 accel)
 {
     uint i = 0;
 
+    const int tooManyParticles = 256 * 256 - 1024;
+
     [unroll]
     for (uint counter = 0; counter < BLOCK_SIZE; counter++) 
-        accel += BodyBodyInteraction(sharedPos[i++], myPos); 
+        accel += BodyBodyInteraction(sharedPos[i++], myPos, 1); 
+
+    accel += BodyBodyInteraction(float4(0.0f, 0.0f, 0.0f, 0.0f), myPos, -tooManyParticles);
 
     return accel;
 }
