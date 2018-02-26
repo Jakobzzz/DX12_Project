@@ -12,6 +12,7 @@ struct CB_UPDATE
 	float g_timestep;
     float g_softeningSquared;
 	UINT g_numParticles;
+	UINT g_numBlocks = UINT(ceil(NUM_BODIES / 256.0f));
 };
 
 FLOAT blendFactors[] = { 1.0f, 1.0f, 1.0f, 1.0f };
@@ -67,7 +68,7 @@ namespace dx
 		//Update the data for the compute constant buffer
 		CB_UPDATE cbUpdate;
 		cbUpdate.g_timestep = 0.016f;
-		cbUpdate.g_softeningSquared = 0.01f;
+		cbUpdate.g_softeningSquared = 0.0012500000f * 0.0012500000f;
 		cbUpdate.g_numParticles = NUM_BODIES;
 		m_buffer->SetConstantBufferData(&cbUpdate, sizeof(cbUpdate), frameIndex, &m_cbUpdateAddress[0]);
 
@@ -78,7 +79,7 @@ namespace dx
 		signature->SetComputeRootSignature();
 		m_buffer->BindConstantBufferComputeForRootDescriptor(0, frameIndex, m_cbUpdateUploadHeap->GetAddressOf()); //Root index 0
 		m_srvUavDescHeap->SetComputeRootDescriptorTable(1, m_srvUavDescHeap->GetGPUIncrementHandle(2)); //Root index 1 for UAV table
-		shader->SetComputeDispatch(NUM_BODIES / 256, 1, 1);
+		shader->SetComputeDispatch(static_cast<int>(ceil(NUM_BODIES / 256.0f)), 1, 1);
 
 		m_buffer->SetResourceBarrier(m_srvBuffer.GetAddressOf(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
 	}

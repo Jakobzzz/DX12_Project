@@ -135,8 +135,6 @@ namespace dx
 		//Run the compute shader
 		m_nBodySystem->UpdateBodies(m_shaders.get(), m_computeRootSignature.get(), m_frameIndex);
 
-		//Get the current back buffer
-		m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
 		m_commandList->RSSetViewports(1, &m_viewport);
 		m_commandList->RSSetScissorRects(1, &m_rect);
 
@@ -165,6 +163,9 @@ namespace dx
 		assert(!m_swapChain->Present(0, 0));
 
 		WaitForPreviousFrame();
+
+		//Get the current back buffer
+		m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
 	}
 
 	void D3D::ShutDown()
