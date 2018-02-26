@@ -44,9 +44,9 @@ namespace dx
 		m_hwnd = hwnd;
 
 		//Initialize DirectX12 functionality and input
-		Input::Initialize(hwnd);
+		Input::Initialize(m_hwnd);
 		FindAndCreateDevice();
-		CreateCommandsAndSwapChain(hwnd);
+		CreateCommandsAndSwapChain(m_hwnd);
 		CreateRenderTargetsAndFences();
 		CreateViewportAndScissorRect();
 
