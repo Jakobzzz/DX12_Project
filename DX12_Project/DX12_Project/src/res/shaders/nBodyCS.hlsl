@@ -30,7 +30,7 @@ float3 BodyBodyInteraction(float4 bi, float4 bj, int particles)
     float invDist = 1.0f / sqrt(distSqr);
 	float invDistCube =  invDist * invDist * invDist;
 
-    float s = 6.67300e-11f * 10000.0f * 10000.0f * 10000.0f * invDistCube;
+    float s = bj.w * invDistCube * particles;
 
     return r * s;
 }
