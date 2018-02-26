@@ -130,8 +130,7 @@ namespace dx
 
 	void D3D::Simulate()
 	{
-		//Wait for the compute queue to finish before we execute another
-		WaitForComputeShader();
+		
 
 		if (m_srvIndex == 2)
 			m_srvIndex = 3;
@@ -157,8 +156,7 @@ namespace dx
 		if (Input::GetKeyDown(Keyboard::Keys::Escape))
 			PostQuitMessage(0);
 
-		//Wait for 3D queue to finish initalize
-		WaitForGraphicsPipeline();
+		
 
 		//Get the current back buffer
 		//to make sure that the compute shader and graphics pipeline works on different frames
@@ -194,6 +192,12 @@ namespace dx
 
 		ExecuteCommandList();
 		assert(!m_swapChain->Present(0, 0));
+
+		//Wait for the compute queue to finish before we execute another
+		WaitForComputeShader();
+
+		//Wait for 3D queue to finish initalize
+		WaitForGraphicsPipeline();
 	}
 
 	void D3D::ShutDown()

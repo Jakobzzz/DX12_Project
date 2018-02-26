@@ -46,11 +46,16 @@ float3 Gravitation(float4 myPos, float3 accel)
 {
     uint i = 0;
 
-    const int tooManyParticles = g_numBlocks * BLOCK_SIZE - g_numParticles;
-
     [unroll]
     for (uint counter = 0; counter < BLOCK_SIZE; counter++) 
         accel += BodyBodyInteraction(sharedPos[i++], myPos, 1); 
+
+    // g_numParticles is the number of our particles, however this number might not 
+	// be an exact multiple of the tile size. In such cases, out of bound reads 
+	// occur in the process above, which means there will be tooManyParticles 
+	// "phantom" particles generating false gravity at position (0, 0, 0), so 
+	// we have to subtract them here. NOTE, out of bound reads always return 0 in CS.
+    const int tooManyParticles = g_numBlocks * BLOCK_SIZE - g_numParticles;
 
     accel += BodyBodyInteraction(float4(0.0f, 0.0f, 0.0f, 0.0f), myPos, -tooManyParticles);
 
