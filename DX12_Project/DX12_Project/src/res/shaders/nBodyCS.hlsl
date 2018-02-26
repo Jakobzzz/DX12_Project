@@ -6,6 +6,7 @@ cbuffer cbUpdate : register(b0)
 	float g_timestep;
 	float g_softeningSquared;
 	uint  g_numParticles;
+    uint g_numBlocks;
 };	
 
 struct BodyData
@@ -45,7 +46,7 @@ float3 Gravitation(float4 myPos, float3 accel)
 {
     uint i = 0;
 
-    const int tooManyParticles = 256 * 256 - 1024;
+    const int tooManyParticles = g_numBlocks * BLOCK_SIZE - g_numParticles;
 
     [unroll]
     for (uint counter = 0; counter < BLOCK_SIZE; counter++) 
