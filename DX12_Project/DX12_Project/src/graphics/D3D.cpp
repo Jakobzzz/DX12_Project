@@ -108,6 +108,7 @@ namespace dx
 		//Set the frameIndex to 1, this is to force the compute shader to start working with the next frame
 		//while the graphics pipeline works with the current frame
 		m_srvIndex = 2;
+		m_frameIndex = 1;
 	}
 
 	void D3D::Render()
@@ -129,18 +130,13 @@ namespace dx
 
 	void D3D::Simulate()
 	{
-		
+		//Wait for the compute queue to finish before we execute another
+		WaitForComputeShader();
 
 		if (m_srvIndex == 2)
-		{
 			m_srvIndex = 3;
-			m_frameIndex = 1;
-		}
 		else
-		{
 			m_srvIndex = 2;
-			m_frameIndex = 0;
-		}
 
 		assert(!m_computeCommandAllocator->Reset());
 		assert(!m_computeCommandList->Reset(m_computeCommandAllocator.Get(), nullptr));
@@ -160,6 +156,9 @@ namespace dx
 		//Exit application
 		if (Input::GetKeyDown(Keyboard::Keys::Escape))
 			PostQuitMessage(0);
+
+		//Wait for 3D queue to finish initalize
+		WaitForGraphicsPipeline();
 
 		//Get the current back buffer
 		//to make sure that the compute shader and graphics pipeline works on different frames
@@ -195,12 +194,6 @@ namespace dx
 
 		ExecuteCommandList();
 		assert(!m_swapChain->Present(0, 0));
-
-		//Wait for 3D queue to finish initalize
-		WaitForGraphicsPipeline();
-
-		//Wait for the compute queue to finish before we execute another
-		WaitForComputeShader();
 	}
 
 	void D3D::ShutDown()

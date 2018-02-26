@@ -48,7 +48,6 @@ namespace dx
 		cbDraw.g_mWorldViewProjection = WVP;
 
 		m_buffer->SetConstantBufferData(&cbDraw, sizeof(cbDraw), frameIndex, &m_cbDrawAddress[0]);
-		m_buffer->SetResourceBarrier(m_srvBuffer[frameIndex].GetAddressOf(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
 
 		//Set the normal NBody shader and root signature
 		m_commandList->OMSetBlendFactor(blendFactors);
@@ -81,6 +80,8 @@ namespace dx
 		m_buffer->BindConstantBufferComputeForRootDescriptor(0, frameIndex, m_cbUpdateUploadHeap->GetAddressOf()); //Root index 0
 		m_srvUavDescHeap->SetComputeRootDescriptorTable(1, m_srvUavDescHeap->GetGPUIncrementHandle(srvIndex)); //Root index 1 for UAV table
 		shader->SetComputeDispatch(static_cast<int>(ceil(NUM_BODIES / 256)), 1, 1);
+
+		m_buffer->SetComputeResourceBarrier(m_srvBuffer[frameIndex].GetAddressOf(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
 	}
 
 	void NBody::InitializeBodies()
