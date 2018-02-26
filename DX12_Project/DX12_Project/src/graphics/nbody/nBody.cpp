@@ -69,7 +69,7 @@ namespace dx
 		//Update the data for the compute constant buffer
 		CB_UPDATE cbUpdate;
 		cbUpdate.g_timestep = 0.016f;
-		cbUpdate.g_softeningSquared = 0.01f;
+		cbUpdate.g_softeningSquared = 0.0012500000f * 0.0012500000f;
 		cbUpdate.g_numParticles = NUM_BODIES;
 		m_buffer->SetConstantBufferData(&cbUpdate, sizeof(cbUpdate), frameIndex, &m_cbUpdateAddress[0]);
 
