@@ -7,6 +7,7 @@
 #include <assert.h>
 #include <DirectXColors.h>
 #include <iostream>
+#include <pix3.h>
 
 namespace dx
 {
@@ -117,7 +118,6 @@ namespace dx
 
 	void D3D::BeginScene(const FLOAT* color)
 	{
-		//WaitForSingleObjectEx(m_swapChain->GetFrameLatencyWaitableObject(), 100, FALSE);
 		m_timer->Tick(NULL);
 
 		//Update the input and camera
@@ -171,6 +171,7 @@ namespace dx
 	void D3D::ShutDown()
 	{
 		//Close the object handle to the fence event.
+		m_device->SetStablePowerState(false);
 		WaitForPreviousFrame();
 		CloseHandle(m_fenceEvent);
 
@@ -228,6 +229,7 @@ namespace dx
 				return false;
 		}
 
+		m_device->SetStablePowerState(true);
 		return true;
 	}
 
