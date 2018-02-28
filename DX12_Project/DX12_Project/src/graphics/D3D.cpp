@@ -138,13 +138,14 @@ namespace dx
 		else
 			m_srvIndex = 2;
 
+		m_computeCommandQueue->Wait(m_fence.Get(), m_fenceValues[m_frameIndex]);
+
 		assert(!m_computeCommandAllocator->Reset());
 		assert(!m_computeCommandList->Reset(m_computeCommandAllocator.Get(), nullptr));
 
 		//Run the compute shader
 		m_nBodySystem->UpdateBodies(m_shaders.get(), m_computeRootSignature.get(), m_frameIndex, m_srvIndex);
 
-		m_computeCommandQueue->Wait(m_fence.Get(), m_fenceValues[m_frameIndex]);
 		ExecuteComputeCommandList();
 	}
 
@@ -164,6 +165,8 @@ namespace dx
 		//Get the current back buffer
 		//to make sure that the compute shader and graphics pipeline works on different frames
 		m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
+
+		m_commandQueue->Wait(m_computeFence.Get(), m_computeFenceValues[m_frameIndex]);
 
 		//Reset resourcee
 		assert(!m_commandAllocator->Reset());
@@ -193,7 +196,6 @@ namespace dx
 		barrier = barrier.Transition(m_backBufferRenderTarget[m_frameIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
 		m_commandList->ResourceBarrier(1, &barrier);
 
-		m_commandQueue->Wait(m_computeFence.Get(), m_computeFenceValues[m_frameIndex]);
 		ExecuteCommandList();
 		assert(!m_swapChain->Present(0, 0));
 	}
@@ -384,10 +386,21 @@ namespace dx
 
 	void D3D::WaitForComputeShader()
 	{
-		if (m_computeFence->GetCompletedValue() < m_computeFenceValues[m_frameIndex])
+		if (m_frameIndex == 0)
 		{
-			m_computeFence->SetEventOnCompletion(m_computeFenceValues[m_frameIndex], m_computeFenceEvent);
-			WaitForSingleObject(m_computeFenceEvent, INFINITE);
+			if (m_computeFence->GetCompletedValue() < m_computeFenceValues[1])
+			{
+				m_computeFence->SetEventOnCompletion(m_computeFenceValues[1], m_computeFenceEvent);
+				WaitForSingleObject(m_computeFenceEvent, INFINITE);
+			}
+		}
+		else
+		{
+			if (m_computeFence->GetCompletedValue() < m_computeFenceValues[0])
+			{
+				m_computeFence->SetEventOnCompletion(m_computeFenceValues[0], m_computeFenceEvent);
+				WaitForSingleObject(m_computeFenceEvent, INFINITE);
+			}
 		}
 	}
 
