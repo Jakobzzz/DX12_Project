@@ -83,7 +83,9 @@ namespace dx
 		HANDLE m_fenceEvent;
 		HANDLE m_computeFenceEvent;
 		UINT64 m_fenceValue;
+		UINT64 m_fenceValues[FRAME_BUFFERS];
 		UINT64 m_computeFenceValue;
+		UINT64 m_computeFenceValues[FRAME_BUFFERS];
 		D3D12_VIEWPORT m_viewport;
 		D3D12_RECT m_rect;
 		D3D12_DEPTH_STENCIL_VIEW_DESC m_depthViewDesc;

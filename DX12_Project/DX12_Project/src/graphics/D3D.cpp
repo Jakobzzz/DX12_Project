@@ -130,7 +130,8 @@ namespace dx
 
 	void D3D::Simulate()
 	{
-		
+		//Wait for the compute queue to finish before we execute another
+		WaitForComputeShader();
 
 		if (m_srvIndex == 2)
 			m_srvIndex = 3;
@@ -143,6 +144,7 @@ namespace dx
 		//Run the compute shader
 		m_nBodySystem->UpdateBodies(m_shaders.get(), m_computeRootSignature.get(), m_frameIndex, m_srvIndex);
 
+		m_computeCommandQueue->Wait(m_fence.Get(), m_fenceValues[m_frameIndex]);
 		ExecuteComputeCommandList();
 	}
 
@@ -156,7 +158,8 @@ namespace dx
 		if (Input::GetKeyDown(Keyboard::Keys::Escape))
 			PostQuitMessage(0);
 
-		
+		//Wait for 3D queue to finish initalize
+		WaitForGraphicsPipeline();
 
 		//Get the current back buffer
 		//to make sure that the compute shader and graphics pipeline works on different frames
@@ -190,14 +193,9 @@ namespace dx
 		barrier = barrier.Transition(m_backBufferRenderTarget[m_frameIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
 		m_commandList->ResourceBarrier(1, &barrier);
 
+		m_commandQueue->Wait(m_computeFence.Get(), m_computeFenceValues[m_frameIndex]);
 		ExecuteCommandList();
 		assert(!m_swapChain->Present(0, 0));
-
-		//Wait for the compute queue to finish before we execute another
-		WaitForComputeShader();
-
-		//Wait for 3D queue to finish initalize
-		WaitForGraphicsPipeline();
 	}
 
 	void D3D::ShutDown()
@@ -376,30 +374,19 @@ namespace dx
 
 	void D3D::WaitForGraphicsPipeline()
 	{
-		//Wait for graphics pipeline
-		//Signal and increment the fence value.
-		const UINT64 fence = m_fenceValue;
-		m_commandQueue->Signal(m_fence.Get(), fence);
-		m_fenceValue++;
-
 		//Wait until command queue is done.
-		if (m_fence->GetCompletedValue() < fence)
+		if (m_fence->GetCompletedValue() < m_fenceValues[m_frameIndex])
 		{
-			m_fence->SetEventOnCompletion(fence, m_fenceEvent);
+			m_fence->SetEventOnCompletion(m_fenceValues[m_frameIndex], m_fenceEvent);
 			WaitForSingleObject(m_fenceEvent, INFINITE);
 		}
 	}
 
 	void D3D::WaitForComputeShader()
 	{
-		//Wait for compute shader
-		const UINT64 computeFence = m_computeFenceValue;
-		m_computeCommandQueue->Signal(m_computeFence.Get(), computeFence);
-		m_computeFenceValue++;
-
-		if (m_computeFence->GetCompletedValue() < computeFence)
+		if (m_computeFence->GetCompletedValue() < m_computeFenceValues[m_frameIndex])
 		{
-			m_computeFence->SetEventOnCompletion(computeFence, m_computeFenceEvent);
+			m_computeFence->SetEventOnCompletion(m_computeFenceValues[m_frameIndex], m_computeFenceEvent);
 			WaitForSingleObject(m_computeFenceEvent, INFINITE);
 		}
 	}
@@ -410,6 +397,12 @@ namespace dx
 		assert(!m_commandList->Close());
 		ID3D12CommandList* ppCommandLists[] = { m_commandList.Get() };
 		m_commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
+
+		//Wait for graphics pipeline
+		//Signal and increment the fence value.
+		m_fenceValues[m_frameIndex] = m_fenceValue;
+		m_commandQueue->Signal(m_fence.Get(), m_fenceValues[m_frameIndex]);
+		m_fenceValue++;
 	}
 
 	void D3D::ExecuteComputeCommandList()
@@ -418,6 +411,11 @@ namespace dx
 		assert(!m_computeCommandList->Close());
 		ID3D12CommandList* ppCommandLists[] = { m_computeCommandList.Get() };
 		m_computeCommandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
+
+		//Wait for compute shader
+		m_computeFenceValues[m_frameIndex] = m_computeFenceValue;
+		m_computeCommandQueue->Signal(m_computeFence.Get(), m_computeFenceValues[m_frameIndex]);
+		m_computeFenceValue++;
 	}
 
 	ID3D12Device* D3D::GetDevice() const
