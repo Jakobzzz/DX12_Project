@@ -463,7 +463,7 @@ namespace dx
 
 			const auto averageDiffMs = sum / validEntryCount;
 
-			auto titleString = std::to_string(averageDiffMs) + " ms (" + std::to_string(1000.0 / averageDiffMs) + " FPS)";
+			auto titleString = std::to_string(averageDiffMs) + " ms (" + std::to_string(m_timer->GetFramesPerSecond()) + " FPS)";
 			SetWindowTextA(m_hwnd, titleString.c_str());
 		}
 	}
