@@ -13,6 +13,7 @@
 #include <graphics/Camera.hpp>
 #include <graphics/nbody/nBody.hpp>
 #include <utils/StepTimer.h>
+#include <array>
 
 using namespace DirectX;
 
@@ -39,12 +40,14 @@ namespace dx
 		//DX12 functionality
 		bool FindAndCreateDevice();
 		void CreateRenderTargetsAndFences();
+		void CreateTimerResources();
 		void CreateCommandsAndSwapChain(HWND hwnd);
 		void CreateViewportAndScissorRect();
 		void BeginScene(const FLOAT* color);
 		void EndScene();
 		void ExecuteCommandList();
 		void WaitForPreviousFrame();
+		void MeasureQueueTime();
 
 	private:
 		std::unique_ptr<Texture> m_texture;
@@ -68,6 +71,17 @@ namespace dx
 		ComPtr<ID3D12CommandAllocator> m_commandAllocator;
 		ComPtr<ID3D12Resource> m_backBufferRenderTarget[2];
 		ComPtr<ID3D12Resource> m_depthStencilBuffer;
+
+	private:
+		//Timing queries
+		ComPtr<ID3D12QueryHeap> m_timeQueryHeap;
+		ComPtr<ID3D12Resource> m_timeQueryReadbackBuffer[2];
+		UINT64 m_queryResults[2];
+		UINT64 m_frequency;
+		int m_queryReadbackIndex;
+		int m_frameTimeEntryCount;
+		int m_frameTimeNextEntry;
+		std::array<double, 64> m_frameTimes;
 
 	private:
 		UINT m_frameIndex;
