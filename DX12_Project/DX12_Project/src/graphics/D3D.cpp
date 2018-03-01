@@ -143,12 +143,6 @@ namespace dx
 		EndScene();
 
 		MeasureQueueTime();
-
-		/*std::string title = "FPS: " + std::to_string(m_timer->GetFramesPerSecond());
-		SetWindowText(m_hwnd, title.c_str());*/
-
-		std::string title = "FPS: " + std::to_string(m_timer->GetFramesPerSecond());
-		SetWindowText(m_hwnd, title.c_str());
 	}
 
 	void D3D::Simulate()
