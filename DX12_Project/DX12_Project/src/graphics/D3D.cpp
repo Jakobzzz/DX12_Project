@@ -128,9 +128,6 @@ namespace dx
 		EndScene();
 
 		MeasureQueueTime();
-
-		/*std::string title = "FPS: " + std::to_string(m_timer->GetFramesPerSecond());
-		SetWindowText(m_hwnd, title.c_str());*/
 	}
 
 	void D3D::BeginScene(const FLOAT* color)
@@ -404,7 +401,6 @@ namespace dx
 
 			const auto validEntryCount = std::min(static_cast<size_t> (m_frameTimeEntryCount), m_frameTimes.size());
 			const auto sum = std::accumulate(m_frameTimes.begin(), m_frameTimes.begin() + validEntryCount, 0.0);
-
 			const auto averageDiffMs = sum / validEntryCount;
 
 			auto titleString = std::to_string(averageDiffMs) + " ms (" + std::to_string(1000.0 / averageDiffMs) + " FPS)";
