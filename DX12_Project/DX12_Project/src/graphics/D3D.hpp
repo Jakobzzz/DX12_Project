@@ -13,9 +13,8 @@
 #include <graphics/Camera.hpp>
 #include <graphics/nbody/nBody.hpp>
 #include <utils/StepTimer.h>
-#include <array>
 #include <utils/Utility.hpp>
-#include <utils/StepTimer.h>
+#include <array>
 
 using namespace DirectX;
 

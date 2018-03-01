@@ -83,11 +83,13 @@ namespace dx
 		//--- Compute shader ---
 		RootDescriptor uavRootDesc;
 		uavRootDesc.AppendDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_VOLATILE);
+		uavRootDesc.AppendDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 1, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_VOLATILE);
 		uavRootDesc.CreateRootDescTable();
 
 		RootParameter computeRootParams;
 		computeRootParams.AppendRootParameterCBV(0, D3D12_SHADER_VISIBILITY_ALL);
-		computeRootParams.AppendRootParameterDescTable(uavRootDesc.GetRootDescTable(), D3D12_SHADER_VISIBILITY_ALL);
+		computeRootParams.AppendRootParameterDescTable(1, &uavRootDesc.GetDescRange()[0], D3D12_SHADER_VISIBILITY_ALL);
+		computeRootParams.AppendRootParameterDescTable(1, &uavRootDesc.GetDescRange()[1], D3D12_SHADER_VISIBILITY_ALL);
 
 		m_computeRootSignature->CreateRootSignature((UINT)computeRootParams.GetRootParameters().size(), 0, &computeRootParams.GetRootParameters()[0], nullptr, 
 													D3D12_ROOT_SIGNATURE_FLAG_NONE);
@@ -109,7 +111,9 @@ namespace dx
 		ExecuteComputeCommandList();
 
 		//Start frame index and time
-		m_frameIndex = 0;
+		//Set the frameIndex to 1, this is to force the compute shader to start working with the next frame
+		//while the graphics pipeline works with the current frame
+		m_frameIndex = 1;
 		m_queryReadbackIndex = -2;
 		m_frameTimeEntryCount = 0;
 		m_frameTimeNextEntry = 0;
@@ -119,10 +123,9 @@ namespace dx
 		//Wait for the compute queue to finish before we execute another
 		WaitForComputeShader();
 
-		//Set the frameIndex to 1, this is to force the compute shader to start working with the next frame
-		//while the graphics pipeline works with the current frame
+		//Set srv index so the compute shader knows which srv/uav buffer to use
 		m_srvIndex = 2;
-		m_frameIndex = 1;
+		
 	}
 
 	void D3D::Render()
