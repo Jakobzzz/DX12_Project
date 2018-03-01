@@ -67,7 +67,6 @@ namespace dx
 			case WM_MOUSEHOVER:
 				Mouse::ProcessMessage(message, wParam, lParam);
 				break;
-
 			case WM_KEYDOWN:
 			case WM_SYSKEYDOWN:
 			case WM_KEYUP:

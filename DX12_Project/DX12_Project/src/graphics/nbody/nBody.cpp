@@ -12,7 +12,7 @@ struct CB_UPDATE
 	float g_timestep;
     float g_softeningSquared;
 	UINT g_numParticles;
-	UINT g_numBlocksX = UINT(ceil(NUM_BODIES / 256.0f));
+	UINT g_numBlocks = UINT(ceil(NUM_BODIES / 256.0f));
 };
 
 FLOAT blendFactors[] = { 1.0f, 1.0f, 1.0f, 1.0f };
