@@ -171,7 +171,6 @@ namespace dx
 	void D3D::ShutDown()
 	{
 		//Close the object handle to the fence event.
-		m_device->SetStablePowerState(false);
 		WaitForPreviousFrame();
 		CloseHandle(m_fenceEvent);
 
@@ -229,7 +228,6 @@ namespace dx
 				return false;
 		}
 
-		m_device->SetStablePowerState(true);
 		return true;
 	}
 
