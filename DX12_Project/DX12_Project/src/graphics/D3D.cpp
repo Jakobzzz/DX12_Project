@@ -320,6 +320,9 @@ namespace dx
 		assert(!m_device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(m_commandAllocator.GetAddressOf())));
 		assert(!m_device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, m_commandAllocator.Get(), nullptr, IID_PPV_ARGS(m_commandList.GetAddressOf())));
 
+		//Init the time stamp
+		m_commandQueue->GetTimestampFrequency(&m_frequency);
+
 		//Initialize the swap chain description.
 		DXGI_SWAP_CHAIN_DESC1 scDesc = {};
 		scDesc.Width = SCREEN_WIDTH;
@@ -395,9 +398,8 @@ namespace dx
 
 			m_frameTimes[m_frameTimeNextEntry] = diffMs;
 			++m_frameTimeNextEntry;
-			if (m_frameTimeNextEntry >= m_frameTimes.size()) {
+			if ((UINT)m_frameTimeNextEntry >= m_frameTimes.size())
 				m_frameTimeNextEntry = 0;
-			}
 			++m_frameTimeEntryCount;
 
 			const auto validEntryCount = std::min(static_cast<size_t> (m_frameTimeEntryCount), m_frameTimes.size());
