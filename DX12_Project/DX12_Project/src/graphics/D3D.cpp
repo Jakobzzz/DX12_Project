@@ -403,9 +403,14 @@ namespace dx
 			const auto sum = std::accumulate(m_frameTimes.begin(), m_frameTimes.begin() + validEntryCount, 0.0);
 			const auto averageDiffMs = sum / validEntryCount;
 
-			auto titleString = std::to_string(averageDiffMs) + " ms (" + std::to_string(m_timer->GetFramesPerSecond()) + " FPS)";
-			SetWindowTextA(m_hwnd, titleString.c_str());
+			if (m_count < 1000)
+				std::cout << averageDiffMs << std::endl;
+
+			/*auto titleString = std::to_string(averageDiffMs) + " ms (" + std::to_string(m_timer->GetFramesPerSecond()) + " FPS)";
+			SetWindowTextA(m_hwnd, titleString.c_str());*/
 		}
+
+		m_count++;
 	}
 
 	void D3D::ExecuteCommandList()

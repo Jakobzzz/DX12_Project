@@ -91,5 +91,6 @@ namespace dx
 		D3D12_RECT m_rect;
 		D3D12_DEPTH_STENCIL_VIEW_DESC m_depthViewDesc;
 		HWND m_hwnd;
+		int m_count = 0;
 	};
 }
