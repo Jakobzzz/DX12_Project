@@ -9,6 +9,7 @@
 #include <iostream>
 #include <pix3.h>
 #include <numeric>
+#include <iomanip>
 
 #ifdef min
 #undef min
@@ -105,6 +106,7 @@ namespace dx
 
 		//Create timer resources
 		CreateTimerResources();
+		CreateComputeTimerResources();
 
 		//Close the command list
 		ExecuteCommandList();
@@ -117,6 +119,11 @@ namespace dx
 		m_queryReadbackIndex = -2;
 		m_frameTimeEntryCount = 0;
 		m_frameTimeNextEntry = 0;
+
+		m_computeQueryReadbackIndex = -2;
+		m_computeFrameTimeEntryCount = 0;
+		m_computeFrameTimeNextEntry = 0;
+
 		//Wait for 3D queue to finish initalize
 		WaitForGraphicsPipeline();
 
@@ -125,7 +132,6 @@ namespace dx
 
 		//Set srv index so the compute shader knows which srv/uav buffer to use
 		m_srvIndex = 2;
-		
 	}
 
 	void D3D::Render()
@@ -146,6 +152,10 @@ namespace dx
 		EndScene();
 
 		MeasureQueueTime();
+		ComputeMeasureQueueTime();
+
+		auto titleString = std::to_string(m_averageDiffMs) + " ms" + std::to_string(m_computeAvrageDiffMs) + "cms (" + std::to_string(m_timer->GetFramesPerSecond()) + " FPS)";
+		SetWindowTextA(m_hwnd, titleString.c_str());
 	}
 
 	void D3D::Simulate()
@@ -165,6 +175,10 @@ namespace dx
 
 		//Run the compute shader
 		m_nBodySystem->UpdateBodies(m_shaders.get(), m_computeRootSignature.get(), m_frameIndex, m_srvIndex);
+
+		//Issue query
+		m_computeCommandList->EndQuery(m_computeTimeQueryHeap.Get(), D3D12_QUERY_TYPE_TIMESTAMP, m_frameIndex);
+		m_computeCommandList->ResolveQueryData(m_computeTimeQueryHeap.Get(), D3D12_QUERY_TYPE_TIMESTAMP, m_frameIndex, 1, m_computeTimeQueryReadbackBuffer[m_frameIndex].Get(), 0);
 
 		ExecuteComputeCommandList();
 	}
@@ -349,6 +363,27 @@ namespace dx
 		m_device->CreateQueryHeap(&queryHeapDesc, IID_PPV_ARGS(&m_timeQueryHeap));
 	}
 
+	void D3D::CreateComputeTimerResources()
+	{
+		D3D12_RESOURCE_DESC cpuTimingBufferDesc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(UINT64));
+
+		for (UINT i = 0; i < FRAME_BUFFERS; ++i)
+		{
+			m_device->CreateCommittedResource(
+				&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_READBACK),
+				D3D12_HEAP_FLAG_NONE,
+				&cpuTimingBufferDesc,
+				D3D12_RESOURCE_STATE_COPY_DEST,
+				nullptr,
+				IID_PPV_ARGS(&m_computeTimeQueryReadbackBuffer[i]));
+		}
+
+		D3D12_QUERY_HEAP_DESC queryHeapDesc = {};
+		queryHeapDesc.Count = FRAME_BUFFERS; //Query at end of frame
+		queryHeapDesc.Type = D3D12_QUERY_HEAP_TYPE_TIMESTAMP;
+		m_device->CreateQueryHeap(&queryHeapDesc, IID_PPV_ARGS(&m_computeTimeQueryHeap));
+	}
+
 	void D3D::CreateCommandsAndSwapChain(HWND hwnd)
 	{
 		//Create compute command queue, allocator and list
@@ -383,6 +418,7 @@ namespace dx
 
 		//Init the time stamp
 		m_commandQueue->GetTimestampFrequency(&m_frequency);
+		m_computeCommandQueue->GetTimestampFrequency(&m_computeFrequency);
 
 		//Initialize the swap chain description.
 		DXGI_SWAP_CHAIN_DESC1 scDesc = {};
@@ -461,10 +497,43 @@ namespace dx
 			const auto validEntryCount = std::min(static_cast<size_t> (m_frameTimeEntryCount), m_frameTimes.size());
 			const auto sum = std::accumulate(m_frameTimes.begin(), m_frameTimes.begin() + validEntryCount, 0.0);
 
-			const auto averageDiffMs = sum / validEntryCount;
+			m_averageDiffMs = sum / validEntryCount;
 
-			auto titleString = std::to_string(averageDiffMs) + " ms (" + std::to_string(m_timer->GetFramesPerSecond()) + " FPS)";
-			SetWindowTextA(m_hwnd, titleString.c_str());
+		}
+	}
+
+	void D3D::ComputeMeasureQueueTime()
+	{
+		//Update query
+		++m_computeQueryReadbackIndex;
+
+		if (m_computeQueryReadbackIndex >= FRAME_BUFFERS)
+			m_computeQueryReadbackIndex = 0;
+
+		if (m_computeQueryReadbackIndex >= 0)
+		{
+			void* mapping = nullptr;
+			m_computeTimeQueryReadbackBuffer[m_computeQueryReadbackIndex]->Map(0, &CD3DX12_RANGE(0, sizeof(UINT64)), &mapping);
+			memcpy(m_computeQueryResults + m_computeQueryReadbackIndex, mapping, sizeof(UINT64));
+			m_computeTimeQueryReadbackBuffer[m_computeQueryReadbackIndex]->Unmap(0, nullptr);
+
+			//Time is now previous to current
+			int previousQueryIndex = m_computeQueryReadbackIndex - 1;
+			if (previousQueryIndex < 0)
+				previousQueryIndex += FRAME_BUFFERS;
+
+			const double diffMs = static_cast<double>(m_computeQueryResults[m_computeQueryReadbackIndex] - m_computeQueryResults[previousQueryIndex]) / static_cast<double> (m_computeFrequency) * 1000;
+
+			m_computeFrameTimes[m_computeFrameTimeNextEntry] = diffMs;
+			++m_computeFrameTimeNextEntry;
+			if ((UINT)m_computeFrameTimeNextEntry >= m_computeFrameTimes.size())
+				m_computeFrameTimeNextEntry = 0;
+			++m_computeFrameTimeEntryCount;
+
+			const auto validEntryCount = std::min(static_cast<size_t> (m_computeFrameTimeEntryCount), m_computeFrameTimes.size());
+			const auto sum = std::accumulate(m_computeFrameTimes.begin(), m_computeFrameTimes.begin() + validEntryCount, 0.0);
+
+			m_computeAvrageDiffMs = sum / validEntryCount;
 		}
 	}
 

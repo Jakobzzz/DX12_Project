@@ -43,13 +43,14 @@ namespace dx
 		bool FindAndCreateDevice();
 		void CreateRenderTargetsAndFences();
 		void CreateTimerResources();
+		void CreateComputeTimerResources();
 		void CreateCommandsAndSwapChain(HWND hwnd);
 		void CreateViewportAndScissorRect();
 		void BeginScene(const FLOAT* color);
 		void EndScene();
 		void ExecuteCommandList();
-		void WaitForPreviousFrame();
 		void MeasureQueueTime();
+		void ComputeMeasureQueueTime();
 		void ExecuteComputeCommandList();
 		void WaitForGraphicsPipeline();
 		void WaitForComputeShader();
@@ -82,15 +83,27 @@ namespace dx
 		ComPtr<ID3D12Resource> m_depthStencilBuffer;
 
 	private:
-		//Timing queries
+		//Timing queries for Render
 		ComPtr<ID3D12QueryHeap> m_timeQueryHeap;
-		ComPtr<ID3D12Resource> m_timeQueryReadbackBuffer[2];
-		UINT64 m_queryResults[2];
+		ComPtr<ID3D12Resource> m_timeQueryReadbackBuffer[FRAME_BUFFERS];
+		UINT64 m_queryResults[FRAME_BUFFERS];
 		UINT64 m_frequency;
 		int m_queryReadbackIndex;
 		int m_frameTimeEntryCount;
 		int m_frameTimeNextEntry;
 		std::array<double, 64> m_frameTimes;
+		double m_averageDiffMs;
+
+		//Timing queries for Compute
+		ComPtr<ID3D12QueryHeap> m_computeTimeQueryHeap;
+		ComPtr<ID3D12Resource> m_computeTimeQueryReadbackBuffer[FRAME_BUFFERS];
+		UINT64 m_computeQueryResults[FRAME_BUFFERS];
+		UINT64 m_computeFrequency;
+		int m_computeQueryReadbackIndex;
+		int m_computeFrameTimeEntryCount;
+		int m_computeFrameTimeNextEntry;
+		std::array<double, 64> m_computeFrameTimes;
+		double m_computeAvrageDiffMs;
 
 	private:
 		UINT m_frameIndex;
