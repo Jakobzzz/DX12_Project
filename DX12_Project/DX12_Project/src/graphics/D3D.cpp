@@ -138,6 +138,8 @@ namespace dx
 
 	void D3D::Render()
 	{		
+		m_fpsTimer->Tick(NULL);
+
 		BeginScene(Colors::Black);
 	
 		//Set resources for normal pipeline
@@ -152,6 +154,8 @@ namespace dx
 		m_timer->ResolveQuery(m_commandList.Get());
 
 		EndScene();
+
+		MeasureQueueTime();
 	}
 
 	void D3D::Simulate()
@@ -243,8 +247,14 @@ namespace dx
 		barrier = barrier.Transition(m_backBufferRenderTarget[m_frameIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
 		m_commandList->ResourceBarrier(1, &barrier);
 
+		//Issue query
+		m_commandList->EndQuery(m_timeQueryHeap.Get(), D3D12_QUERY_TYPE_TIMESTAMP, m_frameIndex);
+		m_commandList->ResolveQueryData(m_timeQueryHeap.Get(), D3D12_QUERY_TYPE_TIMESTAMP, m_frameIndex, 1, m_timeQueryReadbackBuffer[m_frameIndex].Get(), 0);
+
 		ExecuteCommandList();
+
 		assert(!m_swapChain->Present(0, 0));
+
 	}
 
 	void D3D::ShutDown()
@@ -510,6 +520,8 @@ namespace dx
 
 			m_averageDiffMs = sum / validEntryCount;
 
+			auto titleString = std::to_string(m_averageDiffMs) + " ms (" + std::to_string(m_fpsTimer->GetFramesPerSecond()) + " FPS)";
+			SetWindowTextA(m_hwnd, titleString.c_str());
 		}
 	}
 
