@@ -15,6 +15,7 @@
 #include <utils/StepTimer.h>
 #include <utils/Utility.hpp>
 #include <array>
+#include <D3D12Timer.hpp>
 
 using namespace DirectX;
 
@@ -64,7 +65,9 @@ namespace dx
 		std::unique_ptr<Buffer> m_buffer;
 		std::unique_ptr<Camera> m_camera;
 		std::unique_ptr<NBody> m_nBodySystem;
-		std::unique_ptr<StepTimer> m_timer;
+		std::unique_ptr<D3D12Timer> m_timer;
+		std::unique_ptr<D3D12Timer> m_computeTimer;
+		std::unique_ptr<StepTimer> m_fpsTimer;
 
 	private:
 		ComPtr<ID3D12Device> m_device;
@@ -118,5 +121,10 @@ namespace dx
 		D3D12_RECT m_rect;
 		D3D12_DEPTH_STENCIL_VIEW_DESC m_depthViewDesc;
 		HWND m_hwnd;
+		UINT64 m_GPUCalibration;
+		UINT64 m_computeGPUCalibration;
+		UINT64 m_CPUCalibration;
+		UINT64 m_computeCPUCalibration;
+		double m_offset;
 	};
 }

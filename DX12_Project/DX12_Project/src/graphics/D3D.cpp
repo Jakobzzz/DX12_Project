@@ -35,7 +35,9 @@ namespace dx
 		m_texture = std::make_unique<Texture>(m_device.Get(), m_commandList.Get());
 		m_buffer = std::make_unique<Buffer>(m_device.Get(), m_commandList.Get(), m_computeCommandList.Get());
 		m_camera = std::make_unique<Camera>();
-		m_timer = std::make_unique<StepTimer>();
+		m_timer = std::make_unique<D3D12Timer>(m_device.Get());
+		m_computeTimer = std::make_unique<D3D12Timer>(m_device.Get());
+		m_fpsTimer = std::make_unique<StepTimer>();
 
 		//Descriptor heaps
 		m_depthStencilHeap = std::make_unique<DescriptorHeap>(m_device.Get(), m_commandList.Get(), m_computeCommandList.Get(), 1);
@@ -135,33 +137,32 @@ namespace dx
 	}
 
 	void D3D::Render()
-	{
-		m_timer->Tick(NULL);
-		
-		Simulate();
-
+	{		
 		BeginScene(Colors::Black);
 	
 		//Set resources for normal pipeline
 		m_nBodySystem->RenderBodies(m_shaders.get(), m_rootSignature.get(), m_frameIndex);
-
-		//Issue query
-		m_commandList->EndQuery(m_timeQueryHeap.Get(), D3D12_QUERY_TYPE_TIMESTAMP, m_frameIndex);
-		m_commandList->ResolveQueryData(m_timeQueryHeap.Get(), D3D12_QUERY_TYPE_TIMESTAMP, m_frameIndex, 1, m_timeQueryReadbackBuffer[m_frameIndex].Get(), 0);
 		
+		m_commandQueue->GetClockCalibration(&m_GPUCalibration, &m_CPUCalibration);
+		/*m_offset = m_CPUCalibration - m_computeCPUCalibration;
+		
+		m_offset /= m_computeCPUCalibration;*/
+
+		m_timer->Stop(m_commandList.Get());
+		m_timer->ResolveQuery(m_commandList.Get());
+
 		EndScene();
-
-		MeasureQueueTime();
-		ComputeMeasureQueueTime();
-
-		auto titleString = std::to_string(m_averageDiffMs) + " ms" + std::to_string(m_computeAvrageDiffMs) + "cms (" + std::to_string(m_timer->GetFramesPerSecond()) + " FPS)";
-		SetWindowTextA(m_hwnd, titleString.c_str());
 	}
 
 	void D3D::Simulate()
 	{
 		//Wait for the compute queue to finish before we execute another
 		WaitForComputeShader();
+
+		m_computeTimer->CalculateTime();
+
+		//UINT64 offset = m_computeGPUCalibration * m_offset;
+		//std::cout << m_computeTimer->GetBeginTime() - (m_computeGPUCalibration - offset) << "\tCompute Begin\t" << m_computeTimer->GetEndTime() - (m_computeGPUCalibration - offset) << "\tCompute End" << std::endl;
 
 		if (m_srvIndex == 2)
 			m_srvIndex = 3;
@@ -173,20 +174,21 @@ namespace dx
 		assert(!m_computeCommandAllocator->Reset());
 		assert(!m_computeCommandList->Reset(m_computeCommandAllocator.Get(), nullptr));
 
+		m_computeTimer->Start(m_computeCommandList.Get());
+
 		//Run the compute shader
 		m_nBodySystem->UpdateBodies(m_shaders.get(), m_computeRootSignature.get(), m_frameIndex, m_srvIndex);
 
-		//Issue query
-		m_computeCommandList->EndQuery(m_computeTimeQueryHeap.Get(), D3D12_QUERY_TYPE_TIMESTAMP, m_frameIndex);
-		m_computeCommandList->ResolveQueryData(m_computeTimeQueryHeap.Get(), D3D12_QUERY_TYPE_TIMESTAMP, m_frameIndex, 1, m_computeTimeQueryReadbackBuffer[m_frameIndex].Get(), 0);
+		m_computeCommandQueue->GetClockCalibration(&m_computeGPUCalibration, &m_computeCPUCalibration);
+
+		m_computeTimer->Stop(m_computeCommandList.Get());
+		m_computeTimer->ResolveQuery(m_computeCommandList.Get());
 
 		ExecuteComputeCommandList();
 	}
 
 	void D3D::BeginScene(const FLOAT* color)
 	{
-		m_timer->Tick(NULL);
-
 		//Update the input and camera
 		Input::Update();
 		m_camera->Update(0.00001f);
@@ -195,8 +197,15 @@ namespace dx
 		if (Input::GetKeyDown(Keyboard::Keys::Escape))
 			PostQuitMessage(0);
 
+		Simulate();
+
 		//Wait for 3D queue to finish initalize
 		WaitForGraphicsPipeline();
+
+		m_timer->CalculateTime();
+
+		//UNIT64 offset = m_GPUCalibration * m_offset;
+		//std::cout << m_timer->GetBeginTime() - (m_GPUCalibration - offset) << "\t3D Begin\t" << m_timer->GetEndTime() - (m_GPUCalibration - offset) << "\t3D End" << std::endl;
 
 		//Get the current back buffer
 		//to make sure that the compute shader and graphics pipeline works on different frames
@@ -207,6 +216,8 @@ namespace dx
 		//Reset resourcee
 		assert(!m_commandAllocator->Reset());
 		assert(!m_commandList->Reset(m_commandAllocator.Get(), nullptr));
+
+		m_timer->Start(m_commandList.Get());
 
 		m_commandList->RSSetViewports(1, &m_viewport);
 		m_commandList->RSSetScissorRects(1, &m_rect);
