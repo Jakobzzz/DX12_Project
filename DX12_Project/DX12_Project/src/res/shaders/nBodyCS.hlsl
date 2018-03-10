@@ -15,7 +15,7 @@ struct BodyData
     float4 velocity;
 };
 
-RWStructuredBuffer<BodyData> oldParticles : register(u1);
+StructuredBuffer<BodyData> oldParticles : register(t0);
 RWStructuredBuffer<BodyData> particles : register(u0);
 
 // This function computes the gravitational attraction between two bodies

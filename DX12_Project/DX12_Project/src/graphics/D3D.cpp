@@ -86,7 +86,7 @@ namespace dx
 		//--- Compute shader ---
 		RootDescriptor uavRootDesc;
 		uavRootDesc.AppendDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_VOLATILE);
-		uavRootDesc.AppendDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 1, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_VOLATILE);
+		uavRootDesc.AppendDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_VOLATILE);
 		uavRootDesc.CreateRootDescTable();
 
 		RootParameter computeRootParams;
