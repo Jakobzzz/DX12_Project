@@ -35,6 +35,8 @@ namespace dx
 		m_buffer = std::make_unique<Buffer>(m_device.Get(), m_commandList.Get());
 		m_camera = std::make_unique<Camera>();
 		m_timer = std::make_unique<StepTimer>();
+		m_3Dtimer = std::make_unique<D3D12Timer>(m_device.Get());
+		m_computeTimer = std::make_unique<D3D12Timer>(m_device.Get());
 
 		//Descriptor heaps
 		m_depthStencilHeap = std::make_unique<DescriptorHeap>(m_device.Get(), m_commandList.Get(), 1);
@@ -146,8 +148,15 @@ namespace dx
 		assert(!m_commandAllocator->Reset());
 		assert(!m_commandList->Reset(m_commandAllocator.Get(), nullptr));
 
+		m_computeTimer->Start(m_commandList.Get());
+
 		//Run the compute shader
 		m_nBodySystem->UpdateBodies(m_shaders.get(), m_computeRootSignature.get(), m_frameIndex);
+
+		m_computeTimer->Stop(m_commandList.Get());
+		m_computeTimer->ResolveQuery(m_commandList.Get());
+
+		m_3Dtimer->Start(m_commandList.Get());
 
 		m_commandList->RSSetViewports(1, &m_viewport);
 		m_commandList->RSSetScissorRects(1, &m_rect);
@@ -173,10 +182,21 @@ namespace dx
 		barrier = barrier.Transition(m_backBufferRenderTarget[m_frameIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
 		m_commandList->ResourceBarrier(1, &barrier);
 
+		m_3Dtimer->Stop(m_commandList.Get());
+		m_3Dtimer->ResolveQuery(m_commandList.Get());
+
 		ExecuteCommandList();
 		assert(!m_swapChain->Present(0, 0));
 
 		WaitForPreviousFrame();
+
+		m_3Dtimer->CalculateTime();
+		m_computeTimer->CalculateTime();
+
+		if (m_3Dtimer->GetBeginTime() < m_computeTimer->GetEndTime())
+		{
+			std::cout << m_3Dtimer->GetBeginTime() << "\t3D\t" << m_computeTimer->GetEndTime() << "\tCompute\t" << std::endl;
+		}
 
 		//Get the current back buffer
 		m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
@@ -403,11 +423,8 @@ namespace dx
 			const auto sum = std::accumulate(m_frameTimes.begin(), m_frameTimes.begin() + validEntryCount, 0.0);
 			const auto averageDiffMs = sum / validEntryCount;
 
-			if (m_count < 1000)
-				std::cout << averageDiffMs << std::endl;
-
-			/*auto titleString = std::to_string(averageDiffMs) + " ms (" + std::to_string(m_timer->GetFramesPerSecond()) + " FPS)";
-			SetWindowTextA(m_hwnd, titleString.c_str());*/
+			auto titleString = std::to_string(averageDiffMs) + " ms (" + std::to_string(m_timer->GetFramesPerSecond()) + " FPS)";
+			SetWindowTextA(m_hwnd, titleString.c_str());
 		}
 
 		m_count++;

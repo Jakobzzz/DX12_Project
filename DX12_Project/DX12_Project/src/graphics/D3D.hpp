@@ -14,6 +14,7 @@
 #include <graphics/nbody/nBody.hpp>
 #include <utils/StepTimer.h>
 #include <array>
+#include <D3D12Timer.hpp>
 
 using namespace DirectX;
 
@@ -71,6 +72,8 @@ namespace dx
 		ComPtr<ID3D12CommandAllocator> m_commandAllocator;
 		ComPtr<ID3D12Resource> m_backBufferRenderTarget[2];
 		ComPtr<ID3D12Resource> m_depthStencilBuffer;
+		std::unique_ptr<D3D12Timer> m_3Dtimer;
+		std::unique_ptr<D3D12Timer> m_computeTimer;
 
 	private:
 		//Timing queries
