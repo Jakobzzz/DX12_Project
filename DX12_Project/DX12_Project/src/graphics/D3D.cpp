@@ -144,29 +144,17 @@ namespace dx
 	
 		//Set resources for normal pipeline
 		m_nBodySystem->RenderBodies(m_shaders.get(), m_rootSignature.get(), m_frameIndex);
-		
-		m_commandQueue->GetClockCalibration(&m_GPUCalibration, &m_CPUCalibration);
-		/*m_offset = m_CPUCalibration - m_computeCPUCalibration;
-		
-		m_offset /= m_computeCPUCalibration;*/
-
-		m_timer->Stop(m_commandList.Get());
-		m_timer->ResolveQuery(m_commandList.Get());
 
 		EndScene();
 
-		MeasureQueueTime();
+		//MeasureQueueTime();
 	}
 
 	void D3D::Simulate()
 	{
 		//Wait for the compute queue to finish before we execute another
 		WaitForComputeShader();
-
 		m_computeTimer->CalculateTime();
-
-		//UINT64 offset = m_computeGPUCalibration * m_offset;
-		//std::cout << m_computeTimer->GetBeginTime() - (m_computeGPUCalibration - offset) << "\tCompute Begin\t" << m_computeTimer->GetEndTime() - (m_computeGPUCalibration - offset) << "\tCompute End" << std::endl;
 
 		if (m_srvIndex == 2)
 			m_srvIndex = 3;
@@ -183,12 +171,11 @@ namespace dx
 		//Run the compute shader
 		m_nBodySystem->UpdateBodies(m_shaders.get(), m_computeRootSignature.get(), m_frameIndex, m_srvIndex);
 
-		m_computeCommandQueue->GetClockCalibration(&m_computeGPUCalibration, &m_computeCPUCalibration);
-
 		m_computeTimer->Stop(m_computeCommandList.Get());
 		m_computeTimer->ResolveQuery(m_computeCommandList.Get());
 
 		ExecuteComputeCommandList();
+		m_computeCommandQueue->GetClockCalibration(&m_computeGPUCalibration, &m_computeCPUCalibration);
 	}
 
 	void D3D::BeginScene(const FLOAT* color)
@@ -205,11 +192,7 @@ namespace dx
 
 		//Wait for 3D queue to finish initalize
 		WaitForGraphicsPipeline();
-
 		m_timer->CalculateTime();
-
-		//UNIT64 offset = m_GPUCalibration * m_offset;
-		//std::cout << m_timer->GetBeginTime() - (m_GPUCalibration - offset) << "\t3D Begin\t" << m_timer->GetEndTime() - (m_GPUCalibration - offset) << "\t3D End" << std::endl;
 
 		//Get the current back buffer
 		//to make sure that the compute shader and graphics pipeline works on different frames
@@ -248,13 +231,25 @@ namespace dx
 		m_commandList->ResourceBarrier(1, &barrier);
 
 		//Issue query
-		m_commandList->EndQuery(m_timeQueryHeap.Get(), D3D12_QUERY_TYPE_TIMESTAMP, m_frameIndex);
-		m_commandList->ResolveQueryData(m_timeQueryHeap.Get(), D3D12_QUERY_TYPE_TIMESTAMP, m_frameIndex, 1, m_timeQueryReadbackBuffer[m_frameIndex].Get(), 0);
+		//m_commandList->EndQuery(m_timeQueryHeap.Get(), D3D12_QUERY_TYPE_TIMESTAMP, m_frameIndex);
+		//m_commandList->ResolveQueryData(m_timeQueryHeap.Get(), D3D12_QUERY_TYPE_TIMESTAMP, m_frameIndex, 1, m_timeQueryReadbackBuffer[m_frameIndex].Get(), 0);
+
+		m_timer->Stop(m_commandList.Get());
+		m_timer->ResolveQuery(m_commandList.Get());
 
 		ExecuteCommandList();
+		m_commandQueue->GetClockCalibration(&m_GPUCalibration, &m_CPUCalibration);
+
+		//std::cout << m_CPUCalibration / 1000.0f << std::endl;
+
+		if (m_timer->GetBeginTime() < m_computeTimer->GetEndTime())
+		{
+			std::cout << m_timer->GetBeginTime() << "\t3D\t" << m_computeTimer->GetEndTime() << "\tCompute\t" << m_frame << std::endl;
+		}
+
+		m_frame++;
 
 		assert(!m_swapChain->Present(0, 0));
-
 	}
 
 	void D3D::ShutDown()
@@ -298,7 +293,7 @@ namespace dx
 				break;
 
 			//Check if a device that supports feature level 12.1 is found.
-			result = D3D12CreateDevice(adapter.Get(), D3D_FEATURE_LEVEL_11_0, __uuidof(ID3D12Device), (void**)m_device.GetAddressOf());
+			result = D3D12CreateDevice(adapter.Get(), D3D_FEATURE_LEVEL_12_1, __uuidof(ID3D12Device), nullptr);
 			if (SUCCEEDED(result))
 				break;
 		}
@@ -306,7 +301,7 @@ namespace dx
 		if (adapter)
 		{
 			//Create the Direct3D 12 device
-			result = D3D12CreateDevice(adapter.Get(), D3D_FEATURE_LEVEL_11_0, __uuidof(ID3D12Device), (void**)m_device.GetAddressOf());
+			result = D3D12CreateDevice(adapter.Get(), D3D_FEATURE_LEVEL_12_1, __uuidof(ID3D12Device), (void**)m_device.GetAddressOf());
 			if (FAILED(result))
 				return false;
 		}
@@ -425,7 +420,7 @@ namespace dx
 		D3D12_COMMAND_QUEUE_DESC commandQueueDesc;
 		ZeroMemory(&commandQueueDesc, sizeof(commandQueueDesc));
 		commandQueueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
-		commandQueueDesc.Priority = D3D12_COMMAND_QUEUE_PRIORITY_NORMAL;
+		commandQueueDesc.Priority = D3D12_COMMAND_QUEUE_PRIORITY_HIGH;
 		commandQueueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
 		commandQueueDesc.NodeMask = 0;
 

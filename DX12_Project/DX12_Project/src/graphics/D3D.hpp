@@ -125,6 +125,7 @@ namespace dx
 		UINT64 m_computeGPUCalibration;
 		UINT64 m_CPUCalibration;
 		UINT64 m_computeCPUCalibration;
-		double m_offset;
+		UINT64 m_offset;
+		int m_frame = 0;
 	};
 }
