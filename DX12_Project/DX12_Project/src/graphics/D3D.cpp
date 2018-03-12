@@ -150,7 +150,7 @@ namespace dx
 
 		EndScene();
 
-		//MeasureQueueTime();
+		MeasureQueueTime();
 	}
 
 	void D3D::Simulate()
@@ -255,8 +255,8 @@ namespace dx
 		m_commandList->ResourceBarrier(1, &barrier);
 
 		//Issue query
-		//m_commandList->EndQuery(m_timeQueryHeap.Get(), D3D12_QUERY_TYPE_TIMESTAMP, m_frameIndex);
-		//m_commandList->ResolveQueryData(m_timeQueryHeap.Get(), D3D12_QUERY_TYPE_TIMESTAMP, m_frameIndex, 1, m_timeQueryReadbackBuffer[m_frameIndex].Get(), 0);
+		m_commandList->EndQuery(m_timeQueryHeap.Get(), D3D12_QUERY_TYPE_TIMESTAMP, m_frameIndex);
+		m_commandList->ResolveQueryData(m_timeQueryHeap.Get(), D3D12_QUERY_TYPE_TIMESTAMP, m_frameIndex, 1, m_timeQueryReadbackBuffer[m_frameIndex].Get(), 0);
 
 		m_timer->Stop(m_commandList.Get());
 		m_timer->ResolveQuery(m_commandList.Get());
