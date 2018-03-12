@@ -127,5 +127,19 @@ namespace dx
 		UINT64 m_computeCPUCalibration;
 		UINT64 m_offset;
 		int m_frame = 0;
+
+		UINT64 m_freq;
+		UINT64 m_computeFreq;
+		LARGE_INTEGER m_cpuFreq;
+		double m_sec;
+		double m_computeSec;
+		double m_gpuSec;
+		double m_gpuComputeSec;
+		double m_begin;
+		double m_computeBegin;
+		double m_end;
+		double m_computeEnd;
+		double m_3Dduration;
+		double m_computeDuration;
 	};
 }

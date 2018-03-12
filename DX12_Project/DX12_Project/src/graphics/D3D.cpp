@@ -134,6 +134,9 @@ namespace dx
 
 		//Set srv index so the compute shader knows which srv/uav buffer to use
 		m_srvIndex = 2;
+
+		QueryPerformanceFrequency(&m_cpuFreq);
+
 	}
 
 	void D3D::Render()
@@ -154,7 +157,19 @@ namespace dx
 	{
 		//Wait for the compute queue to finish before we execute another
 		WaitForComputeShader();
+		m_computeCommandQueue->GetClockCalibration(&m_computeGPUCalibration, &m_computeCPUCalibration);
 		m_computeTimer->CalculateTime();
+
+		m_computeCommandQueue->GetTimestampFrequency(&m_computeFreq);
+		m_computeSec = m_computeCPUCalibration / (double)m_cpuFreq.QuadPart;
+		m_gpuComputeSec = m_computeGPUCalibration / (double)m_computeFreq;
+
+		m_computeBegin = m_computeTimer->GetBeginTime() / (double)m_computeFreq;
+		m_computeEnd = m_computeTimer->GetEndTime() / (double)m_computeFreq;
+
+		m_computeDuration = m_computeEnd - m_computeBegin;
+
+		m_computeDuration -= m_computeSec;
 
 		if (m_srvIndex == 2)
 			m_srvIndex = 3;
@@ -175,7 +190,6 @@ namespace dx
 		m_computeTimer->ResolveQuery(m_computeCommandList.Get());
 
 		ExecuteComputeCommandList();
-		m_computeCommandQueue->GetClockCalibration(&m_computeGPUCalibration, &m_computeCPUCalibration);
 	}
 
 	void D3D::BeginScene(const FLOAT* color)
@@ -192,7 +206,17 @@ namespace dx
 
 		//Wait for 3D queue to finish initalize
 		WaitForGraphicsPipeline();
+		m_commandQueue->GetClockCalibration(&m_GPUCalibration, &m_CPUCalibration);
 		m_timer->CalculateTime();
+
+		m_freq = 0;
+		m_commandQueue->GetTimestampFrequency(&m_freq);
+		m_sec = m_CPUCalibration / (double)m_cpuFreq.QuadPart;
+		m_gpuSec = m_GPUCalibration / (double)m_freq;
+		m_begin = m_timer->GetBeginTime() / (double)m_freq;
+		m_end = m_timer->GetEndTime() / (double)m_freq;
+
+		m_3Dduration = m_end - m_begin;
 
 		//Get the current back buffer
 		//to make sure that the compute shader and graphics pipeline works on different frames
@@ -238,16 +262,14 @@ namespace dx
 		m_timer->ResolveQuery(m_commandList.Get());
 
 		ExecuteCommandList();
-		m_commandQueue->GetClockCalibration(&m_GPUCalibration, &m_CPUCalibration);
+			
+		double diff = m_sec - m_computeSec;
+		m_gpuComputeSec += diff;
 
-		//std::cout << m_CPUCalibration / 1000.0f << std::endl;
+		m_computeBegin += diff;
+		m_computeEnd += diff;
 
-		if (m_timer->GetBeginTime() < m_computeTimer->GetEndTime())
-		{
-			std::cout << m_timer->GetBeginTime() << "\t3D\t" << m_computeTimer->GetEndTime() << "\tCompute\t" << m_frame << std::endl;
-		}
-
-		m_frame++;
+		std::cout << m_computeEnd - m_begin << std::endl;
 
 		assert(!m_swapChain->Present(0, 0));
 	}
@@ -293,7 +315,7 @@ namespace dx
 				break;
 
 			//Check if a device that supports feature level 12.1 is found.
-			result = D3D12CreateDevice(adapter.Get(), D3D_FEATURE_LEVEL_12_1, __uuidof(ID3D12Device), nullptr);
+			result = D3D12CreateDevice(adapter.Get(), D3D_FEATURE_LEVEL_11_0, __uuidof(ID3D12Device), nullptr);
 			if (SUCCEEDED(result))
 				break;
 		}
@@ -301,7 +323,7 @@ namespace dx
 		if (adapter)
 		{
 			//Create the Direct3D 12 device
-			result = D3D12CreateDevice(adapter.Get(), D3D_FEATURE_LEVEL_12_1, __uuidof(ID3D12Device), (void**)m_device.GetAddressOf());
+			result = D3D12CreateDevice(adapter.Get(), D3D_FEATURE_LEVEL_11_0, __uuidof(ID3D12Device), (void**)m_device.GetAddressOf());
 			if (FAILED(result))
 				return false;
 		}
@@ -420,7 +442,7 @@ namespace dx
 		D3D12_COMMAND_QUEUE_DESC commandQueueDesc;
 		ZeroMemory(&commandQueueDesc, sizeof(commandQueueDesc));
 		commandQueueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
-		commandQueueDesc.Priority = D3D12_COMMAND_QUEUE_PRIORITY_HIGH;
+		commandQueueDesc.Priority = D3D12_COMMAND_QUEUE_PRIORITY_NORMAL;
 		commandQueueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
 		commandQueueDesc.NodeMask = 0;
 
