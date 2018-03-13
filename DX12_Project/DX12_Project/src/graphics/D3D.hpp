@@ -50,6 +50,9 @@ namespace dx
 		void ExecuteComputeCommandList();
 		void WaitForGraphicsPipeline();
 		void WaitForComputeShader();
+		void CalculateComputeTime();
+		void CalculateRenderTime();
+		void CalculateFrameTimeAndFPS();
 
 	private:
 		std::unique_ptr<Texture> m_texture;

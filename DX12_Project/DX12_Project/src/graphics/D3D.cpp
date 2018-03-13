@@ -144,19 +144,7 @@ namespace dx
 	{
 		//Wait for the compute queue to finish before we execute another
 		WaitForComputeShader();
-		m_computeCommandQueue->GetClockCalibration(&m_computeGPUCalibration, &m_computeCPUCalibration);
-		m_computeTimer->CalculateTime();
-
-		m_computeCommandQueue->GetTimestampFrequency(&m_computeFreq);
-		m_computeSec = m_computeCPUCalibration / (double)m_cpuFreq.QuadPart;
-		m_gpuComputeSec = m_computeGPUCalibration / (double)m_computeFreq;
-
-		m_computeBegin = m_computeTimer->GetBeginTime() / (double)m_computeFreq;
-		m_computeEnd = m_computeTimer->GetEndTime() / (double)m_computeFreq;
-
-		m_computeDuration = m_computeEnd - m_computeBegin;
-
-		m_computeDuration -= m_computeSec;
+		CalculateComputeTime();
 
 		if (m_srvIndex == 2)
 			m_srvIndex = 3;
@@ -193,17 +181,7 @@ namespace dx
 
 		//Wait for 3D queue to finish initalize
 		WaitForGraphicsPipeline();
-		m_commandQueue->GetClockCalibration(&m_GPUCalibration, &m_CPUCalibration);
-		m_timer->CalculateTime();
-
-		m_freq = 0;
-		m_commandQueue->GetTimestampFrequency(&m_freq);
-		m_sec = m_CPUCalibration / (double)m_cpuFreq.QuadPart;
-		m_gpuSec = m_GPUCalibration / (double)m_freq;
-		m_begin = m_timer->GetBeginTime() / (double)m_freq;
-		m_end = m_timer->GetEndTime() / (double)m_freq;
-
-		m_3Dduration = m_end - m_begin;
+		CalculateRenderTime();
 
 		//Get the current back buffer
 		//to make sure that the compute shader and graphics pipeline works on different frames
@@ -246,47 +224,9 @@ namespace dx
 
 		ExecuteCommandList();
 			
-		double diff = m_sec - m_computeSec;
-		m_gpuComputeSec += diff;
-
-		m_computeBegin += diff;
-		m_computeEnd += diff;
-
-		if (m_computeBegin < m_begin)
-		{
-			if (m_computeEnd > m_end)
-				m_averageDiffMs = m_computeEnd - m_computeBegin;
-			else
-				m_averageDiffMs = m_end - m_computeBegin;
-		}
-		else
-		{
-			if (m_computeEnd > m_end)
-				m_averageDiffMs = m_computeEnd - m_computeBegin;
-			else
-				m_averageDiffMs = m_end - m_computeBegin;
-		}
-		
 		assert(!m_swapChain->Present(0, 0));
 
-		if (m_frameCount < 5000)
-		{
-			m_frame += m_averageDiffMs;
-			m_overlapp += m_computeEnd - m_begin;
-		}
-		
-		if (m_frameCount > 5000 && m_frameCount < 5002)
-		{
-			std::cout << (m_frame * 1000) / 5000 << std::endl;
-			std::cout << (m_overlapp * 1000) / 5000 << std::endl;
-		}
-		
-		m_averageDiffMs *= 1000.0;
-
-		auto titleString = std::to_string(m_averageDiffMs) + " ms (" + std::to_string(m_fpsTimer->GetFramesPerSecond()) + " FPS)";
-		SetWindowTextA(m_hwnd, titleString.c_str());
-
-		++m_frameCount;
+		CalculateFrameTimeAndFPS();
 	}
 
 	void D3D::ShutDown()
@@ -491,6 +431,73 @@ namespace dx
 				WaitForSingleObject(m_computeFenceEvent, INFINITE);
 			}
 		}
+	}
+
+	void D3D::CalculateComputeTime()
+	{
+		m_computeCommandQueue->GetClockCalibration(&m_computeGPUCalibration, &m_computeCPUCalibration);
+		m_computeTimer->CalculateTime();
+
+		m_computeCommandQueue->GetTimestampFrequency(&m_computeFreq);
+		m_computeSec = m_computeCPUCalibration / (double)m_cpuFreq.QuadPart;
+		m_gpuComputeSec = m_computeGPUCalibration / (double)m_computeFreq;
+		m_computeBegin = m_computeTimer->GetBeginTime() / (double)m_computeFreq;
+		m_computeEnd = m_computeTimer->GetEndTime() / (double)m_computeFreq;
+	}
+
+	void D3D::CalculateRenderTime()
+	{
+		m_commandQueue->GetClockCalibration(&m_GPUCalibration, &m_CPUCalibration);
+		m_timer->CalculateTime();
+
+		m_commandQueue->GetTimestampFrequency(&m_freq);
+		m_sec = m_CPUCalibration / (double)m_cpuFreq.QuadPart;
+		m_gpuSec = m_GPUCalibration / (double)m_freq;
+		m_begin = m_timer->GetBeginTime() / (double)m_freq;
+		m_end = m_timer->GetEndTime() / (double)m_freq;
+	}
+
+	void D3D::CalculateFrameTimeAndFPS()
+	{
+		double diff = m_sec - m_computeSec;
+		m_gpuComputeSec += diff;
+
+		m_computeBegin += diff;
+		m_computeEnd += diff;
+
+		if (m_computeBegin < m_begin)
+		{
+			if (m_computeEnd > m_end)
+				m_averageDiffMs = m_computeEnd - m_computeBegin;
+			else
+				m_averageDiffMs = m_end - m_computeBegin;
+		}
+		else
+		{
+			if (m_computeEnd > m_end)
+				m_averageDiffMs = m_computeEnd - m_computeBegin;
+			else
+				m_averageDiffMs = m_end - m_computeBegin;
+		}
+
+		if (m_frameCount < 5000)
+		{
+			m_frame += m_averageDiffMs;
+			m_overlapp += m_computeEnd - m_begin;
+		}
+
+		if (m_frameCount > 5000 && m_frameCount < 5002)
+		{
+			std::cout << (m_frame * 1000) / 5000 << std::endl;
+			std::cout << (m_overlapp * 1000) / 5000 << std::endl;
+		}
+
+		m_averageDiffMs *= 1000.0;
+
+		auto titleString = std::to_string(m_averageDiffMs) + " ms (" + std::to_string(m_fpsTimer->GetFramesPerSecond()) + " FPS)";
+		SetWindowTextA(m_hwnd, titleString.c_str());
+
+		++m_frameCount;
 	}
 
 	void D3D::ExecuteCommandList()
