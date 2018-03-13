@@ -234,8 +234,31 @@ namespace dx
 	void D3D::ShutDown()
 	{
 		//Close the object handle to the fence event
-		WaitForGraphicsPipeline();
-		WaitForComputeShader();
+		for (int i = 0; i < FRAME_BUFFERS; ++i)
+		{
+			m_fenceValues[i] = m_fenceValue;
+			m_commandQueue->Signal(m_fence.Get(), m_fenceValues[i]);
+			m_fenceValue++;
+
+			//Wait until command queue is done.
+			if (m_fence->GetCompletedValue() < m_fenceValues[i])
+			{
+				m_fence->SetEventOnCompletion(m_fenceValues[i], m_fenceEvent);
+				WaitForSingleObject(m_fenceEvent, INFINITE);
+			}
+
+			m_computeFenceValues[i] = m_computeFenceValue;
+			m_computeCommandQueue->Signal(m_computeFence.Get(), m_computeFenceValues[i]);
+			m_computeFenceValue++;
+
+			//Wait until command queue is done.
+			if (m_computeFence->GetCompletedValue() < m_computeFenceValues[i])
+			{
+				m_computeFence->SetEventOnCompletion(m_computeFenceValues[i], m_computeFenceEvent);
+				WaitForSingleObject(m_computeFenceEvent, INFINITE);
+			}
+		}
+
 		CloseHandle(m_fenceEvent);
 
 		m_texture->Release();
