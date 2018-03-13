@@ -15,6 +15,7 @@
 #include <utils/Utility.hpp>
 #include <array>
 #include <D3D12Timer.hpp>
+#include <AntTweakBar.h>
 
 using namespace DirectX;
 
@@ -84,6 +85,7 @@ namespace dx
 		ComPtr<ID3D12Resource> m_depthStencilBuffer;
 
 	private:
+		TwBar * m_tweakBar;
 		UINT m_frameIndex;
 		UINT m_srvIndex;
 		HANDLE m_fenceEvent;

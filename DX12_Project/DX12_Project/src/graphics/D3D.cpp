@@ -58,6 +58,8 @@ namespace dx
 		CreateCommandsAndSwapChain(m_hwnd);
 		CreateRenderTargetsAndFences();
 		CreateViewportAndScissorRect();
+		//TwInit(TW_DIRECT3D11, m_device.Get()); //Init tweakbar
+		//TwWindowSize(SCREEN_WIDTH, SCREEN_HEIGHT);
 
 		//Prepare scene
 		LoadObjects();
@@ -237,7 +239,7 @@ namespace dx
 		CloseHandle(m_fenceEvent);
 
 		m_texture->Release();
-		m_device.Get()->Release();
+		//m_device.Get()->Release();
 	}
 
 	bool D3D::FindAndCreateDevice()
