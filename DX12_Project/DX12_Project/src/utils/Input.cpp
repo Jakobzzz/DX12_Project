@@ -16,7 +16,7 @@ namespace dx
 		m_mouse = std::make_unique<Mouse>();
 
 		m_mouse->SetWindow(wndHandle);
-		m_mouse->SetMode(Mouse::MODE_ABSOLUTE); //Set relative mode for mouse when using FPS-camera
+		m_mouse->SetMode(Mouse::MODE_RELATIVE); //Set relative mode for mouse when using FPS-camera
 	}
 
 	void Input::SetMouseInputMode(Mouse::Mode mode)
