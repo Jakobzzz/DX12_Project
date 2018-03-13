@@ -12,10 +12,12 @@ namespace dx
 	public:
 		static HWND InitWindow(HINSTANCE hInstance)
 		{
+#ifdef _DEBUG
 			//Allocate console
 			AllocConsole();
 			AttachConsole(GetCurrentProcessId());
 			freopen("CON", "w", stdout);
+#endif
 
 			//Create window
 			WNDCLASSEX wcex = { 0 };

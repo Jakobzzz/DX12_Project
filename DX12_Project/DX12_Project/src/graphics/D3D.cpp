@@ -7,7 +7,6 @@
 #include <assert.h>
 #include <DirectXColors.h>
 #include <iostream>
-#include <pix3.h>
 #include <numeric>
 
 #ifdef min
