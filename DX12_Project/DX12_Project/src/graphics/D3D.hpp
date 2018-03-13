@@ -103,7 +103,7 @@ namespace dx
 		UINT64 m_offset;
 		double m_averageDiffMs = 0.0;
 		double m_frame = 0.0;
-		double m_overlapp = 0.0;
+		double m_overlap = 0.0;
 		int m_frameCount = 0;
 
 		UINT64 m_freq;

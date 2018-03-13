@@ -10,6 +10,7 @@
 #include <pix3.h>
 #include <numeric>
 #include <iomanip>
+#include <fstream>
 
 #ifdef min
 #undef min
@@ -504,13 +505,20 @@ namespace dx
 		if (m_frameCount < 5000)
 		{
 			m_frame += m_averageDiffMs;
-			m_overlapp += m_computeEnd - m_begin;
+			m_overlap += m_end - m_computeEnd;
 		}
 
 		if (m_frameCount > 5000 && m_frameCount < 5002)
 		{
-			std::cout << (m_frame * 1000) / 5000 << std::endl;
-			std::cout << (m_overlapp * 1000) / 5000 << std::endl;
+			double avrageFrameTime = (m_frame * 1000) / 5000;
+			double avrageOverlap = (m_overlap * 1000) / 5000;
+
+			std::ofstream fp;
+			fp.open("Results.txt", std::ios::app);
+			fp << avrageFrameTime << "\n" << avrageOverlap << "\n" << m_fpsTimer->GetFramesPerSecond() << "\n//////////";
+			fp.close();
+
+			system("pause");
 		}
 
 		m_averageDiffMs *= 1000.0;
