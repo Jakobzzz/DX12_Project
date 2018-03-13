@@ -189,8 +189,6 @@ namespace dx
 		//to make sure that the compute shader and graphics pipeline works on different frames
 		m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
 
-		m_commandQueue->Wait(m_computeFence.Get(), m_computeFenceValues[m_frameIndex]);
-
 		//Reset resourcee
 		assert(!m_commandAllocator->Reset());
 		assert(!m_commandList->Reset(m_commandAllocator.Get(), nullptr));
@@ -532,7 +530,6 @@ namespace dx
 		ID3D12CommandList* ppCommandLists[] = { m_commandList.Get() };
 		m_commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
 
-		//Wait for graphics pipeline
 		//Signal and increment the fence value.
 		m_fenceValues[m_frameIndex] = m_fenceValue;
 		m_commandQueue->Signal(m_fence.Get(), m_fenceValues[m_frameIndex]);
@@ -546,7 +543,6 @@ namespace dx
 		ID3D12CommandList* ppCommandLists[] = { m_computeCommandList.Get() };
 		m_computeCommandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
 
-		//Wait for compute shader
 		m_computeFenceValues[m_frameIndex] = m_computeFenceValue;
 		m_computeCommandQueue->Signal(m_computeFence.Get(), m_computeFenceValues[m_frameIndex]);
 		m_computeFenceValue++;
