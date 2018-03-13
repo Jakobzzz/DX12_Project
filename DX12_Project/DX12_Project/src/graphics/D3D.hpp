@@ -12,7 +12,6 @@
 #include <graphics/Shader.hpp>
 #include <graphics/Camera.hpp>
 #include <graphics/nbody/nBody.hpp>
-#include <utils/StepTimer.h>
 #include <utils/Utility.hpp>
 #include <array>
 #include <D3D12Timer.hpp>
@@ -43,15 +42,11 @@ namespace dx
 		//DX12 functionality
 		bool FindAndCreateDevice();
 		void CreateRenderTargetsAndFences();
-		void CreateTimerResources();
-		void CreateComputeTimerResources();
 		void CreateCommandsAndSwapChain(HWND hwnd);
 		void CreateViewportAndScissorRect();
 		void BeginScene(const FLOAT* color);
 		void EndScene();
 		void ExecuteCommandList();
-		void MeasureQueueTime();
-		void ComputeMeasureQueueTime();
 		void ExecuteComputeCommandList();
 		void WaitForGraphicsPipeline();
 		void WaitForComputeShader();
@@ -67,7 +62,7 @@ namespace dx
 		std::unique_ptr<NBody> m_nBodySystem;
 		std::unique_ptr<D3D12Timer> m_timer;
 		std::unique_ptr<D3D12Timer> m_computeTimer;
-		std::unique_ptr<StepTimer> m_fpsTimer;
+		std::unique_ptr<D3D12Timer> m_fpsTimer;
 
 	private:
 		ComPtr<ID3D12Device> m_device;
@@ -84,29 +79,6 @@ namespace dx
 		ComPtr<ID3D12CommandAllocator> m_commandAllocator;
 		ComPtr<ID3D12Resource> m_backBufferRenderTarget[FRAME_BUFFERS];
 		ComPtr<ID3D12Resource> m_depthStencilBuffer;
-
-	private:
-		//Timing queries for Render
-		ComPtr<ID3D12QueryHeap> m_timeQueryHeap;
-		ComPtr<ID3D12Resource> m_timeQueryReadbackBuffer[FRAME_BUFFERS];
-		UINT64 m_queryResults[FRAME_BUFFERS];
-		UINT64 m_frequency;
-		int m_queryReadbackIndex;
-		int m_frameTimeEntryCount;
-		int m_frameTimeNextEntry;
-		std::array<double, 64> m_frameTimes;
-		double m_averageDiffMs;
-
-		//Timing queries for Compute
-		ComPtr<ID3D12QueryHeap> m_computeTimeQueryHeap;
-		ComPtr<ID3D12Resource> m_computeTimeQueryReadbackBuffer[FRAME_BUFFERS];
-		UINT64 m_computeQueryResults[FRAME_BUFFERS];
-		UINT64 m_computeFrequency;
-		int m_computeQueryReadbackIndex;
-		int m_computeFrameTimeEntryCount;
-		int m_computeFrameTimeNextEntry;
-		std::array<double, 64> m_computeFrameTimes;
-		double m_computeAvrageDiffMs;
 
 	private:
 		UINT m_frameIndex;
@@ -126,7 +98,10 @@ namespace dx
 		UINT64 m_CPUCalibration;
 		UINT64 m_computeCPUCalibration;
 		UINT64 m_offset;
-		int m_frame = 0;
+		double m_averageDiffMs = 0.0;
+		double m_frame = 0.0;
+		double m_overlapp = 0.0;
+		int m_frameCount = 0;
 
 		UINT64 m_freq;
 		UINT64 m_computeFreq;
