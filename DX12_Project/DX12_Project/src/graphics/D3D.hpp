@@ -81,5 +81,21 @@ namespace dx
 		D3D12_DEPTH_STENCIL_VIEW_DESC m_depthViewDesc;
 		HWND m_hwnd;
 		int m_count = 0;
+
+		UINT64 m_GPUCalibration;
+		UINT64 m_CPUCalibration;
+		UINT64 m_offset;
+		double m_averageDiffMs = 0.0;
+		double m_frame = 0.0;
+		double m_overlapp = 0.0;
+		int m_frameCount = 0;
+
+		UINT64 m_freq;
+		LARGE_INTEGER m_cpuFreq;
+		double m_sec;
+		double m_gpuSec;
+		double m_begin;
+		double m_end;
+		double m_3Dduration;
 	};
 }

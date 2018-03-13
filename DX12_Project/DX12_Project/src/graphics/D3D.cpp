@@ -106,6 +106,8 @@ namespace dx
 
 		//Start frame index and time
 		m_frameIndex = 0;
+
+		QueryPerformanceFrequency(&m_cpuFreq);
 	}
 
 	void D3D::Render()
@@ -135,6 +137,8 @@ namespace dx
 		assert(!m_commandAllocator->Reset());
 		assert(!m_commandList->Reset(m_commandAllocator.Get(), nullptr));
 
+		m_timer->Start(m_commandList.Get());
+
 		//Run the compute shader
 		m_nBodySystem->UpdateBodies(m_shaders.get(), m_computeRootSignature.get(), m_frameIndex);
 
@@ -162,10 +166,17 @@ namespace dx
 		barrier = barrier.Transition(m_backBufferRenderTarget[m_frameIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
 		m_commandList->ResourceBarrier(1, &barrier);
 
+		m_timer->Stop(m_commandList.Get());
+		m_timer->ResolveQuery(m_commandList.Get());
+
 		ExecuteCommandList();
 		assert(!m_swapChain->Present(0, 0));
 
+		CalculateFrameTimeAndFPS();
+
 		WaitForPreviousFrame();
+
+		CalculateRenderTime();
 
 		//Get the current back buffer
 		m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
@@ -281,29 +292,15 @@ namespace dx
 		m_gpuSec = m_GPUCalibration / (double)m_freq;
 		m_begin = m_timer->GetBeginTime() / (double)m_freq;
 		m_end = m_timer->GetEndTime() / (double)m_freq;
+
+		m_averageDiffMs = m_end - m_begin;
 	}
 
 	void D3D::CalculateFrameTimeAndFPS()
 	{
-		if (m_computeBegin < m_begin)
-		{
-			if (m_computeEnd > m_end)
-				m_averageDiffMs = m_computeEnd - m_computeBegin;
-			else
-				m_averageDiffMs = m_end - m_computeBegin;
-		}
-		else
-		{
-			if (m_computeEnd > m_end)
-				m_averageDiffMs = m_computeEnd - m_computeBegin;
-			else
-				m_averageDiffMs = m_end - m_computeBegin;
-		}
-
 		if (m_frameCount < 5000)
 		{
 			m_frame += m_averageDiffMs;
-			m_overlapp += m_computeEnd - m_begin;
 		}
 
 		if (m_frameCount > 5000 && m_frameCount < 5002)
@@ -311,7 +308,7 @@ namespace dx
 
 		m_averageDiffMs *= 1000.0;
 
-		auto titleString = std::to_string(m_averageDiffMs) + " ms (" + std::to_string(m_fpsTimer->GetFramesPerSecond()) + " FPS)";
+		auto titleString = std::to_string(m_averageDiffMs) + " ms (" + std::to_string(m_timer->GetFramesPerSecond()) + " FPS)";
 		SetWindowTextA(m_hwnd, titleString.c_str());
 
 		++m_frameCount;
