@@ -34,9 +34,7 @@ namespace dx
 		m_texture = std::make_unique<Texture>(m_device.Get(), m_commandList.Get());
 		m_buffer = std::make_unique<Buffer>(m_device.Get(), m_commandList.Get());
 		m_camera = std::make_unique<Camera>();
-		m_timer = std::make_unique<StepTimer>();
-		m_3Dtimer = std::make_unique<D3D12Timer>(m_device.Get());
-		m_computeTimer = std::make_unique<D3D12Timer>(m_device.Get());
+		m_timer = std::make_unique<D3D12Timer>(m_device.Get());
 
 		//Descriptor heaps
 		m_depthStencilHeap = std::make_unique<DescriptorHeap>(m_device.Get(), m_commandList.Get(), 1);
@@ -102,18 +100,12 @@ namespace dx
 		m_depthStencilHeap->CreateDescriptorHeap(1, D3D12_DESCRIPTOR_HEAP_FLAG_NONE, D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
 		m_buffer->CreateDepthStencilBuffer(m_depthStencilBuffer.GetAddressOf(), m_depthViewDesc, m_depthStencilHeap->GetCPUIncrementHandle(0));
 
-		//Create timer resources
-		CreateTimerResources();
-
 		//Close the command list
 		ExecuteCommandList();
 		WaitForPreviousFrame();
 
 		//Start frame index and time
 		m_frameIndex = 0;
-		m_queryReadbackIndex = -2;
-		m_frameTimeEntryCount = 0;
-		m_frameTimeNextEntry = 0;
 	}
 
 	void D3D::Render()
@@ -122,14 +114,9 @@ namespace dx
 	
 		//Set resources for normal pipeline
 		m_nBodySystem->RenderBodies(m_shaders.get(), m_rootSignature.get(), m_frameIndex);
-
-		//Issue query
-		m_commandList->EndQuery(m_timeQueryHeap.Get(), D3D12_QUERY_TYPE_TIMESTAMP, m_frameIndex);
-		m_commandList->ResolveQueryData(m_timeQueryHeap.Get(), D3D12_QUERY_TYPE_TIMESTAMP, m_frameIndex, 1, m_timeQueryReadbackBuffer[m_frameIndex].Get(), 0);
 		
 		EndScene();
 
-		MeasureQueueTime();
 	}
 
 	void D3D::BeginScene(const FLOAT* color)
@@ -148,15 +135,8 @@ namespace dx
 		assert(!m_commandAllocator->Reset());
 		assert(!m_commandList->Reset(m_commandAllocator.Get(), nullptr));
 
-		m_computeTimer->Start(m_commandList.Get());
-
 		//Run the compute shader
 		m_nBodySystem->UpdateBodies(m_shaders.get(), m_computeRootSignature.get(), m_frameIndex);
-
-		m_computeTimer->Stop(m_commandList.Get());
-		m_computeTimer->ResolveQuery(m_commandList.Get());
-
-		m_3Dtimer->Start(m_commandList.Get());
 
 		m_commandList->RSSetViewports(1, &m_viewport);
 		m_commandList->RSSetScissorRects(1, &m_rect);
@@ -182,21 +162,10 @@ namespace dx
 		barrier = barrier.Transition(m_backBufferRenderTarget[m_frameIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
 		m_commandList->ResourceBarrier(1, &barrier);
 
-		m_3Dtimer->Stop(m_commandList.Get());
-		m_3Dtimer->ResolveQuery(m_commandList.Get());
-
 		ExecuteCommandList();
 		assert(!m_swapChain->Present(0, 0));
 
 		WaitForPreviousFrame();
-
-		m_3Dtimer->CalculateTime();
-		m_computeTimer->CalculateTime();
-
-		if (m_3Dtimer->GetBeginTime() < m_computeTimer->GetEndTime())
-		{
-			std::cout << m_3Dtimer->GetBeginTime() << "\t3D\t" << m_computeTimer->GetEndTime() << "\tCompute\t" << std::endl;
-		}
 
 		//Get the current back buffer
 		m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
@@ -302,25 +271,50 @@ namespace dx
 		m_fenceEvent = CreateEvent(nullptr, 0, 0, nullptr);
 	}
 
-	void D3D::CreateTimerResources()
+	void D3D::CalculateRenderTime()
 	{
-		D3D12_RESOURCE_DESC cpuTimingBufferDesc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(UINT64));
+		m_commandQueue->GetClockCalibration(&m_GPUCalibration, &m_CPUCalibration);
+		m_timer->CalculateTime();
 
-		for (UINT i = 0; i < FRAME_BUFFERS; ++i) 
+		m_commandQueue->GetTimestampFrequency(&m_freq);
+		m_sec = m_CPUCalibration / (double)m_cpuFreq.QuadPart;
+		m_gpuSec = m_GPUCalibration / (double)m_freq;
+		m_begin = m_timer->GetBeginTime() / (double)m_freq;
+		m_end = m_timer->GetEndTime() / (double)m_freq;
+	}
+
+	void D3D::CalculateFrameTimeAndFPS()
+	{
+		if (m_computeBegin < m_begin)
 		{
-			m_device->CreateCommittedResource(
-				&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_READBACK),
-				D3D12_HEAP_FLAG_NONE,
-				&cpuTimingBufferDesc,
-				D3D12_RESOURCE_STATE_COPY_DEST,
-				nullptr,
-				IID_PPV_ARGS(&m_timeQueryReadbackBuffer[i]));
+			if (m_computeEnd > m_end)
+				m_averageDiffMs = m_computeEnd - m_computeBegin;
+			else
+				m_averageDiffMs = m_end - m_computeBegin;
+		}
+		else
+		{
+			if (m_computeEnd > m_end)
+				m_averageDiffMs = m_computeEnd - m_computeBegin;
+			else
+				m_averageDiffMs = m_end - m_computeBegin;
 		}
 
-		D3D12_QUERY_HEAP_DESC queryHeapDesc = {};
-		queryHeapDesc.Count = FRAME_BUFFERS; //Query at end of frame
-		queryHeapDesc.Type = D3D12_QUERY_HEAP_TYPE_TIMESTAMP;
-		m_device->CreateQueryHeap(&queryHeapDesc, IID_PPV_ARGS(&m_timeQueryHeap));
+		if (m_frameCount < 5000)
+		{
+			m_frame += m_averageDiffMs;
+			m_overlapp += m_computeEnd - m_begin;
+		}
+
+		if (m_frameCount > 5000 && m_frameCount < 5002)
+			std::cout << (m_frame * 1000) / 5000 << std::endl;
+
+		m_averageDiffMs *= 1000.0;
+
+		auto titleString = std::to_string(m_averageDiffMs) + " ms (" + std::to_string(m_fpsTimer->GetFramesPerSecond()) + " FPS)";
+		SetWindowTextA(m_hwnd, titleString.c_str());
+
+		++m_frameCount;
 	}
 
 	void D3D::CreateCommandsAndSwapChain(HWND hwnd)
@@ -336,9 +330,6 @@ namespace dx
 		assert(!m_device->CreateCommandQueue(&commandQueueDesc, __uuidof(ID3D12CommandQueue), (void**)m_commandQueue.GetAddressOf()));
 		assert(!m_device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(m_commandAllocator.GetAddressOf())));
 		assert(!m_device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, m_commandAllocator.Get(), nullptr, IID_PPV_ARGS(m_commandList.GetAddressOf())));
-
-		//Init the time stamp
-		m_commandQueue->GetTimestampFrequency(&m_frequency);
 
 		//Initialize the swap chain description.
 		DXGI_SWAP_CHAIN_DESC1 scDesc = {};
@@ -389,45 +380,6 @@ namespace dx
 			m_fence->SetEventOnCompletion(fence, m_fenceEvent);
 			WaitForSingleObject(m_fenceEvent, INFINITE);
 		}
-	}
-
-	void D3D::MeasureQueueTime()
-	{
-		//Update query
-		++m_queryReadbackIndex;
-
-		if (m_queryReadbackIndex >= FRAME_BUFFERS)
-			m_queryReadbackIndex = 0;
-
-		if (m_queryReadbackIndex >= 0)
-		{
-			void* mapping = nullptr;
-			m_timeQueryReadbackBuffer[m_queryReadbackIndex]->Map(0, &CD3DX12_RANGE(0, sizeof(UINT64)), &mapping);
-			memcpy(m_queryResults + m_queryReadbackIndex, mapping, sizeof(UINT64));
-			m_timeQueryReadbackBuffer[m_queryReadbackIndex]->Unmap(0, nullptr);
-
-			//Time is now previous to current
-			int previousQueryIndex = m_queryReadbackIndex - 1;
-			if (previousQueryIndex < 0)
-				previousQueryIndex += FRAME_BUFFERS;
-
-			const double diffMs = static_cast<double>(m_queryResults[m_queryReadbackIndex] - m_queryResults[previousQueryIndex]) / static_cast<double> (m_frequency) * 1000;
-
-			m_frameTimes[m_frameTimeNextEntry] = diffMs;
-			++m_frameTimeNextEntry;
-			if ((UINT)m_frameTimeNextEntry >= m_frameTimes.size())
-				m_frameTimeNextEntry = 0;
-			++m_frameTimeEntryCount;
-
-			const auto validEntryCount = std::min(static_cast<size_t> (m_frameTimeEntryCount), m_frameTimes.size());
-			const auto sum = std::accumulate(m_frameTimes.begin(), m_frameTimes.begin() + validEntryCount, 0.0);
-			const auto averageDiffMs = sum / validEntryCount;
-
-			auto titleString = std::to_string(averageDiffMs) + " ms (" + std::to_string(m_timer->GetFramesPerSecond()) + " FPS)";
-			SetWindowTextA(m_hwnd, titleString.c_str());
-		}
-
-		m_count++;
 	}
 
 	void D3D::ExecuteCommandList()

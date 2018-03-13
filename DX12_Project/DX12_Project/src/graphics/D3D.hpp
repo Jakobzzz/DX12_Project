@@ -12,7 +12,6 @@
 #include <graphics/Shader.hpp>
 #include <graphics/Camera.hpp>
 #include <graphics/nbody/nBody.hpp>
-#include <utils/StepTimer.h>
 #include <array>
 #include <D3D12Timer.hpp>
 
@@ -41,14 +40,14 @@ namespace dx
 		//DX12 functionality
 		bool FindAndCreateDevice();
 		void CreateRenderTargetsAndFences();
-		void CreateTimerResources();
 		void CreateCommandsAndSwapChain(HWND hwnd);
 		void CreateViewportAndScissorRect();
 		void BeginScene(const FLOAT* color);
 		void EndScene();
 		void ExecuteCommandList();
 		void WaitForPreviousFrame();
-		void MeasureQueueTime();
+		void CalculateRenderTime();
+		void CalculateFrameTimeAndFPS();
 
 	private:
 		std::unique_ptr<Texture> m_texture;
@@ -59,7 +58,7 @@ namespace dx
 		std::unique_ptr<Buffer> m_buffer;
 		std::unique_ptr<Camera> m_camera;
 		std::unique_ptr<NBody> m_nBodySystem;
-		std::unique_ptr<StepTimer> m_timer;
+		std::unique_ptr<D3D12Timer> m_timer;
 
 	private:
 		ComPtr<ID3D12Device> m_device;
@@ -72,19 +71,6 @@ namespace dx
 		ComPtr<ID3D12CommandAllocator> m_commandAllocator;
 		ComPtr<ID3D12Resource> m_backBufferRenderTarget[2];
 		ComPtr<ID3D12Resource> m_depthStencilBuffer;
-		std::unique_ptr<D3D12Timer> m_3Dtimer;
-		std::unique_ptr<D3D12Timer> m_computeTimer;
-
-	private:
-		//Timing queries
-		ComPtr<ID3D12QueryHeap> m_timeQueryHeap;
-		ComPtr<ID3D12Resource> m_timeQueryReadbackBuffer[2];
-		UINT64 m_queryResults[2];
-		UINT64 m_frequency;
-		int m_queryReadbackIndex;
-		int m_frameTimeEntryCount;
-		int m_frameTimeNextEntry;
-		std::array<double, 64> m_frameTimes;
 
 	private:
 		UINT m_frameIndex;
