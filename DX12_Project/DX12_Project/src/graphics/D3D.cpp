@@ -58,9 +58,9 @@ namespace dx
 		CreateCommandsAndSwapChain(m_hwnd);
 		CreateRenderTargetsAndFences();
 		CreateViewportAndScissorRect();
-		TwInit(TW_DIRECT3D11, m_device.Get()); //Init tweakbar
-		TwWindowSize(SCREEN_WIDTH, SCREEN_HEIGHT);
-		m_tweakBar = TwNewBar("Tweakbar");
+		//TwInit(TW_DIRECT3D11, m_device.Get()); //Init tweakbar
+		//TwWindowSize(SCREEN_WIDTH, SCREEN_HEIGHT);
+		//m_tweakBar = TwNewBar("Tweakbar");
 
 		//Prepare scene
 		LoadObjects();
@@ -228,7 +228,7 @@ namespace dx
 		ExecuteCommandList();
 
 		//Draw the bar
-		TwDraw();
+		//TwDraw();
 			
 		assert(!m_swapChain->Present(0, 0));
 
