@@ -135,8 +135,8 @@ namespace dx
 		//Set srv index so the compute shader knows which srv/uav buffer to use
 		m_srvIndex = 2;
 
+		//Get the CPU clock frequency
 		QueryPerformanceFrequency(&m_cpuFreq);
-
 	}
 
 	void D3D::Render()
@@ -149,8 +149,6 @@ namespace dx
 		m_nBodySystem->RenderBodies(m_shaders.get(), m_rootSignature.get(), m_frameIndex);
 
 		EndScene();
-
-		MeasureQueueTime();
 	}
 
 	void D3D::Simulate()
@@ -269,7 +267,25 @@ namespace dx
 		m_computeBegin += diff;
 		m_computeEnd += diff;
 
-		std::cout << m_computeEnd - m_begin << std::endl;
+		if (m_computeBegin < m_begin)
+		{
+			if (m_computeEnd > m_end)
+				m_averageDiffMs = m_computeEnd - m_computeBegin;
+			else
+				m_averageDiffMs = m_end - m_computeBegin;
+		}
+		else
+		{
+			if (m_computeEnd > m_end)
+				m_averageDiffMs = m_computeEnd - m_computeBegin;
+			else
+				m_averageDiffMs = m_end - m_computeBegin;
+		}
+
+		m_averageDiffMs *= 1000.0;
+
+		auto titleString = std::to_string(m_averageDiffMs) + " ms (" + std::to_string(m_fpsTimer->GetFramesPerSecond()) + " FPS)";
+		SetWindowTextA(m_hwnd, titleString.c_str());
 
 		assert(!m_swapChain->Present(0, 0));
 	}
