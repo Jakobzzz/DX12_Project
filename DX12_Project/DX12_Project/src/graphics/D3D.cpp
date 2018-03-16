@@ -13,6 +13,7 @@
 #include <numeric>
 #include <iomanip>
 #include <stdio.h>
+#include <fstream>
 
 #ifdef min
 #undef min
@@ -515,15 +516,15 @@ namespace dx
 			double avrageFrameTime = (m_frame * 1000) / 5000;
 			double avrageOverlap = (m_overlap * 1000) / 5000;
 
-			FILE *fp;
+			/*FILE *fp;
 			fp = fopen("Results.txt", "a+");
 			fprintf(fp, "%f\n%f\n%d\n////////\n", avrageFrameTime, avrageOverlap, m_fpsTimer->GetFramesPerSecond());
-			fclose(fp);
+			fclose(fp);*/
 
-			//std::ofstream fp;
-			//fp.open("Results.txt", std::ios::app);
-			//fp << avrageFrameTime << "\n" << avrageOverlap << "\n" << m_fpsTimer->GetFramesPerSecond() << "\n//////////";
-			//fp.close();
+			std::ofstream fp;
+			fp.open("Results.txt", std::ios::app);
+			fp << avrageFrameTime << "\n" << avrageOverlap << "\n" << m_fpsTimer->GetFramesPerSecond() << "\n//////////\n";
+			fp.close();
 
 			system("pause");
 		}
