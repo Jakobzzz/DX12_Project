@@ -1,3 +1,5 @@
+#define _CRT_SECURE_NO_WARNINGS
+
 #include <graphics/D3D.hpp>
 #include <graphics/CommonStates.hpp>
 #include <graphics/RootDescriptor.hpp>
@@ -10,7 +12,7 @@
 #include <pix3.h>
 #include <numeric>
 #include <iomanip>
-#include <fstream>
+#include <stdio.h>
 
 #ifdef min
 #undef min
@@ -513,10 +515,15 @@ namespace dx
 			double avrageFrameTime = (m_frame * 1000) / 5000;
 			double avrageOverlap = (m_overlap * 1000) / 5000;
 
-			std::ofstream fp;
-			fp.open("Results.txt", std::ios::app);
-			fp << avrageFrameTime << "\n" << avrageOverlap << "\n" << m_fpsTimer->GetFramesPerSecond() << "\n//////////\n";
-			fp.close();
+			FILE *fp;
+			fp = fopen("Results.txt", "a+");
+			fprintf(fp, "%f\n%f\n%d\n////////\n", avrageFrameTime, avrageOverlap, m_fpsTimer->GetFramesPerSecond());
+			fclose(fp);
+
+			//std::ofstream fp;
+			//fp.open("Results.txt", std::ios::app);
+			//fp << avrageFrameTime << "\n" << avrageOverlap << "\n" << m_fpsTimer->GetFramesPerSecond() << "\n//////////";
+			//fp.close();
 
 			system("pause");
 		}
