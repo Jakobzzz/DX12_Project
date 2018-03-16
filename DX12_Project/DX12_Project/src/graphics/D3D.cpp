@@ -497,15 +497,15 @@ namespace dx
 		else
 		{
 			if (m_computeEnd > m_end)
-				m_averageDiffMs = m_computeEnd - m_computeBegin;
+				m_averageDiffMs = m_computeEnd - m_begin;
 			else
-				m_averageDiffMs = m_end - m_computeBegin;
+				m_averageDiffMs = m_end - m_begin;
 		}
 
 		if (m_frameCount < 5000)
 		{
 			m_frame += m_averageDiffMs;
-			m_overlap += m_end - m_computeEnd;
+			m_overlap += m_computeEnd - m_begin;
 		}
 
 		if (m_frameCount > 5000 && m_frameCount < 5002)
@@ -515,7 +515,7 @@ namespace dx
 
 			std::ofstream fp;
 			fp.open("Results.txt", std::ios::app);
-			fp << avrageFrameTime << "\n" << avrageOverlap << "\n" << m_fpsTimer->GetFramesPerSecond() << "\n//////////";
+			fp << avrageFrameTime << "\n" << avrageOverlap << "\n" << m_fpsTimer->GetFramesPerSecond() << "\n//////////\n";
 			fp.close();
 
 			system("pause");
