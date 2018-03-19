@@ -1,4 +1,7 @@
 #pragma once
+
+#define _CRT_SECURE_NO_WARNINGS
+
 #include <DirectXMath.h>
 #include <memory>
 #include <graphics/Buffer.hpp>
@@ -10,7 +13,7 @@
 
 //Test data values
 //1024, 4096, 8192, 14336, 16384, 28672, 30720, 32768, 57344, 61440, 65536 
-#define NUM_BODIES 30720
+#define NUM_BODIES 1024
 
 struct BodyData
 {

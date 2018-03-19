@@ -1,3 +1,5 @@
+#define _CRT_SECURE_NO_WARNINGS
+
 #include <graphics/D3D.hpp>
 #include <graphics/CommonStates.hpp>
 #include <graphics/RootDescriptor.hpp>
@@ -7,7 +9,6 @@
 #include <assert.h>
 #include <DirectXColors.h>
 #include <iostream>
-#include <pix3.h>
 #include <numeric>
 
 #ifdef min
@@ -304,8 +305,14 @@ namespace dx
 		}
 
 		if (m_frameCount > 5000 && m_frameCount < 5002)
-			std::cout << (m_frame * 1000) / 5000 << std::endl;
-
+		{
+			FILE *fp;
+			fp = fopen("NoAsyncResultsMaxwell.txt", "a+");
+			fprintf(fp, "%d\n////////\n", m_timer->GetFramesPerSecond());
+			fclose(fp);
+			system("pause");
+		}
+			
 		m_averageDiffMs *= 1000.0;
 
 		auto titleString = std::to_string(m_averageDiffMs) + " ms (" + std::to_string(m_timer->GetFramesPerSecond()) + " FPS)";
