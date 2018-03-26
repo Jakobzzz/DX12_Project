@@ -3,9 +3,9 @@
 //Constants used by the compute shader
 cbuffer cbUpdate : register(b0)
 {
-	float g_timestep;
-	float g_softeningSquared;
-	uint  g_numParticles;
+    float g_timestep;
+    float g_softeningSquared;
+    uint g_numParticles;
     uint g_numBlocks;
 };	
 
@@ -15,15 +15,13 @@ struct BodyData
     float4 velocity;
 };
 
-static float g_particleMass = 6.67300e-11f * 10000.0f * 10000.0f * 10000.0f;
-
 StructuredBuffer<BodyData> oldParticles : register(t0);
 RWStructuredBuffer<BodyData> particles : register(u0);
 
 // This function computes the gravitational attraction between two bodies
 // at positions bi and bj. The mass of the bodies is stored in the w 
 // component
-float3 BodyBodyInteraction(float4 bi, float4 bj, int particles) 
+float3 BodyBodyInteraction(float4 bi, float4 bj, int particles)
 {
     float3 r = bi - bj;
 
@@ -31,7 +29,7 @@ float3 BodyBodyInteraction(float4 bi, float4 bj, int particles)
     distSqr += g_softeningSquared;
 
     float invDist = 1.0f / sqrt(distSqr);
-	float invDistCube =  invDist * invDist * invDist;
+    float invDistCube = invDist * invDist * invDist;
 
     float s = bj.w * invDistCube * particles;
 
@@ -69,12 +67,12 @@ float3 Gravitation(float4 myPos, float3 accel)
 // the simulation
 float3 ComputeBodyAccel(float4 bodyPos, uint threadId, uint blockId)
 {
-    float3 acceleration = {0.0f, 0.0f, 0.0f};
+    float3 acceleration = { 0.0f, 0.0f, 0.0f };
     uint p = BLOCK_SIZE;
     uint n = g_numParticles;
     uint numTiles = n / p;
 
-    for (uint tile = 0; tile < numTiles; tile++) 
+    for (uint tile = 0; tile < numTiles; tile++)
     {
         sharedPos[threadId] = oldParticles[tile * p + threadId].pos;
        
@@ -90,19 +88,19 @@ float3 ComputeBodyAccel(float4 bodyPos, uint threadId, uint blockId)
 // This function first computes the acceleration on all bodies in parallel,
 // and then integrates the velocity and position to get the new state of
 // all particles, using a simple Leapfrog-Verlet integration step.
-[numthreads(BLOCK_SIZE, 1 ,1)]
+[numthreads(BLOCK_SIZE, 1, 1)]
 void CS_MAIN(uint threadId : SV_GroupIndex, uint3 groupId : SV_GroupID, uint3 globalThreadId : SV_DispatchThreadID)
-{	
-    float4 pos = oldParticles[globalThreadId.x].pos; 
-    float4 vel = oldParticles[globalThreadId.x].velocity;  
+{
+    float4 pos = oldParticles[globalThreadId.x].pos;
+    float4 vel = oldParticles[globalThreadId.x].velocity;
 
 	//Compute acceleration
-	float3 accel = ComputeBodyAccel(pos, threadId, groupId.x);
+    float3 accel = ComputeBodyAccel(pos, threadId, groupId.x);
 	
 	//Leapfrog-Verlet integration of velocity and position
-	vel.xyz += accel * g_timestep;
-	pos.xyz += vel * g_timestep;
+    vel.xyz += accel * g_timestep;
+    pos.xyz += vel * g_timestep;
     
-	particles[globalThreadId.x].pos = pos;
-	particles[globalThreadId.x].velocity = vel;
+    particles[globalThreadId.x].pos = pos;
+    particles[globalThreadId.x].velocity = vel;
 }
