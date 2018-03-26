@@ -68,14 +68,14 @@ VS_OUT VS_MAIN(uint id : SV_VERTEXID)
     
     output.position = mul(g_particles[id].pos, g_mWorldViewProjection);
     output.uv = float2(0.f, 0.f);
-    return output;    
+    return output;
 }
 
 //--------------------------------------------------------------------------------------
 // Pixel Shader
 //--------------------------------------------------------------------------------------
 float4 PS_MAIN(GS_OUT input) : SV_TARGET
-{ 
+{
     float tex = g_ParticleTex.Sample(g_particleSampler, input.uv).x;
     
     if (tex.x < .05f) 
