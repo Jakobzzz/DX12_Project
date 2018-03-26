@@ -3,6 +3,7 @@
 #include <assert.h>
 #include <utils/Utility.hpp>
 #include <utils/Input.hpp>
+#include <iostream>
 
 namespace dx
 {
@@ -11,10 +12,12 @@ namespace dx
 	public:
 		static HWND InitWindow(HINSTANCE hInstance)
 		{
+#ifdef _DEBUG
 			//Allocate console
 			AllocConsole();
 			AttachConsole(GetCurrentProcessId());
 			freopen("CON", "w", stdout);
+#endif
 
 			//Create window
 			WNDCLASSEX wcex = { 0 };
@@ -66,7 +69,6 @@ namespace dx
 			case WM_MOUSEHOVER:
 				Mouse::ProcessMessage(message, wParam, lParam);
 				break;
-
 			case WM_KEYDOWN:
 			case WM_SYSKEYDOWN:
 			case WM_KEYUP:

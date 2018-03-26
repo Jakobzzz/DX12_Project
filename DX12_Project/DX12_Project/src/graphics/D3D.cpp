@@ -1,3 +1,5 @@
+#define _CRT_SECURE_NO_WARNINGS
+
 #include <graphics/D3D.hpp>
 #include <graphics/CommonStates.hpp>
 #include <graphics/RootDescriptor.hpp>
@@ -7,6 +9,11 @@
 #include <assert.h>
 #include <DirectXColors.h>
 #include <iostream>
+#include <numeric>
+
+#ifdef min
+#undef min
+#endif
 
 namespace dx
 {
@@ -28,6 +35,7 @@ namespace dx
 		m_texture = std::make_unique<Texture>(m_device.Get(), m_commandList.Get());
 		m_buffer = std::make_unique<Buffer>(m_device.Get(), m_commandList.Get());
 		m_camera = std::make_unique<Camera>();
+		m_timer = std::make_unique<D3D12Timer>(m_device.Get());
 
 		//Descriptor heaps
 		m_depthStencilHeap = std::make_unique<DescriptorHeap>(m_device.Get(), m_commandList.Get(), 1);
@@ -40,10 +48,13 @@ namespace dx
 
 	void D3D::Initialize(HWND hwnd)
 	{
+		//Pass the hwnd
+		m_hwnd = hwnd;
+
 		//Initialize DirectX12 functionality and input
-		Input::Initialize(hwnd);
+		Input::Initialize(m_hwnd);
 		FindAndCreateDevice();
-		CreateCommandsAndSwapChain(hwnd);
+		CreateCommandsAndSwapChain(m_hwnd);
 		CreateRenderTargetsAndFences();
 		CreateViewportAndScissorRect();
 
@@ -58,8 +69,7 @@ namespace dx
 		//--- Standard shader ---
 		//Desc range and root table for standard pipeline 
 		RootDescriptor graphicsRootDesc;
-		graphicsRootDesc.AppendDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_VOLATILE);
-		graphicsRootDesc.AppendDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 1, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_VOLATILE);
+		graphicsRootDesc.AppendDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 2, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_VOLATILE);
 		graphicsRootDesc.CreateRootDescTable();
 
 		//Fill in root parameters for standard pipeline
@@ -95,6 +105,11 @@ namespace dx
 		//Close the command list
 		ExecuteCommandList();
 		WaitForPreviousFrame();
+
+		//Start frame index and time
+		m_frameIndex = 0;
+
+		QueryPerformanceFrequency(&m_cpuFreq);
 	}
 
 	void D3D::Render()
@@ -103,12 +118,15 @@ namespace dx
 	
 		//Set resources for normal pipeline
 		m_nBodySystem->RenderBodies(m_shaders.get(), m_rootSignature.get(), m_frameIndex);
-
+		
 		EndScene();
+
 	}
 
 	void D3D::BeginScene(const FLOAT* color)
 	{
+		m_timer->Tick(NULL);
+
 		//Update the input and camera
 		Input::Update();
 		m_camera->Update(0.00001f);
@@ -121,11 +139,11 @@ namespace dx
 		assert(!m_commandAllocator->Reset());
 		assert(!m_commandList->Reset(m_commandAllocator.Get(), nullptr));
 
+		m_timer->Start(m_commandList.Get());
+
 		//Run the compute shader
 		m_nBodySystem->UpdateBodies(m_shaders.get(), m_computeRootSignature.get(), m_frameIndex);
 
-		//Get the current back buffer
-		m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
 		m_commandList->RSSetViewports(1, &m_viewport);
 		m_commandList->RSSetScissorRects(1, &m_rect);
 
@@ -150,10 +168,20 @@ namespace dx
 		barrier = barrier.Transition(m_backBufferRenderTarget[m_frameIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
 		m_commandList->ResourceBarrier(1, &barrier);
 
+		m_timer->Stop(m_commandList.Get());
+		m_timer->ResolveQuery(m_commandList.Get());
+
 		ExecuteCommandList();
 		assert(!m_swapChain->Present(0, 0));
 
+		CalculateFrameTimeAndFPS();
+
 		WaitForPreviousFrame();
+
+		CalculateRenderTime();
+
+		//Get the current back buffer
+		m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
 	}
 
 	void D3D::ShutDown()
@@ -196,7 +224,7 @@ namespace dx
 				break;
 
 			//Check if a device that supports feature level 12.1 is found.
-			result = D3D12CreateDevice(adapter.Get(), D3D_FEATURE_LEVEL_12_1, __uuidof(ID3D12Device), (void**)m_device.GetAddressOf());
+			result = D3D12CreateDevice(adapter.Get(), D3D_FEATURE_LEVEL_11_0, __uuidof(ID3D12Device), (void**)m_device.GetAddressOf());
 			if (SUCCEEDED(result))
 				break;
 		}
@@ -204,14 +232,14 @@ namespace dx
 		if (adapter)
 		{
 			//Create the Direct3D 12 device
-			result = D3D12CreateDevice(adapter.Get(), D3D_FEATURE_LEVEL_12_1, __uuidof(ID3D12Device), (void**)m_device.GetAddressOf());
+			result = D3D12CreateDevice(adapter.Get(), D3D_FEATURE_LEVEL_11_0, __uuidof(ID3D12Device), (void**)m_device.GetAddressOf());
 			if (FAILED(result))
 				return false;
 		}
 		else
 		{
 			//Create a Direct 3D 12 device with feature level 11.1
-			result = D3D12CreateDevice(adapter.Get(), D3D_FEATURE_LEVEL_11_1, __uuidof(ID3D12Device), (void**)m_device.GetAddressOf());
+			result = D3D12CreateDevice(adapter.Get(), D3D_FEATURE_LEVEL_11_0, __uuidof(ID3D12Device), (void**)m_device.GetAddressOf());
 			if (FAILED(result))
 				return false;
 		}
@@ -256,6 +284,44 @@ namespace dx
 		m_fenceEvent = CreateEvent(nullptr, 0, 0, nullptr);
 	}
 
+	void D3D::CalculateRenderTime()
+	{
+		m_commandQueue->GetClockCalibration(&m_GPUCalibration, &m_CPUCalibration);
+		m_timer->CalculateTime();
+
+		m_commandQueue->GetTimestampFrequency(&m_freq);
+		m_sec = m_CPUCalibration / (double)m_cpuFreq.QuadPart;
+		m_gpuSec = m_GPUCalibration / (double)m_freq;
+		m_begin = m_timer->GetBeginTime() / (double)m_freq;
+		m_end = m_timer->GetEndTime() / (double)m_freq;
+
+		m_averageDiffMs = m_end - m_begin;
+	}
+
+	void D3D::CalculateFrameTimeAndFPS()
+	{
+		if (m_frameCount < 5000)
+		{
+			m_frame += m_averageDiffMs;
+		}
+
+		if (m_frameCount > 5000 && m_frameCount < 5002)
+		{
+			FILE *fp;
+			fp = fopen("NoAsyncResultsMaxwell.txt", "a+");
+			fprintf(fp, "%d\n////////\n", m_timer->GetFramesPerSecond());
+			fclose(fp);
+			system("pause");
+		}
+			
+		m_averageDiffMs *= 1000.0;
+
+		auto titleString = std::to_string(m_averageDiffMs) + " ms (" + std::to_string(m_timer->GetFramesPerSecond()) + " FPS)";
+		SetWindowTextA(m_hwnd, titleString.c_str());
+
+		++m_frameCount;
+	}
+
 	void D3D::CreateCommandsAndSwapChain(HWND hwnd)
 	{
 		D3D12_COMMAND_QUEUE_DESC commandQueueDesc;
@@ -282,7 +348,7 @@ namespace dx
 		scDesc.BufferCount = FRAME_BUFFERS;
 		scDesc.Scaling = DXGI_SCALING_NONE;
 		scDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
-		scDesc.Flags = 0;
+		scDesc.Flags = DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT;
 		scDesc.AlphaMode = DXGI_ALPHA_MODE_UNSPECIFIED;
 
 		//Finally create the swap chain using the swap chain description.	

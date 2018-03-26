@@ -12,6 +12,7 @@ struct CB_UPDATE
 	float g_timestep;
     float g_softeningSquared;
 	UINT g_numParticles;
+	UINT g_numBlocks = UINT(ceil(NUM_BODIES / 256.0f));
 };
 
 FLOAT blendFactors[] = { 1.0f, 1.0f, 1.0f, 1.0f };
@@ -28,7 +29,7 @@ namespace dx
 	//Create resources
 	void NBody::Initialize()
 	{
-		//Create constant buffers (two for normal pipeline and one for compute shader)
+		//Create constant buffers (one for normal pipeline and one for compute shader)
 		m_buffer->CreateConstantBuffer(m_cbDrawUploadHeap->GetAddressOf(), &m_cbDrawAddress[0]);
 		m_buffer->CreateConstantBuffer(m_cbUpdateUploadHeap->GetAddressOf(), &m_cbUpdateAddress[0]);
 
@@ -43,8 +44,9 @@ namespace dx
 		//Set constant buffer data for normal pipeline
 		CB_DRAW cbDraw;
 		Matrix world = XMMatrixIdentity();
+		world = XMMatrixTranslationFromVector(Vector3(0.f, 0.f, 100.f));
 		Matrix WVP = world * m_camera->GetViewProjectionMatrix();
-		cbDraw.g_mWorldViewProjection = XMMatrixTranspose(WVP);
+		cbDraw.g_mWorldViewProjection = WVP;
 
 		m_buffer->SetConstantBufferData(&cbDraw, sizeof(cbDraw), frameIndex, &m_cbDrawAddress[0]);
 
@@ -65,24 +67,21 @@ namespace dx
 	{
 		//Update the data for the compute constant buffer
 		CB_UPDATE cbUpdate;
-		cbUpdate.g_timestep = 0.016f;
-		cbUpdate.g_softeningSquared = 0.01f;
+		cbUpdate.g_timestep = 0.0016f;
+		cbUpdate.g_softeningSquared = 0.0012500000f * 0.0012500000f;
 		cbUpdate.g_numParticles = NUM_BODIES;
 		m_buffer->SetConstantBufferData(&cbUpdate, sizeof(cbUpdate), frameIndex, &m_cbUpdateAddress[0]);
+
+		m_buffer->SetResourceBarrier(m_srvBuffer.GetAddressOf(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 
 		//Set NBody compute shader
 		m_commandList->SetPipelineState(shader->GetShaders(Shaders::ID::NBodyCompute).pipelineState.Get());
 		signature->SetComputeRootSignature();
 		m_buffer->BindConstantBufferComputeForRootDescriptor(0, frameIndex, m_cbUpdateUploadHeap->GetAddressOf()); //Root index 0
 		m_srvUavDescHeap->SetComputeRootDescriptorTable(1, m_srvUavDescHeap->GetGPUIncrementHandle(2)); //Root index 1 for UAV table
-		shader->SetComputeDispatch(static_cast<int>(ceil(NUM_BODIES / 256)), 1, 1);
+		shader->SetComputeDispatch(static_cast<int>(ceil(NUM_BODIES / 256.0f)), 1, 1);
 
-		//Copy the UAV data to the SRV
-		m_buffer->SetResourceBarrier(m_uavBuffer.GetAddressOf(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COPY_SOURCE);
-		m_buffer->SetResourceBarrier(m_srvBuffer.GetAddressOf(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COPY_DEST);
-		m_commandList->CopyResource(m_srvBuffer.Get(), m_uavBuffer.Get());
-		m_buffer->SetResourceBarrier(m_srvBuffer.GetAddressOf(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
-		m_buffer->SetResourceBarrier(m_uavBuffer.GetAddressOf(), D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+		m_buffer->SetResourceBarrier(m_srvBuffer.GetAddressOf(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
 	}
 
 	void NBody::InitializeBodies()
@@ -125,16 +124,12 @@ namespace dx
 			i++;
 		}
 
-		//Create SRV buffer for normal pipeline
-		m_buffer->CreateSRVForRootTable(bodyData, sizeof(BodyData) * NUM_BODIES, sizeof(BodyData), NUM_BODIES, m_srvBuffer.GetAddressOf(),
-			m_srvBufferUploadHeap.GetAddressOf(), m_srvUavDescHeap->GetCPUIncrementHandle(0), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+		//Create SRV | UAV buffer for pipelines
+		m_buffer->CreateSharedSRVUAVForTable(bodyData, sizeof(BodyData) * NUM_BODIES, sizeof(BodyData), NUM_BODIES, m_srvBuffer.GetAddressOf(), m_srvBufferUploadHeap.GetAddressOf(), 
+											 m_srvUavDescHeap->GetCPUIncrementHandle(0), m_srvUavDescHeap->GetCPUIncrementHandle(2), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
 
 		//Create SRV from texture
 		m_texture->CreateSRVFromTexture(Textures::ID::Particle, m_srvUavDescHeap->GetCPUIncrementHandle(1));
-
-		//Create UAV buffer for compute shader
-		m_buffer->CreateUAVForRootTable(bodyData, sizeof(BodyData) * NUM_BODIES, sizeof(BodyData), NUM_BODIES, m_uavBuffer.GetAddressOf(),
-			m_uavBufferUploadHeap.GetAddressOf(), m_srvUavDescHeap->GetCPUIncrementHandle(2));
 
 		//Release memory
 		delete[] bodyData;

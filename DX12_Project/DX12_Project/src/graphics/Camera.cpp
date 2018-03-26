@@ -1,12 +1,13 @@
 #include <graphics/Camera.hpp>
 #include <utils/Input.hpp>
 #include <utils/Utility.hpp>
+#include <iostream>
 
 namespace dx
 {
 	Camera::Camera(const Vector3 & camPosition, const Vector3 & camTarget, const Vector3 & camUp, const float & speed, const float & sensitivity) :
 				   m_cameraPos(camPosition), m_camTarget(camTarget), m_camUp(camUp), m_movementSpeed(speed), m_mouseSensivity(sensitivity),
-				   m_camYaw(0.f), m_camPitch(0.f)
+				   m_camYaw(0.f), m_camPitch(0.f), m_fov(45.0f)
 	{
 	}
 
@@ -29,6 +30,19 @@ namespace dx
 			m_cameraPos += XMVector3Normalize(XMVector3Cross(m_camUp, m_camTarget)) * velocity;
 		if (Input::GetKey(Keyboard::Keys::A))
 			m_cameraPos -= XMVector3Normalize(XMVector3Cross(m_camUp, m_camTarget)) * velocity;
+
+		//Zoom functionality which adjusts the camera position instead of fov angle
+		if (Input::GetMouseScrollWheel() > 0)
+		{
+			m_cameraPos += m_camTarget * 50.f;
+			Input::ResetScrollWheelValue();
+		}
+
+		if (Input::GetMouseScrollWheel() < 0)
+		{
+			m_cameraPos -= m_camTarget * 50.f;
+			Input::ResetScrollWheelValue();
+		}
 	}
 
 	void Camera::RotateCamera()
@@ -60,6 +74,16 @@ namespace dx
 		}
 	}
 
+	void Camera::SetPosition(const Vector3 & position)
+	{
+		m_cameraPos = position;
+	}
+
+	void Camera::SetFOV(const float & angle)
+	{
+		m_fov = angle;
+	}
+
 	Matrix Camera::GetViewMatrix() const
 	{
 		return m_viewMatrix;
@@ -72,12 +96,17 @@ namespace dx
 
 	Matrix Camera::GetProjectionMatrix() const
 	{
-		return XMMatrixPerspectiveFovLH(0.4f * 3.14f, static_cast<float>(SCREEN_WIDTH / SCREEN_HEIGHT), 0.1f, 1000.0f);
+		return XMMatrixPerspectiveFovLH(XMConvertToRadians(m_fov), static_cast<float>(SCREEN_WIDTH / SCREEN_HEIGHT), 0.1f, 1000.0f);
 	}
 
 	Vector3 Camera::GetCameraPosition() const
 	{
 		return m_cameraPos;
+	}
+
+	float Camera::GetFOV() const
+	{
+		return m_fov;
 	}
 }
 

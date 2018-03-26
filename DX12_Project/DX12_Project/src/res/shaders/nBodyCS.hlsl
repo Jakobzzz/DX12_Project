@@ -6,6 +6,7 @@ cbuffer cbUpdate : register(b0)
 	float g_timestep;
 	float g_softeningSquared;
 	uint  g_numParticles;
+    uint g_numBlocks;
 };	
 
 struct BodyData
@@ -21,7 +22,7 @@ RWStructuredBuffer<BodyData> particles : register(u0);
 // This function computes the gravitational attraction between two bodies
 // at positions bi and bj. The mass of the bodies is stored in the w 
 // component
-float3 BodyBodyInteraction(float4 bi, float4 bj) 
+float3 BodyBodyInteraction(float4 bi, float4 bj, int particles) 
 {
     float3 r = bi - bj;
 
@@ -31,7 +32,7 @@ float3 BodyBodyInteraction(float4 bi, float4 bj)
     float invDist = 1.0f / sqrt(distSqr);
 	float invDistCube =  invDist * invDist * invDist;
 
-    float s = g_particleMass * invDistCube;
+    float s = bj.w * invDistCube * particles;
 
     return r * s;
 }
@@ -49,7 +50,15 @@ float3 Gravitation(float4 myPos, float3 accel)
 
     [unroll]
     for (uint counter = 0; counter < BLOCK_SIZE; counter++) 
-        accel += BodyBodyInteraction(sharedPos[i++], myPos); 
+        accel += BodyBodyInteraction(sharedPos[i++], myPos, 1);
+    
+    // g_numParticles is the number of our particles, however this number might not 
+	// be an exact multiple of the tile size. In such cases, out of bound reads 
+	// occur in the process above, which means there will be tooManyParticles 
+	// "phantom" particles generating false gravity at position (0, 0, 0), so 
+	// we have to subtract them here. NOTE, out of bound reads always return 0 in CS.
+    const int tooManyParticles = g_numBlocks * BLOCK_SIZE - g_numParticles;
+    accel += BodyBodyInteraction(float4(0.0f, 0.0f, 0.0f, 0.0f), myPos, -tooManyParticles);
 
     return accel;
 }

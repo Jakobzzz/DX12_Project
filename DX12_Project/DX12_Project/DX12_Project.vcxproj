@@ -76,10 +76,10 @@
     <IncludePath>$(ProjectDir)\include;$(ProjectDir)\src;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(ProjectDir)/src</IncludePath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(ProjectDir)/src;$(ProjectDir)include</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(ProjectDir)/src</IncludePath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(ProjectDir)/src;$(ProjectDir)include</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -133,7 +133,6 @@
     <ClCompile Include="src\graphics\Core.cpp" />
     <ClCompile Include="src\graphics\D3D.cpp" />
     <ClCompile Include="src\graphics\DescriptorHeap.cpp" />
-    <ClCompile Include="src\graphics\Model.cpp" />
     <ClCompile Include="src\graphics\nbody\nBody.cpp" />
     <ClCompile Include="src\graphics\RootSignature.cpp" />
     <ClCompile Include="src\graphics\Shader.cpp" />
@@ -149,23 +148,17 @@
     <ClInclude Include="src\graphics\DescriptorHeap.hpp" />
     <ClInclude Include="src\graphics\nbody\nBody.hpp" />
     <ClInclude Include="src\graphics\RootDescriptor.hpp" />
-    <ClInclude Include="src\graphics\Model.hpp" />
     <ClInclude Include="src\graphics\RootParameter.hpp" />
     <ClInclude Include="src\graphics\RootSignature.hpp" />
     <ClInclude Include="src\graphics\CommonStates.hpp" />
     <ClInclude Include="src\graphics\Shader.hpp" />
     <ClInclude Include="src\graphics\Texture.hpp" />
     <ClInclude Include="src\utils\Input.hpp" />
+    <ClInclude Include="src\utils\StepTimer.h" />
     <ClInclude Include="src\utils\Utility.hpp" />
     <ClInclude Include="src\utils\Window.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="src\res\shaders\ComputeShader.hlsl">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </FxCompile>
     <FxCompile Include="src\res\shaders\nBodyCS.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
@@ -178,13 +171,6 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </FxCompile>
-    <FxCompile Include="src\res\shaders\Shaders.hlsl">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -192,11 +178,13 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
     <Import Project="..\packages\directxtk12_desktop_2015.2017.12.13.1\build\native\directxtk12_desktop_2015.targets" Condition="Exists('..\packages\directxtk12_desktop_2015.2017.12.13.1\build\native\directxtk12_desktop_2015.targets')" />
+    <Import Project="..\packages\WinPixEventRuntime.1.0.170918004\build\WinPixEventRuntime.targets" Condition="Exists('..\packages\WinPixEventRuntime.1.0.170918004\build\WinPixEventRuntime.targets')" />
   </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
     <Error Condition="!Exists('..\packages\directxtk12_desktop_2015.2017.12.13.1\build\native\directxtk12_desktop_2015.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\directxtk12_desktop_2015.2017.12.13.1\build\native\directxtk12_desktop_2015.targets'))" />
+    <Error Condition="!Exists('..\packages\WinPixEventRuntime.1.0.170918004\build\WinPixEventRuntime.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\WinPixEventRuntime.1.0.170918004\build\WinPixEventRuntime.targets'))" />
   </Target>
 </Project>

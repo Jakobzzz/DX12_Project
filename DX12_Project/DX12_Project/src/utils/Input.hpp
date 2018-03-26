@@ -19,6 +19,7 @@ namespace dx
 	public:
 		static void Initialize(HWND wndHandle);
 		static void Update();
+		static void ResetScrollWheelValue();
 
 	public:
 		static void SetMouseInputMode(Mouse::Mode mode);

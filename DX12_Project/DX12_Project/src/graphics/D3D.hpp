@@ -10,10 +10,10 @@
 #include <graphics/DescriptorHeap.hpp>
 #include <graphics/RootSignature.hpp>
 #include <graphics/Shader.hpp>
-#include <graphics/Model.hpp>
 #include <graphics/Camera.hpp>
 #include <graphics/nbody/nBody.hpp>
-#include <utils/Utility.hpp>
+#include <array>
+#include <D3D12Timer.hpp>
 
 using namespace DirectX;
 
@@ -46,6 +46,8 @@ namespace dx
 		void EndScene();
 		void ExecuteCommandList();
 		void WaitForPreviousFrame();
+		void CalculateRenderTime();
+		void CalculateFrameTimeAndFPS();
 
 	private:
 		std::unique_ptr<Texture> m_texture;
@@ -56,6 +58,7 @@ namespace dx
 		std::unique_ptr<Buffer> m_buffer;
 		std::unique_ptr<Camera> m_camera;
 		std::unique_ptr<NBody> m_nBodySystem;
+		std::unique_ptr<D3D12Timer> m_timer;
 
 	private:
 		ComPtr<ID3D12Device> m_device;
@@ -76,5 +79,23 @@ namespace dx
 		D3D12_VIEWPORT m_viewport;
 		D3D12_RECT m_rect;
 		D3D12_DEPTH_STENCIL_VIEW_DESC m_depthViewDesc;
+		HWND m_hwnd;
+		int m_count = 0;
+
+		UINT64 m_GPUCalibration;
+		UINT64 m_CPUCalibration;
+		UINT64 m_offset;
+		double m_averageDiffMs = 0.0;
+		double m_frame = 0.0;
+		double m_overlapp = 0.0;
+		int m_frameCount = 0;
+
+		UINT64 m_freq;
+		LARGE_INTEGER m_cpuFreq;
+		double m_sec;
+		double m_gpuSec;
+		double m_begin;
+		double m_end;
+		double m_3Dduration;
 	};
 }

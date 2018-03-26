@@ -20,9 +20,11 @@ namespace dx
 		void CreateConstantBuffer(ID3D12Resource** buffer, UINT8** bufferAddress);
 		void CreateConstantBufferForRootTable(const UINT & size, UINT8** bufferAddress, ID3D12Resource** buffer, D3D12_CPU_DESCRIPTOR_HANDLE* handlers);
 		void CreateUAVForRootTable(const void* data, const UINT & size, const UINT & stride, const UINT & numElements, ID3D12Resource** buffer, ID3D12Resource** uploadHeap,
-									D3D12_CPU_DESCRIPTOR_HANDLE handle);
+								   D3D12_CPU_DESCRIPTOR_HANDLE handle, D3D12_RESOURCE_STATES resourceState);
 		void CreateSRVForRootTable(const void* data, const UINT & size, const UINT & stride, const UINT & numElements, ID3D12Resource** buffer, ID3D12Resource** uploadHeap,
-			D3D12_CPU_DESCRIPTOR_HANDLE handle, D3D12_RESOURCE_STATES resourceState = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+								   D3D12_CPU_DESCRIPTOR_HANDLE handle, D3D12_RESOURCE_STATES resourceState);
+		void CreateSharedSRVUAVForTable(const void* data, const UINT & size, const UINT & stride, const UINT & numElements, ID3D12Resource** buffer, ID3D12Resource** uploadHeap,
+										D3D12_CPU_DESCRIPTOR_HANDLE handle1, D3D12_CPU_DESCRIPTOR_HANDLE handle2, D3D12_RESOURCE_STATES resourceState);
 
 	public:
 		void SetConstantBufferData(const void* data, const UINT & size, const UINT & frameIndex, UINT8** bufferAddress);
