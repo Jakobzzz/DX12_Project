@@ -26,7 +26,7 @@ namespace dx
 		InitializeBodies();
 	}
 
-	//Create resources
+	//Create resourcess
 	void NBody::Initialize()
 	{
 		//Create constant buffers (one for normal pipeline and one for compute shader)
@@ -44,7 +44,7 @@ namespace dx
 		//Set constant buffer data for normal pipeline
 		CB_DRAW cbDraw;
 		Matrix world = XMMatrixIdentity();
-		world = XMMatrixTranslationFromVector(Vector3(0.f, 0.f, 100.f));
+		world = XMMatrixTranslationFromVector(Vector3(-10.f, 7.f, 100.f));
 		Matrix WVP = world * m_camera->GetViewProjectionMatrix();
 		cbDraw.g_mWorldViewProjection = WVP;
 
