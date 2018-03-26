@@ -71,7 +71,6 @@ namespace dx
 		RootDescriptor graphicsRootDesc;
 		graphicsRootDesc.AppendDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_VOLATILE);
 		graphicsRootDesc.AppendDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 1, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_VOLATILE);
-		graphicsRootDesc.CreateRootDescTable();
 
 		//Fill in root parameters for standard pipeline
 		RootParameter rootParams;
@@ -86,16 +85,12 @@ namespace dx
 		//--- Compute shader ---
 		RootDescriptor uavRootDesc;
 		uavRootDesc.AppendDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_VOLATILE);
-		uavRootDesc.CreateRootDescTable();
-
-		RootDescriptor srvRootDesc;
-		srvRootDesc.AppendDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_VOLATILE);
-		srvRootDesc.CreateRootDescTable();
+		uavRootDesc.AppendDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_VOLATILE);
 
 		RootParameter computeRootParams;
 		computeRootParams.AppendRootParameterCBV(0, D3D12_SHADER_VISIBILITY_ALL);
-		computeRootParams.AppendRootParameterDescTable(uavRootDesc.GetRootDescTable(), D3D12_SHADER_VISIBILITY_ALL);
-		computeRootParams.AppendRootParameterDescTable(srvRootDesc.GetRootDescTable(), D3D12_SHADER_VISIBILITY_ALL);
+		computeRootParams.AppendRootParameterDescTable(1, &uavRootDesc.GetDescRange()[0], D3D12_SHADER_VISIBILITY_ALL);
+		computeRootParams.AppendRootParameterDescTable(1, &uavRootDesc.GetDescRange()[1], D3D12_SHADER_VISIBILITY_ALL);
 
 		m_computeRootSignature->CreateRootSignature((UINT)computeRootParams.GetRootParameters().size(), 0, &computeRootParams.GetRootParameters()[0], nullptr, 
 													D3D12_ROOT_SIGNATURE_FLAG_NONE);
@@ -181,11 +176,10 @@ namespace dx
 		ExecuteCommandList();
 		assert(!m_swapChain->Present(0, 0));
 
-		CalculateFrameTimeAndFPS();
-
 		WaitForPreviousFrame();
 
 		CalculateRenderTime();
+		CalculateFrameTimeAndFPS();
 
 		//Get the current back buffer
 		m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
@@ -198,7 +192,7 @@ namespace dx
 		CloseHandle(m_fenceEvent);
 
 		m_texture->Release();
-		m_device.Get()->Release();
+		/*m_device.Get()->Release();*/
 	}
 
 	bool D3D::FindAndCreateDevice()
