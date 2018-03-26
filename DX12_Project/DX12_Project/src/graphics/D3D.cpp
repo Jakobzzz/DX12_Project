@@ -295,7 +295,7 @@ namespace dx
 				break;
 
 			//Check if a device that supports feature level 12.1 is found.
-			result = D3D12CreateDevice(adapter.Get(), D3D_FEATURE_LEVEL_11_0, __uuidof(ID3D12Device), nullptr);
+			result = D3D12CreateDevice(adapter.Get(), D3D_FEATURE_LEVEL_12_1, __uuidof(ID3D12Device), nullptr);
 			if (SUCCEEDED(result))
 				break;
 		}
@@ -303,7 +303,7 @@ namespace dx
 		if (adapter)
 		{
 			//Create the Direct3D 12 device
-			result = D3D12CreateDevice(adapter.Get(), D3D_FEATURE_LEVEL_11_0, __uuidof(ID3D12Device), (void**)m_device.GetAddressOf());
+			result = D3D12CreateDevice(adapter.Get(), D3D_FEATURE_LEVEL_12_1, __uuidof(ID3D12Device), (void**)m_device.GetAddressOf());
 			if (FAILED(result))
 				return false;
 		}
