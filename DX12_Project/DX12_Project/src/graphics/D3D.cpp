@@ -521,12 +521,12 @@ namespace dx
 			fprintf(fp, "%f\n%f\n%d\n////////\n", avrageFrameTime, avrageOverlap, m_fpsTimer->GetFramesPerSecond());
 			fclose(fp);*/
 
-			std::ofstream fp;
+			/*std::ofstream fp;
 			fp.open("Results.txt", std::ios::app);
 			fp << avrageFrameTime << "\n" << avrageOverlap << "\n" << m_fpsTimer->GetFramesPerSecond() << "\n//////////\n";
-			fp.close();
+			fp.close();*/
 
-			system("pause");
+			//system("pause");
 		}
 
 		m_averageDiffMs *= 1000.0;
