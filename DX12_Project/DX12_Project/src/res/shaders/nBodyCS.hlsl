@@ -17,6 +17,7 @@ struct BodyData
 
 static float g_particleMass = 6.67300e-11f * 10000.0f * 10000.0f * 10000.0f;
 
+StructuredBuffer<BodyData> oldParticles : register(t0);
 RWStructuredBuffer<BodyData> particles : register(u0);
 
 // This function computes the gravitational attraction between two bodies
@@ -75,7 +76,7 @@ float3 ComputeBodyAccel(float4 bodyPos, uint threadId, uint blockId)
 
     for (uint tile = 0; tile < numTiles; tile++) 
     {
-        sharedPos[threadId] = particles[tile * p + threadId].pos;
+        sharedPos[threadId] = oldParticles[tile * p + threadId].pos;
        
         GroupMemoryBarrierWithGroupSync();
         acceleration = Gravitation(bodyPos, acceleration);
@@ -92,8 +93,8 @@ float3 ComputeBodyAccel(float4 bodyPos, uint threadId, uint blockId)
 [numthreads(BLOCK_SIZE, 1 ,1)]
 void CS_MAIN(uint threadId : SV_GroupIndex, uint3 groupId : SV_GroupID, uint3 globalThreadId : SV_DispatchThreadID)
 {	
-    float4 pos = particles[globalThreadId.x].pos; 
-    float4 vel = particles[globalThreadId.x].velocity;  
+    float4 pos = oldParticles[globalThreadId.x].pos; 
+    float4 vel = oldParticles[globalThreadId.x].velocity;  
 
 	//Compute acceleration
 	float3 accel = ComputeBodyAccel(pos, threadId, groupId.x);

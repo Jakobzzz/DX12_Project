@@ -69,13 +69,18 @@ namespace dx
 		//--- Standard shader ---
 		//Desc range and root table for standard pipeline 
 		RootDescriptor graphicsRootDesc;
-		graphicsRootDesc.AppendDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 2, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_VOLATILE);
+		graphicsRootDesc.AppendDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_VOLATILE);
 		graphicsRootDesc.CreateRootDescTable();
+
+		RootDescriptor textureRootDesc;
+		textureRootDesc.AppendDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 1, D3D12_DESCRIPTOR_RANGE_FLAG_NONE);
+		textureRootDesc.CreateRootDescTable();
 
 		//Fill in root parameters for standard pipeline
 		RootParameter rootParams;
 		rootParams.AppendRootParameterCBV(0, D3D12_SHADER_VISIBILITY_ALL);
 		rootParams.AppendRootParameterDescTable(graphicsRootDesc.GetRootDescTable(), D3D12_SHADER_VISIBILITY_ALL);
+		rootParams.AppendRootParameterDescTable(textureRootDesc.GetRootDescTable(), D3D12_SHADER_VISIBILITY_ALL);
 
 		//Create a standard root signature
 		m_rootSignature->CreateRootSignature((UINT)rootParams.GetRootParameters().size(), 1, &rootParams.GetRootParameters()[0], 
@@ -86,9 +91,14 @@ namespace dx
 		uavRootDesc.AppendDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_VOLATILE);
 		uavRootDesc.CreateRootDescTable();
 
+		RootDescriptor srvRootDesc;
+		srvRootDesc.AppendDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_VOLATILE);
+		srvRootDesc.CreateRootDescTable();
+
 		RootParameter computeRootParams;
 		computeRootParams.AppendRootParameterCBV(0, D3D12_SHADER_VISIBILITY_ALL);
 		computeRootParams.AppendRootParameterDescTable(uavRootDesc.GetRootDescTable(), D3D12_SHADER_VISIBILITY_ALL);
+		computeRootParams.AppendRootParameterDescTable(srvRootDesc.GetRootDescTable(), D3D12_SHADER_VISIBILITY_ALL);
 
 		m_computeRootSignature->CreateRootSignature((UINT)computeRootParams.GetRootParameters().size(), 0, &computeRootParams.GetRootParameters()[0], nullptr, 
 													D3D12_ROOT_SIGNATURE_FLAG_NONE);
@@ -224,7 +234,7 @@ namespace dx
 				break;
 
 			//Check if a device that supports feature level 12.1 is found.
-			result = D3D12CreateDevice(adapter.Get(), D3D_FEATURE_LEVEL_11_0, __uuidof(ID3D12Device), (void**)m_device.GetAddressOf());
+			result = D3D12CreateDevice(adapter.Get(), D3D_FEATURE_LEVEL_12_1, __uuidof(ID3D12Device), nullptr);
 			if (SUCCEEDED(result))
 				break;
 		}
@@ -232,7 +242,7 @@ namespace dx
 		if (adapter)
 		{
 			//Create the Direct3D 12 device
-			result = D3D12CreateDevice(adapter.Get(), D3D_FEATURE_LEVEL_11_0, __uuidof(ID3D12Device), (void**)m_device.GetAddressOf());
+			result = D3D12CreateDevice(adapter.Get(), D3D_FEATURE_LEVEL_12_1, __uuidof(ID3D12Device), (void**)m_device.GetAddressOf());
 			if (FAILED(result))
 				return false;
 		}
@@ -296,6 +306,7 @@ namespace dx
 		m_end = m_timer->GetEndTime() / (double)m_freq;
 
 		m_averageDiffMs = m_end - m_begin;
+		m_averageDiffMs *= 1000.0;
 	}
 
 	void D3D::CalculateFrameTimeAndFPS()
@@ -305,16 +316,17 @@ namespace dx
 			m_frame += m_averageDiffMs;
 		}
 
-		if (m_frameCount > 5000 && m_frameCount < 5002)
+		/*if (m_frameCount > 5000 && m_frameCount < 5002)
 		{
+			m_frame /= 5000.0;
+
 			FILE *fp;
-			fp = fopen("NoAsyncResultsMaxwell.txt", "a+");
-			fprintf(fp, "%d\n////////\n", m_timer->GetFramesPerSecond());
+			fp = fopen("Results.txt", "a");
+			fprintf(fp, "%f\n%d\n////////\n",m_frame, m_timer->GetFramesPerSecond());
 			fclose(fp);
+
 			system("pause");
-		}
-			
-		m_averageDiffMs *= 1000.0;
+		}*/
 
 		auto titleString = std::to_string(m_averageDiffMs) + " ms (" + std::to_string(m_timer->GetFramesPerSecond()) + " FPS)";
 		SetWindowTextA(m_hwnd, titleString.c_str());
